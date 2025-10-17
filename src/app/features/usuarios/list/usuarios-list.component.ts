@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { User } from '../../../core/models/auth.model';
 
 @Component({
@@ -55,22 +56,33 @@ import { User } from '../../../core/models/auth.model';
                 </div>
               </td>
               <td>
-                <button 
-                  class="btn-small btn-info"
-                  (click)="verConsolidados(user.usuario.username)">
-                  Ver Consolidados
-                </button>
-                <button 
-                  class="btn-small btn-primary"
-                  (click)="asignarRol(user.usuario.username)"
-                  *ngIf="!tieneRolAdmin(user.usuario)">
-                  Hacer Admin
-                </button>
-                <button 
-                  class="btn-small btn-danger"
-                  (click)="eliminarUsuario(user.usuario.username)">
-                  Eliminar
-                </button>
+                <div class="action-buttons">
+                  <button 
+                    class="btn-small btn-info"
+                    (click)="verConsolidados(user.usuario.username)"
+                    title="Ver consolidados">
+                    📊 Consolidados
+                  </button>
+                  <button 
+                    class="btn-small btn-warning"
+                    (click)="cambiarPassword(user.usuario.username)"
+                    title="Cambiar contraseña">
+                    🔑 Cambiar Pass
+                  </button>
+                  <button 
+                    class="btn-small btn-primary"
+                    (click)="asignarRol(user.usuario.username)"
+                    *ngIf="!tieneRolAdmin(user.usuario)"
+                    title="Hacer administrador">
+                    ⭐ Admin
+                  </button>
+                  <button 
+                    class="btn-small btn-danger"
+                    (click)="eliminarUsuario(user.usuario.username)"
+                    title="Eliminar usuario">
+                    🗑️ Eliminar
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -175,13 +187,19 @@ import { User } from '../../../core/models/auth.model';
       color: #666;
     }
 
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
     .btn-small {
       padding: 6px 12px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 13px;
-      margin-right: 5px;
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .btn-primary {
@@ -192,6 +210,11 @@ import { User } from '../../../core/models/auth.model';
     .btn-info {
       background: #17a2b8;
       color: white;
+    }
+
+    .btn-warning {
+      background: #ffc107;
+      color: #333;
     }
 
     .btn-danger {
@@ -213,6 +236,7 @@ export class UsuariosListComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private consolidadoService: ConsolidadoService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -223,7 +247,6 @@ export class UsuariosListComponent implements OnInit {
   cargarDatos(): void {
     this.isLoading = true;
     
-    // Cargar usuarios y consolidados
     Promise.all([
       this.authService.getAllUsers().toPromise(),
       this.consolidadoService.obtenerTodos().toPromise()
@@ -231,7 +254,6 @@ export class UsuariosListComponent implements OnInit {
       this.usuarios = usuarios || [];
       this.consolidados = consolidados || [];
       
-      // Calcular estadísticas por usuario
       this.usuariosConStats = this.usuarios.map(user => {
         const creados = this.consolidados.filter(c => c.usuarioReporta === user.username).length;
         const asignados = this.consolidados.filter(c => c.usuarioAsignado === user.username).length;
@@ -246,6 +268,7 @@ export class UsuariosListComponent implements OnInit {
       this.isLoading = false;
     }).catch(error => {
       console.error('Error al cargar datos', error);
+      this.notificationService.error('Error al cargar usuarios');
       this.isLoading = false;
     });
   }
@@ -264,29 +287,53 @@ export class UsuariosListComponent implements OnInit {
     });
   }
 
+  cambiarPassword(username: string): void {
+    const newPassword = prompt(`Ingrese la nueva contraseña para ${username}:`);
+    
+    if (newPassword && newPassword.trim()) {
+      if (newPassword.length < 6) {
+        this.notificationService.warning('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+
+      const confirmar = confirm(`¿Está seguro de cambiar la contraseña de ${username}?`);
+      
+      if (confirmar) {
+        this.authService.changeUserPassword(username, newPassword).subscribe({
+          next: () => {
+            this.notificationService.success('Contraseña actualizada correctamente');
+          },
+          error: (error) => {
+            this.notificationService.error('Error al cambiar contraseña');
+          }
+        });
+      }
+    }
+  }
+
   asignarRol(username: string): void {
     if (confirm(`¿Asignar rol ADMIN a ${username}?`)) {
       this.authService.assignRole(username, 'ROLE_ADMIN').subscribe({
         next: () => {
-          alert('Rol asignado correctamente');
+          this.notificationService.success('Rol asignado correctamente');
           this.cargarDatos();
         },
         error: (error) => {
-          alert('Error al asignar rol');
+          this.notificationService.error('Error al asignar rol');
         }
       });
     }
   }
 
   eliminarUsuario(username: string): void {
-    if (confirm(`¿Está seguro de eliminar al usuario ${username}?`)) {
+    if (confirm(`¿Está seguro de eliminar al usuario ${username}?\n\nEsta acción no se puede deshacer.`)) {
       this.authService.deleteUser(username).subscribe({
         next: () => {
-          alert('Usuario eliminado correctamente');
+          this.notificationService.success('Usuario eliminado correctamente');
           this.cargarDatos();
         },
         error: (error) => {
-          alert('Error al eliminar usuario');
+          this.notificationService.error('Error al eliminar usuario');
         }
       });
     }

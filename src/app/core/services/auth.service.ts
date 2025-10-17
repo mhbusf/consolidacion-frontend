@@ -74,4 +74,13 @@ export class AuthService {
   deleteUser(username: string): Observable<string> {
     return this.http.delete(`${this.apiUrl}/users/${username}`, { responseType: 'text' });
   }
+
+  // Admin cambia contraseña de cualquier usuario
+changeUserPassword(username: string, newPassword: string): Observable<string> {
+  return this.http.put(
+    `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`, 
+    {}, 
+    { responseType: 'text' }
+  );
+}
 }
