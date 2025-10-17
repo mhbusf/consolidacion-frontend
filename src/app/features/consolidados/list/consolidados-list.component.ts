@@ -309,6 +309,7 @@ export class ConsolidadosListComponent implements OnInit {
   usuarios: User[] = [];
   isLoading = true;
   isAdmin = false;
+  currentUsername = '';
   
   filtroSeleccionado = 'todos';
   usuarioFiltro = '';
@@ -322,6 +323,11 @@ export class ConsolidadosListComponent implements OnInit {
     private router: Router
   ) {
     this.isAdmin = this.authService.isAdmin();
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUsername = user.username;
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -331,7 +337,6 @@ export class ConsolidadosListComponent implements OnInit {
   cargarDatos(): void {
     this.isLoading = true;
     
-    // Cargar consolidados
     this.consolidadoService.obtenerTodos().subscribe({
       next: (data) => {
         this.consolidadosTodos = data;
@@ -346,7 +351,6 @@ export class ConsolidadosListComponent implements OnInit {
       }
     });
 
-    // Cargar usuarios si es admin
     if (this.isAdmin) {
       this.authService.getAllUsers().subscribe({
         next: (users) => {
@@ -360,29 +364,23 @@ export class ConsolidadosListComponent implements OnInit {
   }
 
   aplicarFiltro(): void {
-  switch (this.filtroSeleccionado) {
-    case 'todos':
-      this.consolidados = this.consolidadosTodos;
-      break;
-    case 'sin-asignar':
-      this.consolidados = this.consolidadosTodos.filter(c => !c.usuarioAsignado);
-      break;
-    case 'mis-consolidados':
-      // Obtener el username del usuario actual
-      this.authService.currentUser$.subscribe(user => {
-        if (user) {
-          this.consolidados = this.consolidadosTodos.filter(c => c.usuarioReporta === user.username);
+    switch (this.filtroSeleccionado) {
+      case 'todos':
+        this.consolidados = this.consolidadosTodos;
+        break;
+      case 'sin-asignar':
+        this.consolidados = this.consolidadosTodos.filter(c => !c.usuarioAsignado);
+        break;
+      case 'mis-consolidados':
+        this.consolidados = this.consolidadosTodos.filter(c => c.usuarioReporta === this.currentUsername);
+        break;
+      case 'por-usuario':
+        if (!this.usuarioFiltro) {
+          this.consolidados = [];
         }
-      });
-      break;
-    case 'por-usuario':
-      // Espera a que seleccione un usuario
-      if (!this.usuarioFiltro) {
-        this.consolidados = [];
-      }
-      break;
+        break;
+    }
   }
-}
 
   filtrarPorUsuario(): void {
     if (this.usuarioFiltro) {

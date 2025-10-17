@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
+import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 
 @Component({
   selector: 'app-consolidado-create',
@@ -37,8 +38,13 @@ import { ConsolidadoService } from '../../../core/services/consolidado.service';
                 class="form-control"
                 placeholder="+56912345678">
               <div class="error" *ngIf="consolidadoForm.get('telefono')?.invalid && consolidadoForm.get('telefono')?.touched">
-                El teléfono es requerido
-              </div>
+  <span *ngIf="consolidadoForm.get('telefono')?.hasError('required')">
+    El teléfono es requerido
+  </span>
+  <span *ngIf="consolidadoForm.get('telefono')?.hasError('telefonoInvalido')">
+    Formato inválido. Use: +56912345678 o 912345678
+  </span>
+</div>
             </div>
 
             <div class="form-group">
@@ -206,12 +212,30 @@ export class ConsolidadoCreateComponent {
     private router: Router
   ) {
     this.consolidadoForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      telefono: ['', [Validators.required]],
-      edad: ['', [Validators.required, Validators.min(1), Validators.max(120)]],
-      quienInvito: ['', [Validators.required]],
-      motivoOracion: ['', [Validators.required, Validators.minLength(10)]]
-    });
+  nombre: ['', [
+    Validators.required, 
+    Validators.minLength(3),
+    Validators.maxLength(100)
+  ]],
+  telefono: ['', [
+    Validators.required,
+    TelefonoChilenoValidator.validar()
+  ]],
+  edad: ['', [
+    Validators.required, 
+    Validators.min(1), 
+    Validators.max(120)
+  ]],
+  quienInvito: ['', [
+    Validators.required,
+    Validators.maxLength(100)
+  ]],
+  motivoOracion: ['', [
+    Validators.required, 
+    Validators.minLength(10),
+    Validators.maxLength(500)
+  ]]
+});
   }
 
   onSubmit(): void {
