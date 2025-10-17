@@ -39,6 +39,12 @@ export const routes: Routes = [
     data: { roles: ['ROLE_ADMIN'] }
   },
   { 
+    path: 'usuarios/crear',
+    loadComponent: () => import('./features/usuarios/crear/crear-usuario.component').then(m => m.CrearUsuarioComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+  { 
     path: 'cambiar-password',
     loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
     canActivate: [authGuard]

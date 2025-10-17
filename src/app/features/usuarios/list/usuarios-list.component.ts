@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { User } from '../../../core/models/auth.model';
 
 @Component({
@@ -12,7 +13,9 @@ import { User } from '../../../core/models/auth.model';
     <div class="container">
       <div class="header">
         <h2>Gestión de Usuarios</h2>
-        <button class="btn-back" (click)="volver()">← Volver</button>
+        <div class="actions">
+          <button class="btn-primary" (click)="crearUsuario()">+ Crear Usuario</button>
+        </div>
       </div>
 
       <div *ngIf="isLoading" class="loading">
@@ -27,33 +30,45 @@ import { User } from '../../../core/models/auth.model';
               <th>Email</th>
               <th>Roles</th>
               <th>Estado</th>
+              <th>Consolidados</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let user of usuarios">
-              <td><strong>{{ user.username }}</strong></td>
-              <td>{{ user.email }}</td>
+            <tr *ngFor="let user of usuariosConStats">
+              <td><strong>{{ user.usuario.username }}</strong></td>
+              <td>{{ user.usuario.email }}</td>
               <td>
-                <span class="badge" *ngFor="let role of user.roles">
+                <span class="badge" *ngFor="let role of user.usuario.roles">
                   {{ role.name.replace('ROLE_', '') }}
                 </span>
               </td>
               <td>
-                <span [class]="user.enabled ? 'status-active' : 'status-inactive'">
-                  {{ user.enabled ? 'Activo' : 'Inactivo' }}
+                <span [class]="user.usuario.enabled ? 'status-active' : 'status-inactive'">
+                  {{ user.usuario.enabled ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
               <td>
+                <div class="stats-mini">
+                  <span class="stat-item" title="Creados">📝 {{ user.creados }}</span>
+                  <span class="stat-item" title="Asignados">📌 {{ user.asignados }}</span>
+                </div>
+              </td>
+              <td>
+                <button 
+                  class="btn-small btn-info"
+                  (click)="verConsolidados(user.usuario.username)">
+                  Ver Consolidados
+                </button>
                 <button 
                   class="btn-small btn-primary"
-                  (click)="asignarRol(user.username)"
-                  *ngIf="!tieneRolAdmin(user)">
+                  (click)="asignarRol(user.usuario.username)"
+                  *ngIf="!tieneRolAdmin(user.usuario)">
                   Hacer Admin
                 </button>
                 <button 
                   class="btn-small btn-danger"
-                  (click)="eliminarUsuario(user.username)">
+                  (click)="eliminarUsuario(user.usuario.username)">
                   Eliminar
                 </button>
               </td>
@@ -65,7 +80,7 @@ import { User } from '../../../core/models/auth.model';
   `,
   styles: [`
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 40px auto;
       padding: 20px;
     }
@@ -77,11 +92,16 @@ import { User } from '../../../core/models/auth.model';
       margin-bottom: 30px;
     }
 
-    .btn-back {
-      background: #6c757d;
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: #007bff;
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
     }
@@ -96,7 +116,7 @@ import { User } from '../../../core/models/auth.model';
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      overflow: hidden;
+      overflow-x: auto;
     }
 
     table {
@@ -145,6 +165,16 @@ import { User } from '../../../core/models/auth.model';
       font-weight: 500;
     }
 
+    .stats-mini {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-item {
+      font-size: 13px;
+      color: #666;
+    }
+
     .btn-small {
       padding: 6px 12px;
       border: none;
@@ -156,6 +186,11 @@ import { User } from '../../../core/models/auth.model';
 
     .btn-primary {
       background: #007bff;
+      color: white;
+    }
+
+    .btn-info {
+      background: #17a2b8;
       color: white;
     }
 
@@ -171,28 +206,47 @@ import { User } from '../../../core/models/auth.model';
 })
 export class UsuariosListComponent implements OnInit {
   usuarios: User[] = [];
+  usuariosConStats: any[] = [];
+  consolidados: any[] = [];
   isLoading = true;
 
   constructor(
     private authService: AuthService,
+    private consolidadoService: ConsolidadoService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.cargarUsuarios();
+    this.cargarDatos();
   }
 
-  cargarUsuarios(): void {
+  cargarDatos(): void {
     this.isLoading = true;
-    this.authService.getAllUsers().subscribe({
-      next: (data) => {
-        this.usuarios = data;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar usuarios', error);
-        this.isLoading = false;
-      }
+    
+    // Cargar usuarios y consolidados
+    Promise.all([
+      this.authService.getAllUsers().toPromise(),
+      this.consolidadoService.obtenerTodos().toPromise()
+    ]).then(([usuarios, consolidados]) => {
+      this.usuarios = usuarios || [];
+      this.consolidados = consolidados || [];
+      
+      // Calcular estadísticas por usuario
+      this.usuariosConStats = this.usuarios.map(user => {
+        const creados = this.consolidados.filter(c => c.usuarioReporta === user.username).length;
+        const asignados = this.consolidados.filter(c => c.usuarioAsignado === user.username).length;
+        
+        return {
+          usuario: user,
+          creados,
+          asignados
+        };
+      });
+      
+      this.isLoading = false;
+    }).catch(error => {
+      console.error('Error al cargar datos', error);
+      this.isLoading = false;
     });
   }
 
@@ -200,12 +254,22 @@ export class UsuariosListComponent implements OnInit {
     return user.roles.some(r => r.name === 'ROLE_ADMIN');
   }
 
+  crearUsuario(): void {
+    this.router.navigate(['/usuarios/crear']);
+  }
+
+  verConsolidados(username: string): void {
+    this.router.navigate(['/consolidados'], { 
+      queryParams: { usuario: username } 
+    });
+  }
+
   asignarRol(username: string): void {
     if (confirm(`¿Asignar rol ADMIN a ${username}?`)) {
       this.authService.assignRole(username, 'ROLE_ADMIN').subscribe({
         next: () => {
           alert('Rol asignado correctamente');
-          this.cargarUsuarios();
+          this.cargarDatos();
         },
         error: (error) => {
           alert('Error al asignar rol');
@@ -219,16 +283,12 @@ export class UsuariosListComponent implements OnInit {
       this.authService.deleteUser(username).subscribe({
         next: () => {
           alert('Usuario eliminado correctamente');
-          this.cargarUsuarios();
+          this.cargarDatos();
         },
         error: (error) => {
           alert('Error al eliminar usuario');
         }
       });
     }
-  }
-
-  volver(): void {
-    this.router.navigate(['/consolidados']);
   }
 }
