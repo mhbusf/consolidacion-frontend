@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/auth.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-asignar-consolidado',
@@ -113,7 +114,8 @@ export class AsignarConsolidadoComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private consolidadoService: ConsolidadoService,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -139,15 +141,15 @@ export class AsignarConsolidadoComponent implements OnInit {
 
     this.isLoading = true;
     this.consolidadoService.asignarUsuario(this.consolidadoId, this.usuarioSeleccionado).subscribe({
-      next: () => {
-        alert('Consolidado asignado correctamente');
-        this.router.navigate(['/consolidados']);
-      },
-      error: (error) => {
-        alert('Error al asignar');
-        this.isLoading = false;
-      }
-    });
+  next: () => {
+    this.notificationService.success('Consolidado asignado correctamente');
+    this.router.navigate(['/consolidados']);
+  },
+  error: (error) => {
+    this.notificationService.error('Error al asignar');
+    this.isLoading = false;
+  }
+});
   }
 
   cancelar(): void {

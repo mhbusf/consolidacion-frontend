@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-crear-usuario',
@@ -181,7 +182,8 @@ export class CrearUsuarioComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {
     this.userForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -205,28 +207,27 @@ export class CrearUsuarioComponent {
 
     // Primero registrar el usuario
     this.authService.register({ username, email, password }).subscribe({
+  next: () => {
+    this.authService.assignRole(username, role).subscribe({
       next: () => {
-        // Luego asignar el rol
-        this.authService.assignRole(username, role).subscribe({
-          next: () => {
-            this.successMessage = 'Usuario creado correctamente';
-            this.userForm.reset();
-            this.isLoading = false;
-            setTimeout(() => {
-              this.router.navigate(['/usuarios']);
-            }, 2000);
-          },
-          error: () => {
-            this.errorMessage = 'Usuario creado pero error al asignar rol';
-            this.isLoading = false;
-          }
-        });
+        this.notificationService.success('Usuario creado correctamente');
+        this.userForm.reset();
+        this.isLoading = false;
+        setTimeout(() => {
+          this.router.navigate(['/usuarios']);
+        }, 2000);
       },
-      error: (error) => {
-        this.errorMessage = 'Error al crear usuario';
+      error: () => {
+        this.notificationService.warning('Usuario creado pero error al asignar rol');
         this.isLoading = false;
       }
     });
+  },
+  error: (error) => {
+    this.notificationService.error('Error al crear usuario');
+    this.isLoading = false;
+  }
+});
   }
 
   cancelar(): void {

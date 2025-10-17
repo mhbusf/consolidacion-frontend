@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
+import { NotificationService } from '../../../core/services/notification.service';
+
 
 @Component({
   selector: 'app-consolidado-create',
@@ -209,7 +211,8 @@ export class ConsolidadoCreateComponent {
   constructor(
     private fb: FormBuilder,
     private consolidadoService: ConsolidadoService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {
     this.consolidadoForm = this.fb.group({
   nombre: ['', [
@@ -248,14 +251,15 @@ export class ConsolidadoCreateComponent {
     this.errorMessage = '';
 
     this.consolidadoService.crear(this.consolidadoForm.value).subscribe({
-      next: () => {
-        this.router.navigate(['/consolidados']);
-      },
-      error: (error) => {
-        this.errorMessage = 'Error al crear el consolidado';
-        this.isLoading = false;
-      }
-    });
+  next: () => {
+    this.notificationService.success('Consolidado creado correctamente');
+    this.router.navigate(['/consolidados']);
+  },
+  error: (error) => {
+    this.notificationService.error('Error al crear el consolidado');
+    this.isLoading = false;
+  }
+});
   }
 
   cancelar(): void {

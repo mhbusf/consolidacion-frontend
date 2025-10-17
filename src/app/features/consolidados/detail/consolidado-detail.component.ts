@@ -6,6 +6,7 @@ import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ComentarioService } from '../../../core/services/comentario.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { ComentarioResponse } from '../../../core/models/comentario.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-consolidado-detail',
@@ -289,7 +290,8 @@ export class ConsolidadoDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private consolidadoService: ConsolidadoService,
-    private comentarioService: ComentarioService
+    private comentarioService: ComentarioService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -333,18 +335,19 @@ export class ConsolidadoDetailComponent implements OnInit {
     this.isLoadingComentario = true;
 
     this.comentarioService.agregar(this.consolidado.id, {
-      contenido: this.nuevoComentario
-    }).subscribe({
-      next: (comentario) => {
-        this.comentarios.unshift(comentario);
-        this.nuevoComentario = '';
-        this.isLoadingComentario = false;
-      },
-      error: (error) => {
-        alert('Error al agregar comentario');
-        this.isLoadingComentario = false;
-      }
-    });
+  contenido: this.nuevoComentario
+}).subscribe({
+  next: (comentario) => {
+    this.comentarios.unshift(comentario);
+    this.nuevoComentario = '';
+    this.isLoadingComentario = false;
+    this.notificationService.success('Comentario agregado');
+  },
+  error: (error) => {
+    this.notificationService.error('Error al agregar comentario');
+    this.isLoadingComentario = false;
+  }
+});
   }
 
   volver(): void {

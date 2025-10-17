@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-register',
@@ -199,7 +200,8 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService  
   ) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -229,15 +231,15 @@ export class RegisterComponent {
 
     this.authService.register({ username, email, password }).subscribe({
       next: () => {
-        this.successMessage = 'Usuario registrado correctamente. Redirigiendo...';
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
-      },
-      error: (error) => {
-        this.errorMessage = 'Error al registrar usuario';
-        this.isLoading = false;
-      }
-    });
+        this.notificationService.success('Usuario registrado correctamente');
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+      }, 2000);
+    },
+    error: (error) => {
+      this.notificationService.error('Error al registrar usuario');
+      this.isLoading = false;
+    }
+  });
   }
 }
