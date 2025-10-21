@@ -41,24 +41,24 @@ export class DashboardComponent implements OnInit {
   }
 
   verConsolidado(id: number): void {
-    this.router.navigate(['/consolidados/detail', id]);
+    this.router.navigate(['/consolidados', id]);
   }
 
   getEstadoClass(estado: string): string {
     const clases: { [key: string]: string } = {
-      'PENDIENTE': 'bg-warning',
-      'ASIGNADO': 'bg-info',
-      'EN_PROCESO': 'bg-primary',
-      'GDC': 'bg-success',
-      'CERRADO': 'bg-secondary'
+      'PENDIENTE': 'badge-warning',
+      'ASIGNADO': 'badge-info',
+      'EN_PROCESO': 'badge-primary',
+      'GDC': 'badge-success',
+      'CERRADO': 'badge-secondary'
     };
-    return clases[estado] || 'bg-secondary';
+    return clases[estado] || 'badge-secondary';
   }
 
   getAtrasoClass(dias: number): string {
     if (dias === 0) return 'text-warning';
     if (dias <= 2) return 'text-warning';
     if (dias <= 5) return 'text-danger';
-    return 'text-danger fw-bold';
+    return 'text-danger fw-bold pulse';
   }
 }

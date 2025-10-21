@@ -17,6 +17,11 @@ import { JwtResponse } from '../../../core/models/auth.model';
         </div>
 
         <ul class="nav-menu">
+          <li *ngIf="isAdmin">
+            <a routerLink="/dashboard" routerLinkActive="active">
+              📊 Dashboard
+            </a>
+          </li>
           <li>
             <a routerLink="/consolidados" routerLinkActive="active">
               Consolidados
@@ -57,7 +62,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
     }
 
     .nav-container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
