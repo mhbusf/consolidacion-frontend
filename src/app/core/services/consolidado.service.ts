@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConsolidadoResponse, ConsolidadoRequest } from '../models/consolidado.model';
+import { environment } from '../../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConsolidadoService {
-  private apiUrl = 'http://localhost:8080/api/consolidados';
+  private apiUrl = `${environment.apiUrl}/consolidados`;
 
   constructor(private http: HttpClient) {}
 

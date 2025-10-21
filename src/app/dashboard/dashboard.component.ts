@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardService } from '../services/dashboard.service';
-import { Dashboard } from '../models/consolidado.model';
 import { Router } from '@angular/router';
+import { DashboardService } from '../core/services/dashboard.service';
+import { Dashboard } from '../core/models/consolidado.model';
 
 @Component({
   selector: 'app-dashboard',

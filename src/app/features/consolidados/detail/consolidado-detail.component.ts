@@ -85,7 +85,7 @@ import { NotificationService } from '../../../core/services/notification.service
 
             <div class="comentario" *ngFor="let com of comentarios">
               <div class="comentario-header">
-                <strong>{{ com.usuario }}</strong>
+                <strong>{{ com.username }}</strong>
                 <span class="fecha">{{ com.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
               <p class="comentario-contenido">{{ com.contenido }}</p>
