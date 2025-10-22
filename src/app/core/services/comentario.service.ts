@@ -19,4 +19,12 @@ export class ComentarioService {
   listar(consolidadoId: number): Observable<ComentarioResponse[]> {
     return this.http.get<ComentarioResponse[]>(`${this.apiUrl}/${consolidadoId}/comentarios`);
   }
+
+  // NUEVO: Cerrar consolidado con GDC
+  cerrarConGDC(consolidadoId: number, gdc: string, comentarioCierre: string): Observable<void> {
+    return this.http.post<void>(
+      `${this.apiUrl}/${consolidadoId}/cerrar-gdc`,
+      { gdc, comentarioCierre }
+    );
+  }
 }

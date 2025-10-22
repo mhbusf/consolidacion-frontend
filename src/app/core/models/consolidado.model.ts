@@ -41,7 +41,7 @@ export interface ConsolidadoRequest {
   motivoOracion: string;
 }
 
-// Response del backend
+// Response del backend - ACTUALIZADO CON NUEVOS CAMPOS
 export interface ConsolidadoResponse {
   id: number;
   nombre: string;
@@ -59,6 +59,10 @@ export interface ConsolidadoResponse {
   };
   fechaIngreso: string;
   estado?: string;
+  gdc?: string;                    // ← NUEVO
+  fechaCierre?: string;            // ← NUEVO
+  comentarioCierre?: string;       // ← NUEVO
+  fechaActualizacion?: string;     // ← NUEVO
 }
 
 // Para Dashboard
