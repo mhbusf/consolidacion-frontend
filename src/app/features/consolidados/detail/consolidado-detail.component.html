@@ -12,8 +12,8 @@
       <div class="card-header">
         <h2>{{ consolidado.nombre }}</h2>
         <div class="badges">
-          <span class="badge" *ngIf="consolidado.usuarioAsignado">
-            Asignado a: {{ consolidado.usuarioAsignado.username }}
+           <span class="badge" *ngIf="consolidado.usuarioAsignado">
+            Asignado a: {{ consolidado.usuarioAsignado }}
           </span>
           <span class="badge badge-warning" *ngIf="!consolidado.usuarioAsignado">
             Sin asignar
@@ -49,7 +49,8 @@
           </div>
           <div class="info-item">
             <strong>Reportado por:</strong>
-            <span>{{ consolidado.usuarioReporta?.username }}</span>
+            <span *ngIf="consolidado.usuarioReporta">{{ consolidado.usuarioReporta }}</span>
+            <span *ngIf="!consolidado.usuarioReporta" class="text-muted">No especificado</span>
           </div>
         </div>
 

@@ -72,7 +72,7 @@ import { User } from '../../../core/models/auth.model';
             <h3>{{ c.nombre }}</h3>
             <div class="badges">
               <span class="badge" *ngIf="c.usuarioAsignado">
-                Asignado a: {{ c.usuarioAsignado.username }}
+                Asignado a: {{ c.usuarioAsignado }}
               </span>
               <span class="badge badge-warning" *ngIf="!c.usuarioAsignado">
                 Sin asignar
@@ -86,7 +86,7 @@ import { User } from '../../../core/models/auth.model';
             <p><strong>Invitado por:</strong> {{ c.quienInvito }}</p>
             <p><strong>Motivo:</strong> {{ c.motivoOracion }}</p>
             <p class="meta">
-              <small>Reportado por: {{ c.usuarioReporta?.username }}</small>
+              <small>Reportado por: {{ c.usuarioReporta }}</small>
             </p>
             <p class="meta">
               <small>Fecha: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
@@ -372,7 +372,7 @@ export class ConsolidadosListComponent implements OnInit {
         this.consolidados = this.consolidadosTodos.filter(c => !c.usuarioAsignado);
         break;
       case 'mis-consolidados':
-        this.consolidados = this.consolidadosTodos.filter(c => c.usuarioReporta?.username === this.currentUsername);
+        this.consolidados = this.consolidadosTodos.filter(c => c.usuarioReporta === this.currentUsername);
         break;
       case 'por-usuario':
         if (!this.usuarioFiltro) {
@@ -385,7 +385,8 @@ export class ConsolidadosListComponent implements OnInit {
   filtrarPorUsuario(): void {
     if (this.usuarioFiltro) {
       this.consolidados = this.consolidadosTodos.filter(
-        c => c.usuarioAsignado?.username === this.usuarioFiltro || c.usuarioReporta?.username === this.usuarioFiltro
+        c => c.usuarioAsignado === this.usuarioFiltro || 
+     c.usuarioReporta === this.usuarioFiltro
     );
     }
   }

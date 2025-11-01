@@ -59,15 +59,9 @@ export interface ConsolidadoResponse {
   edad: number;
   quienInvito: string;
   motivoOracion: string;
-  comuna: Comuna | null;  // ← NUEVO (objeto completo)
-  usuarioReporta?: {
-    id: number;
-    username: string;
-  };
-  usuarioAsignado?: {
-    id: number;
-    username: string;
-  };
+  comuna: Comuna | null;
+  usuarioReporta: string | null;  // ← CAMBIAR A STRING (no objeto)
+  usuarioAsignado: string | null; // ← CAMBIAR A STRING (no objeto)
   fechaIngreso: string;
   estado?: string;
   gdc?: string;
