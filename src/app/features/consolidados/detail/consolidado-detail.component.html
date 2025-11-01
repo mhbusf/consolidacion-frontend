@@ -35,6 +35,15 @@
             <span>{{ consolidado.edad }} años</span>
           </div>
           <div class="info-item">
+            <strong>Comuna:</strong>
+            <span *ngIf="consolidado.comuna">
+              {{ consolidado.comuna.nombre }}
+            </span>
+            <span *ngIf="!consolidado.comuna" class="text-muted">
+              No especificada
+            </span>
+          </div>
+          <div class="info-item">
             <strong>Invitado por:</strong>
             <span>{{ consolidado.quienInvito }}</span>
           </div>

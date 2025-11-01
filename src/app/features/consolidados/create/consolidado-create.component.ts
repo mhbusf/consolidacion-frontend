@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
+import { ComunaService } from '../../../core/services/comuna.service';
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 import { NotificationService } from '../../../core/services/notification.service';
-
+import { Comuna } from '../../../core/models/consolidado.model';
 
 @Component({
   selector: 'app-consolidado-create',
@@ -40,13 +41,13 @@ import { NotificationService } from '../../../core/services/notification.service
                 class="form-control"
                 placeholder="+56912345678">
               <div class="error" *ngIf="consolidadoForm.get('telefono')?.invalid && consolidadoForm.get('telefono')?.touched">
-  <span *ngIf="consolidadoForm.get('telefono')?.hasError('required')">
-    El teléfono es requerido
-  </span>
-  <span *ngIf="consolidadoForm.get('telefono')?.hasError('telefonoInvalido')">
-    Formato inválido. Use: +56912345678 o 912345678
-  </span>
-</div>
+                <span *ngIf="consolidadoForm.get('telefono')?.hasError('required')">
+                  El teléfono es requerido
+                </span>
+                <span *ngIf="consolidadoForm.get('telefono')?.hasError('telefonoInvalido')">
+                  Formato inválido. Use: +56912345678 o 912345678
+                </span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -60,6 +61,28 @@ import { NotificationService } from '../../../core/services/notification.service
               <div class="error" *ngIf="consolidadoForm.get('edad')?.invalid && consolidadoForm.get('edad')?.touched">
                 Edad debe ser entre 1 y 120 años
               </div>
+            </div>
+          </div>
+
+          <!-- NUEVO: Campo Comuna -->
+          <div class="form-group">
+            <label for="comunaId">Comuna *</label>
+            <select 
+              id="comunaId"
+              formControlName="comunaId"
+              class="form-control"
+              [disabled]="isLoadingComunas">
+              <option [value]="0">{{ isLoadingComunas ? 'Cargando comunas...' : 'Seleccione una comuna' }}</option>
+              <optgroup *ngFor="let provincia of getProvincias()" [label]="provincia">
+                <option 
+                  *ngFor="let comuna of getComunasPorProvincia(provincia)" 
+                  [value]="comuna.id">
+                  {{ comuna.nombre }}
+                </option>
+              </optgroup>
+            </select>
+            <div class="error" *ngIf="consolidadoForm.get('comunaId')?.invalid && consolidadoForm.get('comunaId')?.touched">
+              Debe seleccionar una comuna
             </div>
           </div>
 
@@ -156,6 +179,15 @@ import { NotificationService } from '../../../core/services/notification.service
       border-color: #007bff;
     }
 
+    select.form-control {
+      cursor: pointer;
+    }
+
+    select.form-control:disabled {
+      background-color: #f5f5f5;
+      cursor: not-allowed;
+    }
+
     textarea.form-control {
       resize: vertical;
     }
@@ -203,42 +235,76 @@ import { NotificationService } from '../../../core/services/notification.service
     }
   `]
 })
-export class ConsolidadoCreateComponent {
+export class ConsolidadoCreateComponent implements OnInit {
   consolidadoForm: FormGroup;
   isLoading = false;
+  isLoadingComunas = true;
   errorMessage = '';
+  comunas: Comuna[] = [];
 
   constructor(
     private fb: FormBuilder,
     private consolidadoService: ConsolidadoService,
+    private comunaService: ComunaService,
     private router: Router,
     private notificationService: NotificationService
   ) {
     this.consolidadoForm = this.fb.group({
-  nombre: ['', [
-    Validators.required, 
-    Validators.minLength(3),
-    Validators.maxLength(100)
-  ]],
-  telefono: ['', [
-    Validators.required,
-    TelefonoChilenoValidator.validar()
-  ]],
-  edad: ['', [
-    Validators.required, 
-    Validators.min(1), 
-    Validators.max(120)
-  ]],
-  quienInvito: ['', [
-    Validators.required,
-    Validators.maxLength(100)
-  ]],
-  motivoOracion: ['', [
-    Validators.required, 
-    Validators.minLength(10),
-    Validators.maxLength(500)
-  ]]
-});
+      nombre: ['', [
+        Validators.required, 
+        Validators.minLength(3),
+        Validators.maxLength(100)
+      ]],
+      telefono: ['', [
+        Validators.required,
+        TelefonoChilenoValidator.validar()
+      ]],
+      edad: ['', [
+        Validators.required, 
+        Validators.min(1), 
+        Validators.max(120)
+      ]],
+      comunaId: [0, [
+        Validators.required,
+        Validators.min(1)
+      ]],
+      quienInvito: ['', [
+        Validators.required,
+        Validators.maxLength(100)
+      ]],
+      motivoOracion: ['', [
+        Validators.required, 
+        Validators.minLength(10),
+        Validators.maxLength(500)
+      ]]
+    });
+  }
+
+  ngOnInit(): void {
+    this.cargarComunas();
+  }
+
+  cargarComunas(): void {
+    this.comunaService.listarTodas().subscribe({
+      next: (data) => {
+        this.comunas = data;
+        this.isLoadingComunas = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar comunas', error);
+        this.notificationService.error('Error al cargar comunas');
+        this.isLoadingComunas = false;
+      }
+    });
+  }
+
+  getProvincias(): string[] {
+    const provincias = [...new Set(this.comunas.map(c => c.provincia))];
+    return provincias.sort();
+  }
+
+  getComunasPorProvincia(provincia: string): Comuna[] {
+    return this.comunas.filter(c => c.provincia === provincia);
   }
 
   onSubmit(): void {
@@ -251,15 +317,15 @@ export class ConsolidadoCreateComponent {
     this.errorMessage = '';
 
     this.consolidadoService.crear(this.consolidadoForm.value).subscribe({
-  next: () => {
-    this.notificationService.success('Consolidado creado correctamente');
-    this.router.navigate(['/consolidados']);
-  },
-  error: (error) => {
-    this.notificationService.error('Error al crear el consolidado');
-    this.isLoading = false;
-  }
-});
+      next: () => {
+        this.notificationService.success('Consolidado creado correctamente');
+        this.router.navigate(['/consolidados']);
+      },
+      error: (error) => {
+        this.notificationService.error('Error al crear el consolidado');
+        this.isLoading = false;
+      }
+    });
   }
 
   cancelar(): void {

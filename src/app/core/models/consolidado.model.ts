@@ -1,3 +1,11 @@
+// Modelo de Comuna
+export interface Comuna {
+  id: number;
+  nombre: string;
+  provincia: string;
+  region: string;
+}
+
 // Interfaz básica de Consolidado
 export interface Consolidado {
   id?: number;
@@ -6,6 +14,7 @@ export interface Consolidado {
   edad: number;
   quienInvito: string;
   motivoOracion: string;
+  comunaId?: number;
   usuarioReporta?: {
     id: number;
     username: string;
@@ -39,9 +48,10 @@ export interface ConsolidadoRequest {
   edad: number;
   quienInvito: string;
   motivoOracion: string;
+  comunaId: number;  // ← NUEVO
 }
 
-// Response del backend - ACTUALIZADO CON NUEVOS CAMPOS
+// Response del backend
 export interface ConsolidadoResponse {
   id: number;
   nombre: string;
@@ -49,6 +59,7 @@ export interface ConsolidadoResponse {
   edad: number;
   quienInvito: string;
   motivoOracion: string;
+  comuna: Comuna | null;  // ← NUEVO (objeto completo)
   usuarioReporta?: {
     id: number;
     username: string;
@@ -59,10 +70,10 @@ export interface ConsolidadoResponse {
   };
   fechaIngreso: string;
   estado?: string;
-  gdc?: string;                    // ← NUEVO
-  fechaCierre?: string;            // ← NUEVO
-  comentarioCierre?: string;       // ← NUEVO
-  fechaActualizacion?: string;     // ← NUEVO
+  gdc?: string;
+  fechaCierre?: string;
+  comentarioCierre?: string;
+  fechaActualizacion?: string;
 }
 
 // Para Dashboard
@@ -82,6 +93,14 @@ export interface ConsolidadoEstado {
   diasDeAtraso: number;
 }
 
+export interface UsuarioEstadistica {
+  username: string;
+  email: string;
+  totalAsignados: number;
+  alDia: number;
+  conAtrasos: number;
+}
+
 export interface Dashboard {
   totalConsolidados: number;
   consolidadosEnProceso: number;
@@ -90,4 +109,5 @@ export interface Dashboard {
   consolidadosAlDia: number;
   consolidadosAtrasados: number;
   consolidadosConAtrasos: ConsolidadoEstado[];
+  estadisticasPorUsuario: UsuarioEstadistica[];
 }
