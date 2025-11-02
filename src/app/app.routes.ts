@@ -9,10 +9,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
   
-  {
-    path: 'register',
-    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
-  },
+  // ELIMINADO: register (solo admins pueden crear usuarios)
   
   {
     path: 'dashboard',
@@ -61,7 +58,7 @@ export const routes: Routes = [
   },
   
   {
-    path: 'cambiar-password',
+    path: 'change-password',
     loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
     canActivate: [authGuard]
   },

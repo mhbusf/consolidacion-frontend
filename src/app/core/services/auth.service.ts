@@ -83,4 +83,17 @@ changeUserPassword(username: string, newPassword: string): Observable<string> {
     { responseType: 'text' }
   );
 }
+/**
+ * Solicitar recuperación de contraseña
+ */
+forgotPassword(email: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+}
+
+/**
+ * Resetear contraseña con token
+ */
+resetPassword(token: string, newPassword: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/reset-password`, { token, newPassword });
+}
 }
