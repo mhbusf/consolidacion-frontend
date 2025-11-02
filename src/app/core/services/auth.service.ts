@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { LoginRequest, RegisterRequest, JwtResponse, User, ChangePasswordRequest } from '../models/auth.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -75,25 +76,19 @@ export class AuthService {
     return this.http.delete(`${this.apiUrl}/users/${username}`, { responseType: 'text' });
   }
 
-  // Admin cambia contraseña de cualquier usuario
-changeUserPassword(username: string, newPassword: string): Observable<string> {
-  return this.http.put(
-    `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`, 
-    {}, 
-    { responseType: 'text' }
-  );
-}
-/**
- * Solicitar recuperación de contraseña
- */
-forgotPassword(email: string): Observable<any> {
-  return this.http.post(`${this.apiUrl}/forgot-password`, { email });
-}
+  changeUserPassword(username: string, newPassword: string): Observable<string> {
+    return this.http.put(
+      `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`, 
+      {}, 
+      { responseType: 'text' }
+    );
+  }
 
-/**
- * Resetear contraseña con token
- */
-resetPassword(token: string, newPassword: string): Observable<any> {
-  return this.http.post(`${this.apiUrl}/reset-password`, { token, newPassword });
-}
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, { token, newPassword });
+  }
 }
