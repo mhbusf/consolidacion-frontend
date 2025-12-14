@@ -12,6 +12,7 @@ export interface RegisterRequest {
 export interface JwtResponse {
   token: string;
   username: string;
+  email: string; // ← AGREGADO: El backend sí envía el email
   roles: Role[];
 }
 
@@ -31,4 +32,10 @@ export interface User {
 export interface ChangePasswordRequest {
   oldPassword: string;
   newPassword: string;
+}
+
+// Helper enum para validar roles
+export enum RoleName {
+  ADMIN = 'ROLE_ADMIN',
+  USER = 'ROLE_USER',
 }

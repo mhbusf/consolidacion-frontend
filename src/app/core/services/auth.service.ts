@@ -1,11 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { LoginRequest, RegisterRequest, JwtResponse, User, ChangePasswordRequest } from '../models/auth.model';
+import {
+  LoginRequest,
+  RegisterRequest,
+  JwtResponse,
+  User,
+  ChangePasswordRequest,
+} from '../models/auth.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
@@ -20,12 +26,14 @@ export class AuthService {
   }
 
   register(request: RegisterRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/register`, request, { responseType: 'text' });
+    return this.http.post(`${this.apiUrl}/register`, request, {
+      responseType: 'text',
+    });
   }
 
   login(request: LoginRequest): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${this.apiUrl}/login`, request).pipe(
-      tap(response => {
+      tap((response) => {
         localStorage.setItem('currentUser', JSON.stringify(response));
         localStorage.setItem('token', response.token);
         this.currentUserSubject.next(response);
@@ -49,7 +57,7 @@ export class AuthService {
 
   hasRole(roleName: string): boolean {
     const user = this.currentUserSubject.value;
-    return user?.roles.some(role => role.name === roleName) || false;
+    return user?.roles.some((role) => role.name === roleName) || false;
   }
 
   isAdmin(): boolean {
@@ -65,21 +73,32 @@ export class AuthService {
   }
 
   assignRole(username: string, roleName: string): Observable<string> {
-    return this.http.put(`${this.apiUrl}/users/${username}/roles?roleName=${roleName}`, {}, { responseType: 'text' });
+    return this.http.put(
+      `${this.apiUrl}/users/${username}/roles?roleName=${roleName}`,
+      {},
+      { responseType: 'text' }
+    );
   }
 
   changePassword(request: ChangePasswordRequest): Observable<string> {
-    return this.http.put(`${this.apiUrl}/password`, request, { responseType: 'text' });
+    return this.http.put(`${this.apiUrl}/password`, request, {
+      responseType: 'text',
+    });
   }
 
   deleteUser(username: string): Observable<string> {
-    return this.http.delete(`${this.apiUrl}/users/${username}`, { responseType: 'text' });
+    return this.http.delete(`${this.apiUrl}/users/${username}`, {
+      responseType: 'text',
+    });
   }
 
-  changeUserPassword(username: string, newPassword: string): Observable<string> {
+  changeUserPassword(
+    username: string,
+    newPassword: string
+  ): Observable<string> {
     return this.http.put(
-      `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`, 
-      {}, 
+      `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`,
+      {},
       { responseType: 'text' }
     );
   }
@@ -89,6 +108,9 @@ export class AuthService {
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reset-password`, { token, newPassword });
+    return this.http.post(`${this.apiUrl}/reset-password`, {
+      token,
+      newPassword,
+    });
   }
 }
