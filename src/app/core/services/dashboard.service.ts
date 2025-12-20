@@ -5,7 +5,7 @@ import { Dashboard } from '../models/consolidado.model';
 import { environment } from '../../../environments/environment.prod';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DashboardService {
   private apiUrl = `${environment.apiUrl}/dashboard`;
