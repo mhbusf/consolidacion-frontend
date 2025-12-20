@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ComunaService } from '../../../core/services/comuna.service';
@@ -20,13 +25,20 @@ import { Comuna } from '../../../core/models/consolidado.model';
         <form [formGroup]="consolidadoForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="nombre">Nombre Completo *</label>
-            <input 
-              type="text" 
-              id="nombre" 
-              formControlName="nombre" 
+            <input
+              type="text"
+              id="nombre"
+              formControlName="nombre"
               class="form-control"
-              placeholder="Ej: Juan Pérez">
-            <div class="error" *ngIf="consolidadoForm.get('nombre')?.invalid && consolidadoForm.get('nombre')?.touched">
+              placeholder="Ej: Juan Pérez"
+            />
+            <div
+              class="error"
+              *ngIf="
+                consolidadoForm.get('nombre')?.invalid &&
+                consolidadoForm.get('nombre')?.touched
+              "
+            >
               El nombre es requerido (mínimo 3 caracteres)
             </div>
           </div>
@@ -34,17 +46,32 @@ import { Comuna } from '../../../core/models/consolidado.model';
           <div class="form-row">
             <div class="form-group">
               <label for="telefono">Teléfono *</label>
-              <input 
-                type="tel" 
-                id="telefono" 
-                formControlName="telefono" 
+              <input
+                type="tel"
+                id="telefono"
+                formControlName="telefono"
                 class="form-control"
-                placeholder="+56912345678">
-              <div class="error" *ngIf="consolidadoForm.get('telefono')?.invalid && consolidadoForm.get('telefono')?.touched">
-                <span *ngIf="consolidadoForm.get('telefono')?.hasError('required')">
+                placeholder="+56912345678"
+              />
+              <div
+                class="error"
+                *ngIf="
+                  consolidadoForm.get('telefono')?.invalid &&
+                  consolidadoForm.get('telefono')?.touched
+                "
+              >
+                <span
+                  *ngIf="consolidadoForm.get('telefono')?.hasError('required')"
+                >
                   El teléfono es requerido
                 </span>
-                <span *ngIf="consolidadoForm.get('telefono')?.hasError('telefonoInvalido')">
+                <span
+                  *ngIf="
+                    consolidadoForm
+                      .get('telefono')
+                      ?.hasError('telefonoInvalido')
+                  "
+                >
                   Formato inválido. Use: +56912345678 o 912345678
                 </span>
               </div>
@@ -52,62 +79,101 @@ import { Comuna } from '../../../core/models/consolidado.model';
 
             <div class="form-group">
               <label for="edad">Edad *</label>
-              <input 
-                type="number" 
-                id="edad" 
-                formControlName="edad" 
+              <input
+                type="number"
+                id="edad"
+                formControlName="edad"
                 class="form-control"
-                placeholder="25">
-              <div class="error" *ngIf="consolidadoForm.get('edad')?.invalid && consolidadoForm.get('edad')?.touched">
+                placeholder="25"
+              />
+              <div
+                class="error"
+                *ngIf="
+                  consolidadoForm.get('edad')?.invalid &&
+                  consolidadoForm.get('edad')?.touched
+                "
+              >
                 Edad debe ser entre 1 y 120 años
               </div>
             </div>
           </div>
 
-          <!-- NUEVO: Campo Comuna -->
           <div class="form-group">
             <label for="comunaId">Comuna *</label>
-            <select 
+            <select
               id="comunaId"
               formControlName="comunaId"
               class="form-control"
-              [disabled]="isLoadingComunas">
-              <option [value]="0">{{ isLoadingComunas ? 'Cargando comunas...' : 'Seleccione una comuna' }}</option>
-              <optgroup *ngFor="let provincia of getProvincias()" [label]="provincia">
-                <option 
-                  *ngFor="let comuna of getComunasPorProvincia(provincia)" 
-                  [value]="comuna.id">
+              [disabled]="isLoadingComunas"
+            >
+              <option [ngValue]="0">
+                {{
+                  isLoadingComunas
+                    ? 'Cargando comunas...'
+                    : 'Seleccione una comuna'
+                }}
+              </option>
+
+              <optgroup
+                *ngFor="let provincia of getProvincias()"
+                [label]="provincia"
+              >
+                <option
+                  *ngFor="let comuna of getComunasPorProvincia(provincia)"
+                  [ngValue]="comuna.id"
+                >
                   {{ comuna.nombre }}
                 </option>
               </optgroup>
             </select>
-            <div class="error" *ngIf="consolidadoForm.get('comunaId')?.invalid && consolidadoForm.get('comunaId')?.touched">
+
+            <div
+              class="error"
+              *ngIf="
+                consolidadoForm.get('comunaId')?.invalid &&
+                consolidadoForm.get('comunaId')?.touched
+              "
+            >
               Debe seleccionar una comuna
             </div>
           </div>
 
           <div class="form-group">
             <label for="quienInvito">¿Quién lo invitó? *</label>
-            <input 
-              type="text" 
-              id="quienInvito" 
-              formControlName="quienInvito" 
+            <input
+              type="text"
+              id="quienInvito"
+              formControlName="quienInvito"
               class="form-control"
-              placeholder="Ej: María González">
-            <div class="error" *ngIf="consolidadoForm.get('quienInvito')?.invalid && consolidadoForm.get('quienInvito')?.touched">
+              placeholder="Ej: María González"
+            />
+            <div
+              class="error"
+              *ngIf="
+                consolidadoForm.get('quienInvito')?.invalid &&
+                consolidadoForm.get('quienInvito')?.touched
+              "
+            >
               Este campo es requerido
             </div>
           </div>
 
           <div class="form-group">
             <label for="motivoOracion">Motivo de Oración *</label>
-            <textarea 
-              id="motivoOracion" 
-              formControlName="motivoOracion" 
+            <textarea
+              id="motivoOracion"
+              formControlName="motivoOracion"
               class="form-control"
               rows="4"
-              placeholder="Describe el motivo de oración o necesidad..."></textarea>
-            <div class="error" *ngIf="consolidadoForm.get('motivoOracion')?.invalid && consolidadoForm.get('motivoOracion')?.touched">
+              placeholder="Describe el motivo de oración o necesidad..."
+            ></textarea>
+            <div
+              class="error"
+              *ngIf="
+                consolidadoForm.get('motivoOracion')?.invalid &&
+                consolidadoForm.get('motivoOracion')?.touched
+              "
+            >
               El motivo de oración es requerido (mínimo 10 caracteres)
             </div>
           </div>
@@ -117,10 +183,19 @@ import { Comuna } from '../../../core/models/consolidado.model';
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isLoading">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="cancelar()"
+              [disabled]="isLoading"
+            >
               Cancelar
             </button>
-            <button type="submit" class="btn-primary" [disabled]="consolidadoForm.invalid || isLoading">
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="consolidadoForm.invalid || isLoading"
+            >
               {{ isLoading ? 'Guardando...' : 'Guardar' }}
             </button>
           </div>
@@ -128,112 +203,115 @@ import { Comuna } from '../../../core/models/consolidado.model';
       </div>
     </div>
   `,
-  styles: [`
-    .container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 20px;
-    }
+  styles: [
+    `
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+      }
 
-    .form-card {
-      background: white;
-      padding: 40px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
+      .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
 
-    h2 {
-      margin-bottom: 30px;
-      color: #333;
-    }
+      h2 {
+        margin-bottom: 30px;
+        color: #333;
+      }
 
-    .form-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-    }
+      .form-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+      }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+      .form-group {
+        margin-bottom: 20px;
+      }
 
-    label {
-      display: block;
-      margin-bottom: 5px;
-      color: #555;
-      font-weight: 500;
-    }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+      }
 
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
+      .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
 
-    .form-control:focus {
-      outline: none;
-      border-color: #007bff;
-    }
+      .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+      }
 
-    select.form-control {
-      cursor: pointer;
-    }
+      select.form-control {
+        cursor: pointer;
+      }
 
-    select.form-control:disabled {
-      background-color: #f5f5f5;
-      cursor: not-allowed;
-    }
+      select.form-control:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+      }
 
-    textarea.form-control {
-      resize: vertical;
-    }
+      textarea.form-control {
+        resize: vertical;
+      }
 
-    .error {
-      color: #dc3545;
-      font-size: 12px;
-      margin-top: 5px;
-    }
+      .error {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+      }
 
-    .form-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 30px;
-    }
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 30px;
+      }
 
-    .btn-primary, .btn-secondary {
-      padding: 10px 24px;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
+      .btn-primary,
+      .btn-secondary {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
 
-    .btn-primary {
-      background: #007bff;
-      color: white;
-    }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
 
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
 
-    .btn-primary:hover:not(:disabled),
-    .btn-secondary:hover:not(:disabled) {
-      opacity: 0.9;
-    }
+      .btn-primary:hover:not(:disabled),
+      .btn-secondary:hover:not(:disabled) {
+        opacity: 0.9;
+      }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  `]
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    `,
+  ],
 })
 export class ConsolidadoCreateComponent implements OnInit {
   consolidadoForm: FormGroup;
@@ -250,33 +328,32 @@ export class ConsolidadoCreateComponent implements OnInit {
     private notificationService: NotificationService
   ) {
     this.consolidadoForm = this.fb.group({
-      nombre: ['', [
-        Validators.required, 
-        Validators.minLength(3),
-        Validators.maxLength(100)
-      ]],
-      telefono: ['', [
-        Validators.required,
-        TelefonoChilenoValidator.validar()
-      ]],
-      edad: ['', [
-        Validators.required, 
-        Validators.min(1), 
-        Validators.max(120)
-      ]],
-      comunaId: [0, [
-        Validators.required,
-        Validators.min(1)
-      ]],
-      quienInvito: ['', [
-        Validators.required,
-        Validators.maxLength(100)
-      ]],
-      motivoOracion: ['', [
-        Validators.required, 
-        Validators.minLength(10),
-        Validators.maxLength(500)
-      ]]
+      nombre: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(100),
+        ],
+      ],
+      telefono: ['', [Validators.required, TelefonoChilenoValidator.validar()]],
+      edad: ['', [Validators.required, Validators.min(1), Validators.max(120)]],
+      comunaId: [
+        0,
+        [
+          Validators.required,
+          Validators.min(1), // Asegura que no sea 0
+        ],
+      ],
+      quienInvito: ['', [Validators.required, Validators.maxLength(100)]],
+      motivoOracion: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(10),
+          Validators.maxLength(500),
+        ],
+      ],
     });
   }
 
@@ -294,17 +371,17 @@ export class ConsolidadoCreateComponent implements OnInit {
         console.error('Error al cargar comunas', error);
         this.notificationService.error('Error al cargar comunas');
         this.isLoadingComunas = false;
-      }
+      },
     });
   }
 
   getProvincias(): string[] {
-    const provincias = [...new Set(this.comunas.map(c => c.provincia))];
+    const provincias = [...new Set(this.comunas.map((c) => c.provincia))];
     return provincias.sort();
   }
 
   getComunasPorProvincia(provincia: string): Comuna[] {
-    return this.comunas.filter(c => c.provincia === provincia);
+    return this.comunas.filter((c) => c.provincia === provincia);
   }
 
   onSubmit(): void {
@@ -316,15 +393,30 @@ export class ConsolidadoCreateComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.consolidadoService.crear(this.consolidadoForm.value).subscribe({
+    const formValue = this.consolidadoForm.value;
+
+    // === CORRECCIÓN CRÍTICA ===
+    // Convertimos explícitamente a número para evitar que se envíen como Strings
+    const requestPayload = {
+      ...formValue,
+      edad: Number(formValue.edad),
+      comunaId: Number(formValue.comunaId),
+    };
+
+    console.log('Enviando Payload:', requestPayload);
+
+    this.consolidadoService.crear(requestPayload).subscribe({
       next: () => {
         this.notificationService.success('Consolidado creado correctamente');
         this.router.navigate(['/consolidados']);
       },
       error: (error) => {
-        this.notificationService.error('Error al crear el consolidado');
+        console.error('Error Backend:', error);
+        this.notificationService.error(
+          'Error al crear el consolidado. Verifique los datos.'
+        );
         this.isLoading = false;
-      }
+      },
     });
   }
 
