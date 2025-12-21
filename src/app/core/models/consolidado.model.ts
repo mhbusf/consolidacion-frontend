@@ -6,6 +6,12 @@ export interface Comuna {
   region: string;
 }
 
+// ← NUEVO: Modelo de Reunión
+export interface Reunion {
+  id: number;
+  nombre: string;
+}
+
 // Interfaz básica de Consolidado
 export interface Consolidado {
   id?: number;
@@ -15,6 +21,7 @@ export interface Consolidado {
   quienInvito: string;
   motivoOracion: string;
   comunaId?: number;
+  reunionId?: number; // ← NUEVO
   usuarioReporta?: {
     id: number;
     username: string;
@@ -38,7 +45,7 @@ export enum EstadoConsolidado {
   ASIGNADO = 'ASIGNADO',
   EN_PROCESO = 'EN_PROCESO',
   GDC = 'GDC',
-  CERRADO = 'CERRADO'
+  CERRADO = 'CERRADO',
 }
 
 // Request para crear consolidado
@@ -48,7 +55,8 @@ export interface ConsolidadoRequest {
   edad: number;
   quienInvito: string;
   motivoOracion: string;
-  comunaId: number;  // ← NUEVO
+  comunaId: number;
+  reunionId?: number; // ← NUEVO (opcional)
 }
 
 // Response del backend
@@ -60,8 +68,8 @@ export interface ConsolidadoResponse {
   quienInvito: string;
   motivoOracion: string;
   comuna: Comuna | null;
-  usuarioReporta: string | null;  // ← CAMBIAR A STRING (no objeto)
-  usuarioAsignado: string | null; // ← CAMBIAR A STRING (no objeto)
+  usuarioReporta: string | null;
+  usuarioAsignado: string | null;
   fechaIngreso: string;
   estado?: string;
   gdc?: string;

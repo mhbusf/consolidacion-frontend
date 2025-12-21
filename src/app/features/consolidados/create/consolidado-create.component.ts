@@ -9,9 +9,10 @@ import {
 import { Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ComunaService } from '../../../core/services/comuna.service';
+import { ReunionService } from '../../../core/services/reunion.service'; // ← NUEVO
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Comuna } from '../../../core/models/consolidado.model';
+import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ← AGREGAR Reunion
 
 @Component({
   selector: 'app-consolidado-create',
@@ -136,6 +137,29 @@ import { Comuna } from '../../../core/models/consolidado.model';
             >
               Debe seleccionar una comuna
             </div>
+          </div>
+
+          <!-- ← NUEVO: Selector de Reunión -->
+          <div class="form-group">
+            <label for="reunionId">¿En qué reunión llegó?</label>
+            <select
+              id="reunionId"
+              formControlName="reunionId"
+              class="form-control"
+              [disabled]="isLoadingReuniones"
+            >
+              <option [ngValue]="null">
+                {{
+                  isLoadingReuniones
+                    ? 'Cargando reuniones...'
+                    : 'Seleccione una reunión (opcional)'
+                }}
+              </option>
+              <option *ngFor="let reunion of reuniones" [ngValue]="reunion.id">
+                {{ reunion.nombre }}
+              </option>
+            </select>
+            <small class="form-text">Este campo es opcional</small>
           </div>
 
           <div class="form-group">
@@ -268,6 +292,13 @@ import { Comuna } from '../../../core/models/consolidado.model';
         resize: vertical;
       }
 
+      .form-text {
+        display: block;
+        margin-top: 5px;
+        color: #6c757d;
+        font-size: 12px;
+      }
+
       .error {
         color: #dc3545;
         font-size: 12px;
@@ -317,13 +348,16 @@ export class ConsolidadoCreateComponent implements OnInit {
   consolidadoForm: FormGroup;
   isLoading = false;
   isLoadingComunas = true;
+  isLoadingReuniones = true; // ← NUEVO
   errorMessage = '';
   comunas: Comuna[] = [];
+  reuniones: Reunion[] = []; // ← NUEVO
 
   constructor(
     private fb: FormBuilder,
     private consolidadoService: ConsolidadoService,
     private comunaService: ComunaService,
+    private reunionService: ReunionService, // ← NUEVO
     private router: Router,
     private notificationService: NotificationService
   ) {
@@ -338,13 +372,8 @@ export class ConsolidadoCreateComponent implements OnInit {
       ],
       telefono: ['', [Validators.required, TelefonoChilenoValidator.validar()]],
       edad: ['', [Validators.required, Validators.min(1), Validators.max(120)]],
-      comunaId: [
-        0,
-        [
-          Validators.required,
-          Validators.min(1), // Asegura que no sea 0
-        ],
-      ],
+      comunaId: [0, [Validators.required, Validators.min(1)]],
+      reunionId: [null], // ← NUEVO (opcional, sin validadores)
       quienInvito: ['', [Validators.required, Validators.maxLength(100)]],
       motivoOracion: [
         '',
@@ -359,6 +388,7 @@ export class ConsolidadoCreateComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarComunas();
+    this.cargarReuniones(); // ← NUEVO
   }
 
   cargarComunas(): void {
@@ -371,6 +401,21 @@ export class ConsolidadoCreateComponent implements OnInit {
         console.error('Error al cargar comunas', error);
         this.notificationService.error('Error al cargar comunas');
         this.isLoadingComunas = false;
+      },
+    });
+  }
+
+  // ← NUEVO MÉTODO
+  cargarReuniones(): void {
+    this.reunionService.listar().subscribe({
+      next: (data) => {
+        this.reuniones = data;
+        this.isLoadingReuniones = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar reuniones', error);
+        this.notificationService.error('Error al cargar reuniones');
+        this.isLoadingReuniones = false;
       },
     });
   }
@@ -395,12 +440,12 @@ export class ConsolidadoCreateComponent implements OnInit {
 
     const formValue = this.consolidadoForm.value;
 
-    // === CORRECCIÓN CRÍTICA ===
-    // Convertimos explícitamente a número para evitar que se envíen como Strings
+    // Convertir valores a números y manejar reunionId opcional
     const requestPayload = {
       ...formValue,
       edad: Number(formValue.edad),
       comunaId: Number(formValue.comunaId),
+      reunionId: formValue.reunionId ? Number(formValue.reunionId) : undefined, // ← NUEVO
     };
 
     console.log('Enviando Payload:', requestPayload);
