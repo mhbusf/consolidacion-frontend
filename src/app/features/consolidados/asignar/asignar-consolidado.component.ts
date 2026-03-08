@@ -48,10 +48,11 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .card {
-      background: white;
+      background: var(--bg-card);
       padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
     }
 
     .form-group {
@@ -62,16 +63,24 @@ import { NotificationService } from '../../../core/services/notification.service
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
-      color: #555;
+      color: var(--text-secondary);
     }
 
     .form-control {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       font-size: 14px;
       box-sizing: border-box;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     .actions {
@@ -89,12 +98,12 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .btn-primary {
-      background: #007bff;
+      background: var(--primary-light);
       color: white;
     }
 
     .btn-secondary {
-      background: #6c757d;
+      background: var(--secondary);
       color: white;
     }
 

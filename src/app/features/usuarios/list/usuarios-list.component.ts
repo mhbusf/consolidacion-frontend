@@ -110,7 +110,7 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .btn-primary {
-      background: #007bff;
+      background: var(--primary-light);
       color: white;
       border: none;
       padding: 10px 20px;
@@ -121,13 +121,13 @@ import { User } from '../../../core/models/auth.model';
     .loading {
       text-align: center;
       padding: 40px;
-      color: #666;
+      color: var(--text-muted);
     }
 
     .usuarios-table {
-      background: white;
+      background: var(--bg-card);
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
       overflow-x: auto;
     }
 
@@ -137,43 +137,48 @@ import { User } from '../../../core/models/auth.model';
     }
 
     thead {
-      background: #f8f9fa;
+      background: var(--bg-secondary);
     }
 
     th {
       padding: 15px;
       text-align: left;
       font-weight: 600;
-      color: #333;
-      border-bottom: 2px solid #dee2e6;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     td {
       padding: 15px;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
     }
 
     tbody tr:hover {
-      background: #f8f9fa;
+      background: var(--bg-hover);
     }
 
     .badge {
       display: inline-block;
       padding: 4px 8px;
-      background: #007bff;
-      color: white;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--info);
+      border: 1px solid var(--info);
       border-radius: 4px;
       font-size: 12px;
       margin-right: 5px;
     }
 
     .status-active {
-      color: #28a745;
+      color: var(--success);
       font-weight: 500;
     }
 
     .status-inactive {
-      color: #dc3545;
+      color: var(--danger);
       font-weight: 500;
     }
 
@@ -184,7 +189,7 @@ import { User } from '../../../core/models/auth.model';
 
     .stat-item {
       font-size: 13px;
-      color: #666;
+      color: var(--text-muted);
     }
 
     .action-buttons {
@@ -200,26 +205,24 @@ import { User } from '../../../core/models/auth.model';
       cursor: pointer;
       font-size: 12px;
       white-space: nowrap;
+      color: white;
     }
 
     .btn-primary {
-      background: #007bff;
-      color: white;
+      background: var(--primary-light);
     }
 
     .btn-info {
-      background: #17a2b8;
-      color: white;
+      background: var(--info);
     }
 
     .btn-warning {
-      background: #ffc107;
-      color: #333;
+      background: var(--warning);
+      color: var(--bg-primary);
     }
 
     .btn-danger {
-      background: #dc3545;
-      color: white;
+      background: var(--danger);
     }
 
     .btn-small:hover {

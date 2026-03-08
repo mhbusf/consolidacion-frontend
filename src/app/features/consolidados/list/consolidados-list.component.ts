@@ -136,10 +136,10 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .filters {
-      background: white;
+      background: var(--bg-card);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
       margin-bottom: 30px;
     }
 
@@ -151,17 +151,19 @@ import { User } from '../../../core/models/auth.model';
       display: block;
       margin-bottom: 5px;
       font-weight: 500;
-      color: #555;
+      color: var(--text-secondary);
     }
 
     .form-control {
       width: 100%;
       max-width: 400px;
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       font-size: 14px;
       box-sizing: border-box;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
     }
 
     .stats {
@@ -172,28 +174,30 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .stat-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
       padding: 20px;
       border-radius: 8px;
       text-align: center;
+      border: 1px solid var(--border-color);
     }
 
     .stat-number {
       font-size: 32px;
       font-weight: bold;
       margin-bottom: 5px;
+      color: var(--primary-light);
     }
 
     .stat-label {
       font-size: 14px;
-      opacity: 0.9;
+      color: var(--text-secondary);
     }
 
     .loading, .empty-state {
       text-align: center;
       padding: 40px;
-      color: #666;
+      color: var(--text-muted);
     }
 
     .consolidados-grid {
@@ -203,27 +207,27 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .consolidado-card {
-      background: white;
+      background: var(--bg-card);
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
       overflow: hidden;
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .consolidado-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .card-header {
-      background: #f8f9fa;
+      background: var(--bg-secondary);
       padding: 15px;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .card-header h3 {
       margin: 0 0 10px 0;
-      color: #333;
+      color: var(--text-primary);
     }
 
     .badges {
@@ -235,15 +239,17 @@ import { User } from '../../../core/models/auth.model';
     .badge {
       display: inline-block;
       padding: 4px 8px;
-      background: #28a745;
-      color: white;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid var(--success);
       border-radius: 4px;
       font-size: 12px;
     }
 
     .badge-warning {
-      background: #ffc107;
-      color: #333;
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid var(--warning);
     }
 
     .card-body {
@@ -252,18 +258,18 @@ import { User } from '../../../core/models/auth.model';
 
     .card-body p {
       margin: 8px 0;
-      color: #555;
+      color: var(--text-secondary);
     }
 
     .meta {
-      color: #999;
+      color: var(--text-muted);
       font-style: italic;
       margin-top: 10px;
     }
 
     .card-actions {
       padding: 15px;
-      border-top: 1px solid #dee2e6;
+      border-top: 1px solid var(--border-color);
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -276,26 +282,23 @@ import { User } from '../../../core/models/auth.model';
       cursor: pointer;
       font-size: 14px;
       transition: opacity 0.2s;
+      color: white;
     }
 
     .btn-primary {
-      background: #007bff;
-      color: white;
+      background: var(--primary-light);
     }
 
     .btn-secondary {
-      background: #6c757d;
-      color: white;
+      background: var(--secondary);
     }
 
     .btn-success {
-      background: #28a745;
-      color: white;
+      background: var(--success);
     }
 
     .btn-info {
-      background: #17a2b8;
-      color: white;
+      background: var(--info);
     }
 
     button:hover {

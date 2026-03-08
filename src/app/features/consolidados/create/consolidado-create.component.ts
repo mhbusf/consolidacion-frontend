@@ -236,15 +236,16 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
       }
 
       .form-card {
-        background: white;
+        background: var(--bg-card);
         padding: 40px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
       }
 
       h2 {
         margin-bottom: 30px;
-        color: #333;
+        color: var(--text-primary);
       }
 
       .form-row {
@@ -260,23 +261,30 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
       label {
         display: block;
         margin-bottom: 5px;
-        color: #555;
+        color: var(--text-secondary);
         font-weight: 500;
       }
 
       .form-control {
         width: 100%;
         padding: 10px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border-color);
         border-radius: 4px;
         font-size: 14px;
         font-family: inherit;
         box-sizing: border-box;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .form-control::placeholder {
+        color: var(--text-muted);
       }
 
       .form-control:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
 
       select.form-control {
@@ -284,8 +292,9 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
       }
 
       select.form-control:disabled {
-        background-color: #f5f5f5;
+        background-color: var(--bg-primary);
         cursor: not-allowed;
+        opacity: 0.7;
       }
 
       textarea.form-control {
@@ -295,12 +304,12 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
       .form-text {
         display: block;
         margin-top: 5px;
-        color: #6c757d;
+        color: var(--text-muted);
         font-size: 12px;
       }
 
       .error {
-        color: #dc3545;
+        color: var(--danger);
         font-size: 12px;
         margin-top: 5px;
       }
@@ -323,12 +332,12 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
       }
 
       .btn-primary {
-        background: #007bff;
+        background: var(--primary-light);
         color: white;
       }
 
       .btn-secondary {
-        background: #6c757d;
+        background: var(--secondary);
         color: white;
       }
 

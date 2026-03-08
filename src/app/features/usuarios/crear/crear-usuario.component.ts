@@ -97,15 +97,16 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .card {
-      background: white;
+      background: var(--bg-card);
       padding: 40px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
     }
 
     h2 {
       margin-bottom: 30px;
-      color: #333;
+      color: var(--text-primary);
     }
 
     .form-group {
@@ -115,29 +116,42 @@ import { NotificationService } from '../../../core/services/notification.service
     label {
       display: block;
       margin-bottom: 5px;
-      color: #555;
+      color: var(--text-secondary);
       font-weight: 500;
     }
 
     .form-control {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       font-size: 14px;
       box-sizing: border-box;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .form-control::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     .error {
-      color: #dc3545;
+      color: var(--danger);
       font-size: 12px;
       margin-top: 5px;
     }
 
     .success {
-      color: #28a745;
+      color: var(--success);
       padding: 10px;
-      background: #d4edda;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
       border-radius: 4px;
       margin-bottom: 15px;
     }
@@ -158,12 +172,12 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .btn-primary {
-      background: #007bff;
+      background: var(--primary-light);
       color: white;
     }
 
     .btn-secondary {
-      background: #6c757d;
+      background: var(--secondary);
       color: white;
     }
 
