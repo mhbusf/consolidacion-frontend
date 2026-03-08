@@ -16,7 +16,8 @@ import { NotificationComponent } from './shared/components/notification/notifica
     :host {
       display: block;
       min-height: 100vh;
-      background: #f5f5f5;
+      background: var(--bg-primary);
+      color: var(--text-primary);
     }
   `]
 })
