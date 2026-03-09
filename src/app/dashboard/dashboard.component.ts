@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardService } from '../core/services/dashboard.service';
-import { Dashboard } from '../core/models/consolidado.model';
+import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -58,6 +58,15 @@ import { Dashboard } from '../core/models/consolidado.model';
             </div>
           </div>
 
+          <!-- Sin Asignar -->
+          <div class="stat-card stat-danger">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ dashboard.consolidadosSinAsignar }}</div>
+              <div class="stat-label">Sin Asignar</div>
+            </div>
+          </div>
+
           <!-- Con GDC -->
           <div class="stat-card stat-info">
             <div class="stat-icon">📝</div>
@@ -73,6 +82,66 @@ import { Dashboard } from '../core/models/consolidado.model';
             <div class="stat-content">
               <div class="stat-value">{{ dashboard.consolidadosCerrados }}</div>
               <div class="stat-label">Cerrados</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico GDC -->
+        <div class="section" *ngIf="historico.length > 0">
+          <h2 class="section-title">🗂️ Histórico GDC ({{ historico.length }})</h2>
+          <div class="table-container">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>GDC</th>
+                  <th>Usuario Asignado</th>
+                  <th>Comuna</th>
+                  <th>Reunión</th>
+                  <th>Fecha Ingreso</th>
+                  <th>Fecha Cierre</th>
+                  <th>Comentario Cierre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let h of historico">
+                  <td class="fw-bold">{{ h.nombre }}</td>
+                  <td>
+                    <span class="badge-gdc">{{ h.gdc }}</span>
+                  </td>
+                  <td>
+                    <div class="user-cell">
+                      <span class="user-avatar">{{ getInitials(h.usuarioAsignado) }}</span>
+                      <span class="user-name">{{ h.usuarioAsignado }}</span>
+                    </div>
+                  </td>
+                  <td class="text-muted-cell">{{ h.comunaNombre || '—' }}</td>
+                  <td class="text-muted-cell">{{ h.reunionNombre || '—' }}</td>
+                  <td class="text-muted-cell">{{ h.fechaIngresoDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="text-muted-cell">{{ h.fechaCierre | date:'dd/MM/yyyy' }}</td>
+                  <td class="comentario-cell">{{ h.comentarioCierre }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section empty-historico" *ngIf="historico.length === 0 && !isLoadingHistorico">
+          <h2 class="section-title">🗂️ Histórico GDC</h2>
+          <div class="empty-historico-msg">
+            <span class="empty-icon-sm">📭</span>
+            <p>Aún no hay consolidados cerrados con GDC.</p>
+          </div>
+        </div>
+
+        <!-- Estadísticas por Reunión -->
+        <div class="section" *ngIf="dashboard.estadisticasPorReunion?.length">
+          <h2 class="section-title">🏛️ Consolidados por Reunión</h2>
+          <div class="reunion-grid">
+            <div class="reunion-card" *ngFor="let r of dashboard.estadisticasPorReunion">
+              <div class="reunion-nombre">{{ r.nombreReunion }}</div>
+              <div class="reunion-count">{{ r.totalConsolidados }}</div>
+              <div class="reunion-label">consolidados</div>
             </div>
           </div>
         </div>
@@ -766,6 +835,110 @@ import { Dashboard } from '../core/models/consolidado.model';
         transform: translateY(-2px);
       }
 
+      /* Histórico GDC */
+      .badge-gdc {
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+        border: 1px solid #06b6d4;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .fw-bold {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .text-muted-cell {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      .comentario-cell {
+        color: var(--text-secondary);
+        font-size: 13px;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .empty-historico .table-container {
+        display: none;
+      }
+
+      .empty-historico-msg {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      .empty-icon-sm {
+        font-size: 28px;
+      }
+
+      .empty-historico-msg p {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      /* Estadísticas por Reunión */
+      .reunion-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+      }
+
+      .reunion-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-top: 3px solid var(--primary-light);
+      }
+
+      .reunion-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .reunion-nombre {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .reunion-count {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--primary-light);
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+
+      .reunion-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .dashboard-container {
@@ -799,7 +972,9 @@ import { Dashboard } from '../core/models/consolidado.model';
 })
 export class DashboardComponent implements OnInit {
   dashboard: Dashboard | null = null;
+  historico: ConsolidadoGDCHistorico[] = [];
   isLoading = true;
+  isLoadingHistorico = true;
 
   constructor(
     private dashboardService: DashboardService,
@@ -808,6 +983,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDashboard();
+    this.cargarHistorico();
   }
 
   cargarDashboard(): void {
@@ -820,6 +996,20 @@ export class DashboardComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar dashboard:', error);
         this.isLoading = false;
+      },
+    });
+  }
+
+  cargarHistorico(): void {
+    this.isLoadingHistorico = true;
+    this.dashboardService.getHistorico().subscribe({
+      next: (data) => {
+        this.historico = data;
+        this.isLoadingHistorico = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar histórico:', error);
+        this.isLoadingHistorico = false;
       },
     });
   }

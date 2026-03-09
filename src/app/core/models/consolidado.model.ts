@@ -103,6 +103,32 @@ export interface UsuarioEstadistica {
   conAtrasos: number;
 }
 
+export interface ReunionEstadistica {
+  nombreReunion: string;
+  totalConsolidados: number;
+}
+
+export interface ConsolidadoGDCHistorico {
+  id: number;
+  consolidadoId: number;
+  nombre: string;
+  telefono: string;
+  edad: number;
+  quienInvito: string;
+  motivoOracion: string;
+  gdc: string;
+  comentarioCierre: string;
+  fechaCierre: string;
+  fechaIngresoDate: string;
+  usuarioAsignado: string;
+  usuarioReporta: string;
+  comunaNombre: string;
+  region: string;
+  provincia: string;
+  reunionNombre: string;
+  fechaRegistro: string;
+}
+
 export interface Dashboard {
   totalConsolidados: number;
   consolidadosEnProceso: number;
@@ -110,6 +136,8 @@ export interface Dashboard {
   consolidadosCerrados: number;
   consolidadosAlDia: number;
   consolidadosAtrasados: number;
+  consolidadosSinAsignar: number;
   consolidadosConAtrasos: ConsolidadoEstado[];
   estadisticasPorUsuario: UsuarioEstadistica[];
+  estadisticasPorReunion: ReunionEstadistica[];
 }
