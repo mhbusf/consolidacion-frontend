@@ -39,6 +39,10 @@ export class ConsolidadoService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  obtenerCerradosGDC(): Observable<ConsolidadoResponse[]> {
+    return this.http.get<ConsolidadoResponse[]>(`${this.apiUrl}/cerrados-gdc`);
+  }
+
   // NUEVO MÉTODO PARA EL DASHBOARD INTERACTIVO
   filtrarPorTipo(tipo: string): Observable<ConsolidadoResponse[]> {
     return this.http.get<ConsolidadoResponse[]>(

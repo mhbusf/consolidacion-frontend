@@ -14,14 +14,15 @@ import { User } from '../../../core/models/auth.model';
   template: `
     <div class="container">
       <div class="header">
-        <h2>Consolidados</h2>
+        <h2>{{ vistaGDC ? 'Consolidados Cerrados con GDC' : 'Consolidados' }}</h2>
         <div class="header-actions">
-          <button class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
+          <button *ngIf="isAdmin && vistaGDC" class="btn-secondary" (click)="volverActivos()">← Volver a Activos</button>
+          <button *ngIf="!vistaGDC" class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
         </div>
       </div>
 
-      <!-- Filtros solo para Admin -->
-      <div class="filters" *ngIf="isAdmin">
+      <!-- Filtros solo para Admin (vista activos) -->
+      <div class="filters" *ngIf="isAdmin && !vistaGDC">
         <div class="filter-group">
           <label>Filtrar por:</label>
           <select [(ngModel)]="filtroSeleccionado" (change)="aplicarFiltro()" class="form-control">
@@ -55,6 +56,11 @@ import { User } from '../../../core/models/auth.model';
             <div class="stat-number">{{ sinAsignar }}</div>
             <div class="stat-label">Sin Asignar</div>
           </div>
+          <div class="stat-card stat-card-gdc" (click)="verCerradosGDC()">
+            <div class="stat-number">{{ totalCerradosGDC }}</div>
+            <div class="stat-label">Cerrados con GDC</div>
+            <div class="stat-hint">Click para ver</div>
+          </div>
         </div>
       </div>
 
@@ -67,14 +73,17 @@ import { User } from '../../../core/models/auth.model';
       </div>
 
       <div class="consolidados-grid" *ngIf="!isLoading && consolidados.length > 0">
-        <div class="consolidado-card" *ngFor="let c of consolidados">
+        <div class="consolidado-card" [class.card-gdc]="vistaGDC" *ngFor="let c of consolidados">
           <div class="card-header">
             <h3>{{ c.nombre }}</h3>
             <div class="badges">
-              <span class="badge" *ngIf="c.usuarioAsignado">
+              <span class="badge badge-gdc" *ngIf="vistaGDC">
+                GDC: {{ c.gdc }}
+              </span>
+              <span class="badge" *ngIf="!vistaGDC && c.usuarioAsignado">
                 Asignado a: {{ c.usuarioAsignado }}
               </span>
-              <span class="badge badge-warning" *ngIf="!c.usuarioAsignado">
+              <span class="badge badge-warning" *ngIf="!vistaGDC && !c.usuarioAsignado">
                 Sin asignar
               </span>
             </div>
@@ -85,11 +94,15 @@ import { User } from '../../../core/models/auth.model';
             <p><strong>Edad:</strong> {{ c.edad }} años</p>
             <p><strong>Invitado por:</strong> {{ c.quienInvito }}</p>
             <p><strong>Motivo:</strong> {{ c.motivoOracion }}</p>
-            <p class="meta">
+            <p *ngIf="vistaGDC && c.comentarioCierre"><strong>Cierre:</strong> {{ c.comentarioCierre }}</p>
+            <p *ngIf="vistaGDC && c.fechaCierre" class="meta">
+              <small>Cerrado: {{ c.fechaCierre | date:'dd/MM/yyyy HH:mm' }}</small>
+            </p>
+            <p class="meta" *ngIf="!vistaGDC">
               <small>Reportado por: {{ c.usuarioReporta }}</small>
             </p>
             <p class="meta">
-              <small>Fecha: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
+              <small>Fecha ingreso: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
             </p>
           </div>
 
@@ -97,15 +110,15 @@ import { User } from '../../../core/models/auth.model';
             <button class="btn-secondary" (click)="verDetalle(c.id)">
               Ver Detalle
             </button>
-            <button 
-              *ngIf="isAdmin && !c.usuarioAsignado" 
-              class="btn-success" 
+            <button
+              *ngIf="isAdmin && !vistaGDC && !c.usuarioAsignado"
+              class="btn-success"
               (click)="asignar(c.id)">
               Asignar
             </button>
-            <button 
-              *ngIf="isAdmin && c.usuarioAsignado" 
-              class="btn-info" 
+            <button
+              *ngIf="isAdmin && !vistaGDC && c.usuarioAsignado"
+              class="btn-info"
               (click)="reasignar(c.id)">
               Reasignar
             </button>
@@ -252,6 +265,42 @@ import { User } from '../../../core/models/auth.model';
       border: 1px solid var(--warning);
     }
 
+    .badge-gdc {
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+      border: 1px solid #8b5cf6;
+    }
+
+    .stat-card-gdc {
+      cursor: pointer;
+      border-color: #8b5cf6;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .stat-card-gdc:hover {
+      background: rgba(139, 92, 246, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .stat-card-gdc .stat-number {
+      color: #8b5cf6;
+    }
+
+    .stat-hint {
+      font-size: 11px;
+      color: #8b5cf6;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .card-gdc {
+      border-color: #8b5cf6;
+    }
+
+    .card-gdc .card-header {
+      background: rgba(139, 92, 246, 0.08);
+    }
+
     .card-body {
       padding: 15px;
     }
@@ -313,12 +362,14 @@ export class ConsolidadosListComponent implements OnInit {
   isLoading = true;
   isAdmin = false;
   currentUsername = '';
-  
+  vistaGDC = false;
+
   filtroSeleccionado = 'todos';
   usuarioFiltro = '';
-  
+
   totalConsolidados = 0;
   sinAsignar = 0;
+  totalCerradosGDC = 0;
 
   constructor(
     private consolidadoService: ConsolidadoService,
@@ -339,7 +390,8 @@ export class ConsolidadosListComponent implements OnInit {
 
   cargarDatos(): void {
     this.isLoading = true;
-    
+    this.vistaGDC = false;
+
     this.consolidadoService.obtenerTodos().subscribe({
       next: (data) => {
         this.consolidadosTodos = data;
@@ -356,14 +408,36 @@ export class ConsolidadosListComponent implements OnInit {
 
     if (this.isAdmin) {
       this.authService.getAllUsers().subscribe({
-        next: (users) => {
-          this.usuarios = users;
-        },
-        error: (error) => {
-          console.error('Error al cargar usuarios', error);
-        }
+        next: (users) => { this.usuarios = users; },
+        error: (error) => { console.error('Error al cargar usuarios', error); }
+      });
+
+      this.consolidadoService.obtenerCerradosGDC().subscribe({
+        next: (data) => { this.totalCerradosGDC = data.length; },
+        error: () => { this.totalCerradosGDC = 0; }
       });
     }
+  }
+
+  verCerradosGDC(): void {
+    this.isLoading = true;
+    this.vistaGDC = true;
+    this.consolidadoService.obtenerCerradosGDC().subscribe({
+      next: (data) => {
+        this.consolidados = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar cerrados GDC', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  volverActivos(): void {
+    this.vistaGDC = false;
+    this.filtroSeleccionado = 'todos';
+    this.consolidados = this.consolidadosTodos;
   }
 
   aplicarFiltro(): void {
