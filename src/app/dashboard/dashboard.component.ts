@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardService } from '../core/services/dashboard.service';
-import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.model';
+import { ConsolidadoService } from '../core/services/consolidado.service';
+import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -76,14 +77,6 @@ import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.m
             </div>
           </div>
 
-          <!-- Cerrados -->
-          <div class="stat-card stat-closed">
-            <div class="stat-icon">🔒</div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dashboard.consolidadosCerrados }}</div>
-              <div class="stat-label">Cerrados</div>
-            </div>
-          </div>
         </div>
 
         <!-- Histórico GDC -->
@@ -97,8 +90,7 @@ import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.m
                   <th>GDC</th>
                   <th>Usuario Asignado</th>
                   <th>Comuna</th>
-                  <th>Reunión</th>
-                  <th>Fecha Ingreso</th>
+                  <th>Teléfono</th>
                   <th>Fecha Cierre</th>
                   <th>Comentario Cierre</th>
                 </tr>
@@ -111,15 +103,14 @@ import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.m
                   </td>
                   <td>
                     <div class="user-cell">
-                      <span class="user-avatar">{{ getInitials(h.usuarioAsignado) }}</span>
-                      <span class="user-name">{{ h.usuarioAsignado }}</span>
+                      <span class="user-avatar">{{ getInitials(h.usuarioAsignado || '') }}</span>
+                      <span class="user-name">{{ h.usuarioAsignado || 'Sin asignar' }}</span>
                     </div>
                   </td>
-                  <td class="text-muted-cell">{{ h.comunaNombre || '—' }}</td>
-                  <td class="text-muted-cell">{{ h.reunionNombre || '—' }}</td>
-                  <td class="text-muted-cell">{{ h.fechaIngresoDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="text-muted-cell">{{ h.comuna?.nombre || '—' }}</td>
+                  <td class="text-muted-cell">{{ h.telefono || '—' }}</td>
                   <td class="text-muted-cell">{{ h.fechaCierre | date:'dd/MM/yyyy' }}</td>
-                  <td class="comentario-cell">{{ h.comentarioCierre }}</td>
+                  <td class="comentario-cell">{{ h.comentarioCierre || '—' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -972,12 +963,13 @@ import { Dashboard, ConsolidadoGDCHistorico } from '../core/models/consolidado.m
 })
 export class DashboardComponent implements OnInit {
   dashboard: Dashboard | null = null;
-  historico: ConsolidadoGDCHistorico[] = [];
+  historico: ConsolidadoResponse[] = [];
   isLoading = true;
   isLoadingHistorico = true;
 
   constructor(
     private dashboardService: DashboardService,
+    private consolidadoService: ConsolidadoService,
     private router: Router
   ) {}
 
@@ -1002,7 +994,7 @@ export class DashboardComponent implements OnInit {
 
   cargarHistorico(): void {
     this.isLoadingHistorico = true;
-    this.dashboardService.getHistorico().subscribe({
+    this.consolidadoService.obtenerCerradosGDC().subscribe({
       next: (data) => {
         this.historico = data;
         this.isLoadingHistorico = false;
