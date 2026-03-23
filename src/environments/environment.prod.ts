@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://consolidacion-backend.onrender.com/api',
+  apiUrl: 'consolidaci-n-production.up.railway.app',
 };
