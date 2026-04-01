@@ -41,6 +41,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <th>Nombre</th>
               <th>Apellido</th>
               <th>Telefono</th>
+              <th>Invitado por</th>
               <th>Fecha Ingreso</th>
               <th>Registrado por</th>
             </tr>
@@ -50,6 +51,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <td class="fw-bold">{{ r.nombre }}</td>
               <td>{{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
+              <td>{{ r.invitadoPor || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
               <td>
                 <span class="user-badge">{{ r.registradoPor }}</span>
