@@ -58,10 +58,22 @@ export const routes: Routes = [
   },
   
   {
+    path: 'cafe-con-jesus',
+    loadComponent: () => import('./features/cafe-con-jesus/list/cafe-list.component').then(m => m.CafeListComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'cafe-con-jesus/nuevo',
+    loadComponent: () => import('./features/cafe-con-jesus/create/cafe-create.component').then(m => m.CafeCreateComponent),
+    canActivate: [authGuard]
+  },
+
+  {
     path: 'change-password',
     loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
     canActivate: [authGuard]
   },
-  
+
   { path: '**', redirectTo: '/login' }
 ];

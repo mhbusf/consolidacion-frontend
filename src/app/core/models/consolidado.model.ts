@@ -140,4 +140,5 @@ export interface Dashboard {
   consolidadosConAtrasos: ConsolidadoEstado[];
   estadisticasPorUsuario: UsuarioEstadistica[];
   estadisticasPorReunion: ReunionEstadistica[];
+  totalCafeConJesus: number;
 }

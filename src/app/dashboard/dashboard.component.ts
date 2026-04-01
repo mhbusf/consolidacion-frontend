@@ -77,6 +77,15 @@ import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model
             </div>
           </div>
 
+          <!-- Cafe con Jesus -->
+          <div class="stat-card stat-cafe" (click)="verCafeConJesus()">
+            <div class="stat-icon">☕</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ dashboard.totalCafeConJesus }}</div>
+              <div class="stat-label">Cafe con Jesus</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Histórico GDC -->
@@ -416,6 +425,9 @@ import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model
       }
       .stat-danger {
         color: #ef4444;
+      }
+      .stat-cafe {
+        color: #a16207;
       }
 
       /* Secciones */
@@ -1042,6 +1054,10 @@ export class DashboardComponent implements OnInit {
 
   verConsolidados(): void {
     this.router.navigate(['/consolidados']);
+  }
+
+  verCafeConJesus(): void {
+    this.router.navigate(['/cafe-con-jesus']);
   }
 
   verDetalle(id: number): void {

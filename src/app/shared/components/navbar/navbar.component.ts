@@ -32,6 +32,12 @@ import { JwtResponse } from '../../../core/models/auth.model';
               Consolidados
             </a>
           </li>
+          <li>
+            <a routerLink="/cafe-con-jesus" routerLinkActive="active">
+              <span class="menu-icon">☕</span>
+              Cafe con Jesus
+            </a>
+          </li>
           <li *ngIf="isAdmin">
             <a routerLink="/usuarios" routerLinkActive="active">
               <span class="menu-icon">🔐</span>
