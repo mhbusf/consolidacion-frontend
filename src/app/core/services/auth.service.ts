@@ -21,7 +21,11 @@ export class AuthService {
   constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
+      if (this.isTokenExpired()) {
+        this.logout();
+      } else {
+        this.currentUserSubject.next(JSON.parse(storedUser));
+      }
     }
   }
 
@@ -52,7 +56,24 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+    if (this.isTokenExpired()) {
+      this.logout();
+      return false;
+    }
+    return true;
+  }
+
+  private isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
   }
 
   hasRole(roleName: string): boolean {
