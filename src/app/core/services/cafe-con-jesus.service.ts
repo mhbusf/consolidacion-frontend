@@ -8,6 +8,9 @@ export interface CafeConJesusRequest {
   apellido: string;
   telefono: string;
   invitadoPor?: string;
+  comentario?: string;
+  asistio?: boolean;
+  fechaAsistencia?: string;
 }
 
 export interface CafeConJesusResponse {
@@ -19,6 +22,9 @@ export interface CafeConJesusResponse {
   fechaIngreso: string;
   registradoPor: string;
   fechaCreacion: string;
+  comentario: string;
+  asistio: boolean;
+  fechaAsistencia: string;
 }
 
 @Injectable({
@@ -39,5 +45,9 @@ export class CafeConJesusService {
 
   listarMios(): Observable<CafeConJesusResponse[]> {
     return this.http.get<CafeConJesusResponse[]>(`${this.apiUrl}/mis-registros`);
+  }
+
+  actualizar(id: number, request: CafeConJesusRequest): Observable<CafeConJesusResponse> {
+    return this.http.put<CafeConJesusResponse>(`${this.apiUrl}/${id}`, request);
   }
 }

@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   CafeConJesusService,
   CafeConJesusResponse,
 } from '../../../core/services/cafe-con-jesus.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-cafe-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="container">
       <div class="header">
@@ -43,7 +45,11 @@ import { AuthService } from '../../../core/services/auth.service';
               <th>Telefono</th>
               <th>Invitado por</th>
               <th>Fecha Ingreso</th>
+              <th>Asistio</th>
+              <th>Fecha Asistencia</th>
+              <th>Comentario</th>
               <th>Registrado por</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -54,11 +60,49 @@ import { AuthService } from '../../../core/services/auth.service';
               <td>{{ r.invitadoPor || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
               <td>
+                <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
+                  {{ r.asistio ? 'Si' : 'No' }}
+                </span>
+              </td>
+              <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date : 'dd/MM/yyyy') : '-' }}</td>
+              <td class="comentario-cell">{{ r.comentario || '-' }}</td>
+              <td>
                 <span class="user-badge">{{ r.registradoPor }}</span>
+              </td>
+              <td>
+                <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Modal editar -->
+        <div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <h3>Editar Registro</h3>
+            <div class="form-group">
+              <label>Asistio al Cafe con Jesus</label>
+              <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
+                <option [ngValue]="false">No</option>
+                <option [ngValue]="true">Si</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="editAsistio">
+              <label>Fecha de Asistencia</label>
+              <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Comentario</label>
+              <textarea [(ngModel)]="editComentario" class="form-control" rows="3" placeholder="Agregar comentario..."></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+              <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
+                {{ isSaving ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -201,6 +245,133 @@ import { AuthService } from '../../../core/services/auth.service';
         color: var(--text-secondary);
         margin-bottom: 20px;
       }
+
+      .badge {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge-success {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+      }
+
+      .badge-pending {
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+      }
+
+      .comentario-cell {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .btn-edit {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn-edit:hover {
+        opacity: 0.8;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: var(--bg-card);
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        border: 1px solid var(--border-color);
+      }
+
+      .modal-content h3 {
+        margin-bottom: 20px;
+        color: var(--text-primary);
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-light);
+      }
+
+      textarea.form-control {
+        resize: vertical;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 24px;
+      }
+
+      .btn-primary, .btn-secondary {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn-secondary {
+        background: var(--secondary);
+        color: white;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     `,
   ],
 })
@@ -209,10 +380,18 @@ export class CafeListComponent implements OnInit {
   isLoading = true;
   isAdmin = false;
 
+  // Edicion
+  registroEditando: CafeConJesusResponse | null = null;
+  editAsistio = false;
+  editFechaAsistencia = '';
+  editComentario = '';
+  isSaving = false;
+
   constructor(
     private cafeService: CafeConJesusService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -240,5 +419,51 @@ export class CafeListComponent implements OnInit {
 
   nuevoRegistro(): void {
     this.router.navigate(['/cafe-con-jesus/nuevo']);
+  }
+
+  editarRegistro(r: CafeConJesusResponse): void {
+    this.registroEditando = r;
+    this.editAsistio = r.asistio || false;
+    this.editFechaAsistencia = r.fechaAsistencia || '';
+    this.editComentario = r.comentario || '';
+  }
+
+  onAsistioChange(): void {
+    if (!this.editAsistio) {
+      this.editFechaAsistencia = '';
+    }
+  }
+
+  cancelarEdicion(): void {
+    this.registroEditando = null;
+  }
+
+  guardarEdicion(): void {
+    if (!this.registroEditando) return;
+
+    this.isSaving = true;
+    const request = {
+      nombre: this.registroEditando.nombre,
+      apellido: this.registroEditando.apellido,
+      telefono: this.registroEditando.telefono,
+      invitadoPor: this.registroEditando.invitadoPor,
+      comentario: this.editComentario,
+      asistio: this.editAsistio,
+      fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
+    };
+
+    this.cafeService.actualizar(this.registroEditando.id, request).subscribe({
+      next: () => {
+        this.notificationService.success('Registro actualizado correctamente');
+        this.registroEditando = null;
+        this.isSaving = false;
+        this.cargarRegistros();
+      },
+      error: (error) => {
+        console.error('Error al actualizar:', error);
+        this.notificationService.error('Error al actualizar el registro');
+        this.isSaving = false;
+      },
+    });
   }
 }
