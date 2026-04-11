@@ -126,7 +126,7 @@ import { User } from '../../../core/models/auth.model';
   styles: [
     `
       .container {
-        max-width: 1200px;
+        max-width: 1600px;
         margin: 40px auto;
         padding: 20px;
       }
@@ -163,12 +163,13 @@ import { User } from '../../../core/models/auth.model';
       .table-container {
         background: var(--bg-card);
         border-radius: 12px;
-        overflow: hidden;
+        overflow-x: auto;
         border: 1px solid var(--border-color);
       }
 
       .data-table {
         width: 100%;
+        min-width: 1400px;
         border-collapse: collapse;
       }
 
