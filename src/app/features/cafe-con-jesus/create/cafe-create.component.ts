@@ -86,6 +86,17 @@ import { NotificationService } from '../../../core/services/notification.service
             />
           </div>
 
+          <div class="form-group">
+            <label for="telefonoInvitadoPor">Telefono de quien invito</label>
+            <input
+              type="tel"
+              id="telefonoInvitadoPor"
+              formControlName="telefonoInvitadoPor"
+              class="form-control"
+              placeholder="+56912345678"
+            />
+          </div>
+
           <div class="form-actions">
             <button
               type="button"
@@ -221,6 +232,7 @@ export class CafeCreateComponent {
       apellido: ['', [Validators.required, Validators.minLength(2)]],
       telefono: ['', [Validators.required]],
       invitadoPor: [''],
+      telefonoInvitadoPor: [''],
     });
   }
 

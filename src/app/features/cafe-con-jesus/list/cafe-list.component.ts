@@ -44,6 +44,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <th>Apellido</th>
               <th>Telefono</th>
               <th>Invitado por</th>
+              <th>Tel. Invitado por</th>
               <th>Fecha Ingreso</th>
               <th>Asistio</th>
               <th>Fecha Asistencia</th>
@@ -58,6 +59,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <td>{{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
               <td>{{ r.invitadoPor || '-' }}</td>
+              <td>{{ r.telefonoInvitadoPor || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
               <td>
                 <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
@@ -447,6 +449,7 @@ export class CafeListComponent implements OnInit {
       apellido: this.registroEditando.apellido,
       telefono: this.registroEditando.telefono,
       invitadoPor: this.registroEditando.invitadoPor,
+      telefonoInvitadoPor: this.registroEditando.telefonoInvitadoPor,
       comentario: this.editComentario,
       asistio: this.editAsistio,
       fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
