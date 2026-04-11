@@ -7,6 +7,7 @@ export interface CafeConJesusRequest {
   nombre: string;
   apellido: string;
   telefono: string;
+  edad?: string;
   invitadoPor?: string;
   telefonoInvitadoPor?: string;
   comentario?: string;
@@ -19,6 +20,7 @@ export interface CafeConJesusResponse {
   nombre: string;
   apellido: string;
   telefono: string;
+  edad: string;
   invitadoPor: string;
   telefonoInvitadoPor: string;
   fechaIngreso: string;

@@ -43,6 +43,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <th>Nombre</th>
               <th>Apellido</th>
               <th>Telefono</th>
+              <th>Edad</th>
               <th>Invitado por</th>
               <th>Tel. Invitado por</th>
               <th>Fecha Ingreso</th>
@@ -58,6 +59,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <td class="fw-bold">{{ r.nombre }}</td>
               <td>{{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
+              <td>{{ r.edad || '-' }}</td>
               <td>{{ r.invitadoPor || '-' }}</td>
               <td>{{ r.telefonoInvitadoPor || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
@@ -448,6 +450,7 @@ export class CafeListComponent implements OnInit {
       nombre: this.registroEditando.nombre,
       apellido: this.registroEditando.apellido,
       telefono: this.registroEditando.telefono,
+      edad: this.registroEditando.edad,
       invitadoPor: this.registroEditando.invitadoPor,
       telefonoInvitadoPor: this.registroEditando.telefonoInvitadoPor,
       comentario: this.editComentario,

@@ -76,6 +76,17 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
 
           <div class="form-group">
+            <label for="edad">Edad</label>
+            <input
+              type="text"
+              id="edad"
+              formControlName="edad"
+              class="form-control"
+              placeholder="Ej: 25"
+            />
+          </div>
+
+          <div class="form-group">
             <label for="invitadoPor">Invitado por</label>
             <input
               type="text"
@@ -231,6 +242,7 @@ export class CafeCreateComponent {
       nombre: ['', [Validators.required, Validators.minLength(2)]],
       apellido: ['', [Validators.required, Validators.minLength(2)]],
       telefono: ['', [Validators.required]],
+      edad: [''],
       invitadoPor: [''],
       telefonoInvitadoPor: [''],
     });
