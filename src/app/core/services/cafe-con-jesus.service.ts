@@ -25,6 +25,7 @@ export interface CafeConJesusResponse {
   telefonoInvitadoPor: string;
   fechaIngreso: string;
   registradoPor: string;
+  usuarioAsignado: string;
   fechaCreacion: string;
   comentario: string;
   asistio: boolean;
@@ -53,5 +54,9 @@ export class CafeConJesusService {
 
   actualizar(id: number, request: CafeConJesusRequest): Observable<CafeConJesusResponse> {
     return this.http.put<CafeConJesusResponse>(`${this.apiUrl}/${id}`, request);
+  }
+
+  asignarUsuario(id: number, username: string): Observable<string> {
+    return this.http.put(`${this.apiUrl}/${id}/asignar?username=${username}`, null, { responseType: 'text' });
   }
 }

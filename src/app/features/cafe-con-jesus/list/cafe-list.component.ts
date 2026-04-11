@@ -8,6 +8,7 @@ import {
 } from '../../../core/services/cafe-con-jesus.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { User } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-cafe-list',
@@ -51,6 +52,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <th>Fecha Asistencia</th>
               <th>Comentario</th>
               <th>Registrado por</th>
+              <th>Asignado a</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -74,6 +76,10 @@ import { NotificationService } from '../../../core/services/notification.service
                 <span class="user-badge">{{ r.registradoPor }}</span>
               </td>
               <td>
+                <span class="user-badge badge-asignado" *ngIf="r.usuarioAsignado">{{ r.usuarioAsignado }}</span>
+                <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
+              </td>
+              <td>
                 <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
               </td>
             </tr>
@@ -84,6 +90,13 @@ import { NotificationService } from '../../../core/services/notification.service
         <div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
           <div class="modal-content" (click)="$event.stopPropagation()">
             <h3>Editar Registro</h3>
+            <div class="form-group">
+              <label>Consolidador asignado</label>
+              <select [(ngModel)]="editUsuarioAsignado" class="form-control">
+                <option value="">Sin asignar</option>
+                <option *ngFor="let u of usuarios" [value]="u.username">{{ u.username }}</option>
+              </select>
+            </div>
             <div class="form-group">
               <label>Asistio al Cafe con Jesus</label>
               <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
@@ -267,6 +280,11 @@ import { NotificationService } from '../../../core/services/notification.service
         color: #eab308;
       }
 
+      .badge-asignado {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+      }
+
       .comentario-cell {
         max-width: 200px;
         overflow: hidden;
@@ -381,6 +399,7 @@ import { NotificationService } from '../../../core/services/notification.service
 })
 export class CafeListComponent implements OnInit {
   registros: CafeConJesusResponse[] = [];
+  usuarios: User[] = [];
   isLoading = true;
   isAdmin = false;
 
@@ -389,6 +408,7 @@ export class CafeListComponent implements OnInit {
   editAsistio = false;
   editFechaAsistencia = '';
   editComentario = '';
+  editUsuarioAsignado = '';
   isSaving = false;
 
   constructor(
@@ -401,6 +421,12 @@ export class CafeListComponent implements OnInit {
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     this.cargarRegistros();
+    if (this.isAdmin) {
+      this.authService.getAllUsers().subscribe({
+        next: (users) => { this.usuarios = users; },
+        error: (error) => { console.error('Error al cargar usuarios', error); }
+      });
+    }
   }
 
   cargarRegistros(): void {
@@ -430,6 +456,7 @@ export class CafeListComponent implements OnInit {
     this.editAsistio = r.asistio || false;
     this.editFechaAsistencia = r.fechaAsistencia || '';
     this.editComentario = r.comentario || '';
+    this.editUsuarioAsignado = r.usuarioAsignado || '';
   }
 
   onAsistioChange(): void {
@@ -446,6 +473,8 @@ export class CafeListComponent implements OnInit {
     if (!this.registroEditando) return;
 
     this.isSaving = true;
+    const id = this.registroEditando.id;
+
     const request = {
       nombre: this.registroEditando.nombre,
       apellido: this.registroEditando.apellido,
@@ -458,12 +487,30 @@ export class CafeListComponent implements OnInit {
       fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
     };
 
-    this.cafeService.actualizar(this.registroEditando.id, request).subscribe({
+    this.cafeService.actualizar(id, request).subscribe({
       next: () => {
-        this.notificationService.success('Registro actualizado correctamente');
-        this.registroEditando = null;
-        this.isSaving = false;
-        this.cargarRegistros();
+        // Si cambió el usuario asignado, llamar al endpoint de asignación
+        if (this.editUsuarioAsignado && this.editUsuarioAsignado !== this.registroEditando?.usuarioAsignado) {
+          this.cafeService.asignarUsuario(id, this.editUsuarioAsignado).subscribe({
+            next: () => {
+              this.notificationService.success('Registro actualizado y asignado correctamente');
+              this.registroEditando = null;
+              this.isSaving = false;
+              this.cargarRegistros();
+            },
+            error: (error) => {
+              console.error('Error al asignar:', error);
+              this.notificationService.error('Registro actualizado pero error al asignar');
+              this.isSaving = false;
+              this.cargarRegistros();
+            },
+          });
+        } else {
+          this.notificationService.success('Registro actualizado correctamente');
+          this.registroEditando = null;
+          this.isSaving = false;
+          this.cargarRegistros();
+        }
       },
       error: (error) => {
         console.error('Error al actualizar:', error);
