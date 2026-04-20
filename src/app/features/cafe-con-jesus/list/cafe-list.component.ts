@@ -53,6 +53,7 @@ import { User } from '../../../core/models/auth.model';
               <th>Comentario</th>
               <th>Registrado por</th>
               <th>Asignado a</th>
+              <th>Acepto al Senor</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -80,7 +81,15 @@ import { User } from '../../../core/models/auth.model';
                 <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
               </td>
               <td>
+                <span class="badge badge-success" *ngIf="r.convertidoAConsolidado">Convertido</span>
+                <span class="badge badge-pending" *ngIf="!r.aceptoAlSenor && !r.convertidoAConsolidado">No</span>
+                <span class="badge badge-success" *ngIf="r.aceptoAlSenor && !r.convertidoAConsolidado">Si</span>
+              </td>
+              <td class="actions-cell">
                 <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
+                <button class="btn-convertir" *ngIf="!r.convertidoAConsolidado" (click)="convertirAConsolidado(r)">
+                  Acepto al Senor
+                </button>
               </td>
             </tr>
           </tbody>
@@ -169,7 +178,7 @@ import { User } from '../../../core/models/auth.model';
 
       .data-table {
         width: 100%;
-        min-width: 1400px;
+        min-width: 1600px;
         border-collapse: collapse;
       }
 
@@ -307,6 +316,28 @@ import { User } from '../../../core/models/auth.model';
 
       .btn-edit:hover {
         opacity: 0.8;
+      }
+
+      .btn-convertir {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn-convertir:hover {
+        opacity: 0.8;
+      }
+
+      .actions-cell {
+        display: flex;
+        gap: 6px;
+        align-items: center;
       }
 
       .modal-overlay {
@@ -517,6 +548,23 @@ export class CafeListComponent implements OnInit {
         console.error('Error al actualizar:', error);
         this.notificationService.error('Error al actualizar el registro');
         this.isSaving = false;
+      },
+    });
+  }
+
+  convertirAConsolidado(r: CafeConJesusResponse): void {
+    if (!confirm(`¿Confirmas que ${r.nombre} ${r.apellido} acepto al Senor? Se creara un registro en Consolidacion.`)) {
+      return;
+    }
+
+    this.cafeService.convertirAConsolidado(r.id).subscribe({
+      next: () => {
+        this.notificationService.success('Registro convertido a consolidacion exitosamente');
+        this.cargarRegistros();
+      },
+      error: (error) => {
+        console.error('Error al convertir:', error);
+        this.notificationService.error(error.error?.message || 'Error al convertir a consolidado');
       },
     });
   }

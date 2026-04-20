@@ -30,6 +30,9 @@ export interface CafeConJesusResponse {
   comentario: string;
   asistio: boolean;
   fechaAsistencia: string;
+  aceptoAlSenor: boolean;
+  convertidoAConsolidado: boolean;
+  consolidadoId: number;
 }
 
 @Injectable({
@@ -58,5 +61,9 @@ export class CafeConJesusService {
 
   asignarUsuario(id: number, username: string): Observable<string> {
     return this.http.put(`${this.apiUrl}/${id}/asignar?username=${username}`, null, { responseType: 'text' });
+  }
+
+  convertirAConsolidado(id: number): Observable<CafeConJesusResponse> {
+    return this.http.put<CafeConJesusResponse>(`${this.apiUrl}/${id}/convertir`, null);
   }
 }
