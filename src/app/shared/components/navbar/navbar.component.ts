@@ -39,6 +39,12 @@ import { JwtResponse } from '../../../core/models/auth.model';
             </a>
           </li>
           <li *ngIf="isAdmin">
+            <a routerLink="/cafe-admin" routerLinkActive="active">
+              <span class="menu-icon">📋</span>
+              Admin Café
+            </a>
+          </li>
+          <li *ngIf="isAdmin">
             <a routerLink="/usuarios" routerLinkActive="active">
               <span class="menu-icon">🔐</span>
               Usuarios

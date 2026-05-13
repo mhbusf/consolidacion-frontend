@@ -33,6 +33,23 @@ export interface CafeConJesusResponse {
   aceptoAlSenor: boolean;
   convertidoAConsolidado: boolean;
   consolidadoId: number;
+  archivado: boolean;
+  fechaArchivado: string;
+}
+
+export interface CafeAdminDashboard {
+  sinAsignar: CafeConJesusResponse[];
+  asignados: CafeConJesusResponse[];
+  pasaronAConsolidacion: CafeConJesusResponse[];
+  archivados: CafeConJesusResponse[];
+  totalRegistros: number;
+  totalSinAsignar: number;
+  totalAsignados: number;
+  totalPasaronAConsolidacion: number;
+  totalArchivados: number;
+  totalAsistieron: number;
+  totalAceptaronAlSenor: number;
+  porcentajeConversion: number;
 }
 
 @Injectable({
@@ -65,5 +82,17 @@ export class CafeConJesusService {
 
   convertirAConsolidado(id: number): Observable<CafeConJesusResponse> {
     return this.http.put<CafeConJesusResponse>(`${this.apiUrl}/${id}/convertir`, null);
+  }
+
+  obtenerDashboardAdmin(): Observable<CafeAdminDashboard> {
+    return this.http.get<CafeAdminDashboard>(`${this.apiUrl}/admin/dashboard`);
+  }
+
+  archivar(id: number): Observable<string> {
+    return this.http.put(`${this.apiUrl}/${id}/archivar`, null, { responseType: 'text' });
+  }
+
+  desarchivar(id: number): Observable<string> {
+    return this.http.put(`${this.apiUrl}/${id}/desarchivar`, null, { responseType: 'text' });
   }
 }

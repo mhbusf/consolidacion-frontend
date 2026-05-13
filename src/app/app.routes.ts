@@ -70,6 +70,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'cafe-admin',
+    loadComponent: () => import('./features/cafe-con-jesus/admin/cafe-admin-dashboard.component').then(m => m.CafeAdminDashboardComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+
+  {
     path: 'change-password',
     loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
     canActivate: [authGuard]
