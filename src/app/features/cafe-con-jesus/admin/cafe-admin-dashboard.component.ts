@@ -123,6 +123,7 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                           <ng-container *ngSwitchCase="'sinAsignar'">
                             <button class="btn-asignar" (click)="abrirAsignar(r)">Asignar</button>
                             <button class="btn-edit" (click)="abrirEditar(r)">Editar</button>
+                            <button class="btn-convertir" (click)="convertir(r)">Aceptó al Señor</button>
                             <button class="btn-warning" (click)="archivar(r)">Archivar</button>
                           </ng-container>
                           <ng-container *ngSwitchCase="'asignados'">

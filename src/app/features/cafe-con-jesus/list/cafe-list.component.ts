@@ -53,7 +53,6 @@ import { User } from '../../../core/models/auth.model';
               <th>Comentario</th>
               <th>Registrado por</th>
               <th>Asignado a</th>
-              <th>Acepto al Senor</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -79,11 +78,6 @@ import { User } from '../../../core/models/auth.model';
               <td>
                 <span class="user-badge badge-asignado" *ngIf="r.usuarioAsignado">{{ r.usuarioAsignado }}</span>
                 <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
-              </td>
-              <td>
-                <span class="badge badge-success" *ngIf="r.convertidoAConsolidado">Convertido</span>
-                <span class="badge badge-pending" *ngIf="!r.aceptoAlSenor && !r.convertidoAConsolidado">No</span>
-                <span class="badge badge-success" *ngIf="r.aceptoAlSenor && !r.convertidoAConsolidado">Si</span>
               </td>
               <td class="actions-cell">
                 <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
