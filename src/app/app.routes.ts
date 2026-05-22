@@ -77,6 +77,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'consolidador-resumen',
+    loadComponent: () => import('./features/consolidador-resumen/consolidador-resumen.component').then(m => m.ConsolidadorResumenComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+
+  {
     path: 'change-password',
     loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
     canActivate: [authGuard]

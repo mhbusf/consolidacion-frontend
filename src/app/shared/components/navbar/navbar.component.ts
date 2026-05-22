@@ -45,6 +45,12 @@ import { JwtResponse } from '../../../core/models/auth.model';
             </a>
           </li>
           <li *ngIf="isAdmin">
+            <a routerLink="/consolidador-resumen" routerLinkActive="active">
+              <span class="menu-icon">🔍</span>
+              Por Consolidador
+            </a>
+          </li>
+          <li *ngIf="isAdmin">
             <a routerLink="/usuarios" routerLinkActive="active">
               <span class="menu-icon">🔐</span>
               Usuarios
