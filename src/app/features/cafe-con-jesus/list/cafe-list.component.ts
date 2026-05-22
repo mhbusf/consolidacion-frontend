@@ -463,7 +463,7 @@ export class CafeListComponent implements OnInit {
 
     obs$.subscribe({
       next: (data) => {
-        this.registros = data;
+        this.registros = data.filter(r => !r.convertidoAConsolidado && !r.archivado);
         this.isLoading = false;
       },
       error: (error) => {
