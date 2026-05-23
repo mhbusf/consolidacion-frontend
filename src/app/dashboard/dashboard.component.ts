@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DashboardService } from '../core/services/dashboard.service';
+import { DashboardService, ConsolidadorResumen } from '../core/services/dashboard.service';
 import { ConsolidadoService } from '../core/services/consolidado.service';
+import { AuthService } from '../core/services/auth.service';
 import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model';
+import { User } from '../core/models/auth.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="dashboard-container">
       <h1 class="dashboard-title">
@@ -302,6 +305,131 @@ import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model
           <p>No hay consolidados con atrasos en este momento.</p>
         </div>
       </ng-container>
+
+      <!-- Sección Cartera por Consolidador -->
+      <div class="section section-consolidador">
+        <h2 class="section-title">👤 Cartera por Consolidador</h2>
+
+        <div class="selector-card">
+          <label class="selector-label">Selecciona un consolidador</label>
+          <div class="selector-row">
+            <select [(ngModel)]="usernameSeleccionado" class="form-control" (ngModelChange)="onSeleccionarConsolidador()">
+              <option value="">-- Selecciona --</option>
+              <option *ngFor="let u of usuarios" [value]="u.username">{{ u.username }}</option>
+            </select>
+            <div class="spinner-inline" *ngIf="isLoadingResumen"></div>
+          </div>
+        </div>
+
+        <div *ngIf="!usernameSeleccionado && !isLoadingResumen" class="resumen-empty">
+          <span class="empty-icon-sm">👤</span>
+          <p>Selecciona un consolidador para ver su cartera</p>
+        </div>
+
+        <ng-container *ngIf="resumenConsolidador && !isLoadingResumen">
+          <!-- Métricas -->
+          <div class="resumen-metrics">
+            <div class="resumen-metric metric-blue">
+              <div class="resumen-metric-label">Café con Jesús</div>
+              <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes }}</div>
+            </div>
+            <div class="resumen-metric metric-green">
+              <div class="resumen-metric-label">Consolidados</div>
+              <div class="resumen-metric-value">{{ resumenConsolidador.totalConsolidados }}</div>
+            </div>
+            <div class="resumen-metric metric-purple">
+              <div class="resumen-metric-label">Total personas</div>
+              <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes + resumenConsolidador.totalConsolidados }}</div>
+            </div>
+          </div>
+
+          <!-- Tabla Café con Jesús -->
+          <div class="resumen-seccion">
+            <div class="resumen-seccion-header header-cafe">
+              <span>☕</span>
+              <span class="resumen-seccion-titulo">Café con Jesús</span>
+              <span class="resumen-count">{{ resumenConsolidador.totalCafes }}</span>
+            </div>
+            <div *ngIf="resumenConsolidador.cafes.length === 0" class="resumen-seccion-empty">
+              No tiene personas asignadas en Café con Jesús
+            </div>
+            <div class="table-container" *ngIf="resumenConsolidador.cafes.length > 0">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Edad</th>
+                    <th>Invitado por</th>
+                    <th>Fecha ingreso</th>
+                    <th>Asistió</th>
+                    <th>Comentario</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of resumenConsolidador.cafes">
+                    <td class="fw-bold">{{ c.nombre }} {{ c.apellido }}</td>
+                    <td class="text-muted-cell">{{ c.telefono }}</td>
+                    <td class="text-muted-cell">{{ c.edad || '—' }}</td>
+                    <td class="text-muted-cell">{{ c.invitadoPor || '—' }}</td>
+                    <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="badge" [class.badge-success]="c.asistio" [class.badge-warning]="!c.asistio">
+                        {{ c.asistio ? 'Sí' : 'No' }}
+                      </span>
+                    </td>
+                    <td class="comentario-cell">{{ c.comentario || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tabla Consolidados -->
+          <div class="resumen-seccion">
+            <div class="resumen-seccion-header header-consolidados">
+              <span>👥</span>
+              <span class="resumen-seccion-titulo">Consolidados</span>
+              <span class="resumen-count">{{ resumenConsolidador.totalConsolidados }}</span>
+            </div>
+            <div *ngIf="resumenConsolidador.consolidados.length === 0" class="resumen-seccion-empty">
+              No tiene personas asignadas en Consolidados
+            </div>
+            <div class="table-container" *ngIf="resumenConsolidador.consolidados.length > 0">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Edad</th>
+                    <th>Quién invitó</th>
+                    <th>Fecha ingreso</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of resumenConsolidador.consolidados">
+                    <td class="fw-bold">{{ c.nombre }}</td>
+                    <td class="text-muted-cell">{{ c.telefono }}</td>
+                    <td class="text-muted-cell">{{ c.edad || '—' }}</td>
+                    <td class="text-muted-cell">{{ c.quienInvito || '—' }}</td>
+                    <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getBadgeEstado(c.estado)">
+                        {{ getLabelEstado(c.estado) }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-ver" (click)="verDetalle(c.id)">Ver</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-container>
+      </div>
 
       <!-- Estado de carga -->
       <div class="loading" *ngIf="isLoading">
@@ -942,6 +1070,164 @@ import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model
         letter-spacing: 0.5px;
       }
 
+      /* Sección Cartera por Consolidador */
+      .section-consolidador {
+        padding-bottom: 40px;
+      }
+
+      .selector-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+      }
+
+      .selector-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+      }
+
+      .selector-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .form-control {
+        max-width: 400px;
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        cursor: pointer;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-light);
+      }
+
+      .spinner-inline {
+        width: 22px;
+        height: 22px;
+        border: 3px solid var(--bg-secondary);
+        border-top-color: var(--primary-light);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        flex-shrink: 0;
+      }
+
+      .resumen-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+      }
+
+      .resumen-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .resumen-metric {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .metric-blue   { border-left: 4px solid #3b82f6; }
+      .metric-green  { border-left: 4px solid #22c55e; }
+      .metric-purple { border-left: 4px solid #8b5cf6; }
+
+      .resumen-metric-label {
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+
+      .resumen-metric-value {
+        color: var(--text-primary);
+        font-size: 32px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .resumen-seccion {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      .resumen-seccion-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .header-cafe         { background: rgba(234,179,8,0.08);  border-left: 4px solid #eab308; }
+      .header-consolidados { background: rgba(59,130,246,0.08); border-left: 4px solid #3b82f6; }
+
+      .resumen-seccion-titulo {
+        flex: 1;
+        color: var(--text-primary);
+      }
+
+      .resumen-count {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .resumen-seccion-empty {
+        padding: 28px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+
+      .btn-ver {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn-ver:hover { opacity: 0.8; }
+
       /* Responsive */
       @media (max-width: 768px) {
         .dashboard-container {
@@ -979,15 +1265,25 @@ export class DashboardComponent implements OnInit {
   isLoading = true;
   isLoadingHistorico = true;
 
+  usuarios: User[] = [];
+  usernameSeleccionado = '';
+  resumenConsolidador: ConsolidadorResumen | null = null;
+  isLoadingResumen = false;
+
   constructor(
     private dashboardService: DashboardService,
     private consolidadoService: ConsolidadoService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarDashboard();
     this.cargarHistorico();
+    this.authService.getAllUsers().subscribe({
+      next: (users) => { this.usuarios = users; },
+      error: () => {}
+    });
   }
 
   cargarDashboard(): void {
@@ -1050,6 +1346,38 @@ export class DashboardComponent implements OnInit {
       CERRADO: 'Cerrado',
     };
     return labels[estado] || estado;
+  }
+
+  onSeleccionarConsolidador(): void {
+    if (!this.usernameSeleccionado) {
+      this.resumenConsolidador = null;
+      return;
+    }
+    this.isLoadingResumen = true;
+    this.resumenConsolidador = null;
+    this.dashboardService.getResumenConsolidador(this.usernameSeleccionado).subscribe({
+      next: (data) => {
+        this.resumenConsolidador = data;
+        this.isLoadingResumen = false;
+      },
+      error: () => { this.isLoadingResumen = false; }
+    });
+  }
+
+  getBadgeEstado(estado: string): string {
+    const map: Record<string, string> = {
+      ASIGNADO: 'badge-primary', EN_PROCESO: 'badge-warning',
+      PENDIENTE: 'badge-warning', GDC: 'badge-secondary', CERRADO: 'badge-success'
+    };
+    return map[estado] || 'badge-secondary';
+  }
+
+  getLabelEstado(estado: string): string {
+    const map: Record<string, string> = {
+      ASIGNADO: 'Asignado', EN_PROCESO: 'En proceso',
+      PENDIENTE: 'Pendiente', GDC: 'En GDC', CERRADO: 'Cerrado'
+    };
+    return map[estado] || estado;
   }
 
   verConsolidados(): void {
