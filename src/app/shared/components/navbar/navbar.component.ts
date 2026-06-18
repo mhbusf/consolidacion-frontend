@@ -237,7 +237,8 @@ import { JwtResponse } from '../../../core/models/auth.model';
         display: none;
         position: absolute;
         right: 0;
-        top: calc(100% + 8px);
+        top: 100%;
+        margin-top: 8px;
         background: #334155;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
@@ -245,6 +246,15 @@ import { JwtResponse } from '../../../core/models/auth.model';
         z-index: 1000;
         border: 1px solid #475569;
         overflow: hidden;
+      }
+
+      .dropdown-menu::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 0;
+        right: 0;
+        height: 8px;
       }
 
       .dropdown-menu a {
