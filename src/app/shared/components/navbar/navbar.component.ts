@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -59,15 +59,15 @@ import { JwtResponse } from '../../../core/models/auth.model';
         </ul>
 
         <div class="nav-user" *ngIf="currentUser$ | async as user">
-          <div class="dropdown">
-            <button class="dropdown-toggle">
+          <div class="dropdown" [class.open]="dropdownOpen">
+            <button class="dropdown-toggle" (click)="toggleDropdown($event)">
               <span class="user-icon">👤</span>
               <span class="user-name">{{ user.username }}</span>
               <span class="badge-role" *ngIf="isAdmin">ADMIN</span>
               <span class="dropdown-arrow">▼</span>
             </button>
-            <div class="dropdown-menu">
-              <a routerLink="/cambiar-password">
+            <div class="dropdown-menu" *ngIf="dropdownOpen">
+              <a routerLink="/cambiar-password" (click)="dropdownOpen = false">
                 <span class="menu-icon">🔑</span>
                 Cambiar Contraseña
               </a>
@@ -225,20 +225,14 @@ import { JwtResponse } from '../../../core/models/auth.model';
         transition: transform 0.2s ease;
       }
 
-      .dropdown:hover .dropdown-arrow {
+      .dropdown.open .dropdown-arrow {
         transform: rotate(180deg);
       }
 
-      .dropdown:hover .dropdown-menu {
-        display: block;
-      }
-
       .dropdown-menu {
-        display: none;
         position: absolute;
         right: 0;
-        top: 100%;
-        margin-top: 8px;
+        top: calc(100% + 8px);
         background: #334155;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
@@ -246,15 +240,6 @@ import { JwtResponse } from '../../../core/models/auth.model';
         z-index: 1000;
         border: 1px solid #475569;
         overflow: hidden;
-      }
-
-      .dropdown-menu::before {
-        content: '';
-        position: absolute;
-        top: -8px;
-        left: 0;
-        right: 0;
-        height: 8px;
       }
 
       .dropdown-menu a {
@@ -316,18 +301,32 @@ import { JwtResponse } from '../../../core/models/auth.model';
 export class NavbarComponent implements OnInit {
   currentUser$: Observable<JwtResponse | null>;
   isAdmin = false;
+  dropdownOpen = false;
 
-  constructor(public authService: AuthService, private router: Router) {
+  constructor(public authService: AuthService, private router: Router, private el: ElementRef) {
     this.currentUser$ = this.authService.currentUser$;
   }
 
   ngOnInit(): void {
-    this.currentUser$.subscribe((user) => {
+    this.currentUser$.subscribe(() => {
       this.isAdmin = this.authService.isAdmin();
     });
   }
 
+  toggleDropdown(event: Event): void {
+    event.stopPropagation();
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (!this.el.nativeElement.contains(event.target)) {
+      this.dropdownOpen = false;
+    }
+  }
+
   logout(): void {
+    this.dropdownOpen = false;
     this.authService.logout();
     this.router.navigate(['/login']);
   }
