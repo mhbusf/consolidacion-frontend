@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import {
   CafeConJesusService,
   CafeConJesusResponse,
+  ETAPAS_CAFE,
+  etapaLabel,
 } from '../../../core/services/cafe-con-jesus.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -50,6 +52,7 @@ import { User } from '../../../core/models/auth.model';
               <th>Fecha Ingreso</th>
               <th>Asistio</th>
               <th>Fecha Asistencia</th>
+              <th>Etapa</th>
               <th>Comentario</th>
               <th>Registrado por</th>
               <th>Asignado a</th>
@@ -71,6 +74,10 @@ import { User } from '../../../core/models/auth.model';
                 </span>
               </td>
               <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date : 'dd/MM/yyyy') : '-' }}</td>
+              <td>
+                <span *ngIf="r.etapa" class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
+                <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
+              </td>
               <td class="comentario-cell">{{ r.comentario || '-' }}</td>
               <td>
                 <span class="user-badge">{{ r.registradoPor }}</span>
@@ -110,6 +117,13 @@ import { User } from '../../../core/models/auth.model';
             <div class="form-group" *ngIf="editAsistio">
               <label>Fecha de Asistencia</label>
               <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Etapa de seguimiento</label>
+              <select [(ngModel)]="editEtapa" class="form-control">
+                <option value="">— Sin etapa —</option>
+                <option *ngFor="let e of etapas" [value]="e.value">{{ e.label }}</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Comentario</label>
@@ -296,6 +310,22 @@ import { User } from '../../../core/models/auth.model';
         white-space: nowrap;
       }
 
+      .badge-etapa {
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .etapa-1 { background: rgba(59,130,246,0.15); color: #3b82f6; }
+      .etapa-2 { background: rgba(99,102,241,0.15); color: #6366f1; }
+      .etapa-3 { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+      .etapa-4 { background: rgba(34,197,94,0.15);  color: #22c55e; }
+      .etapa-5 { background: rgba(107,114,128,0.15);color: #6b7280; }
+
+      .text-muted-sm { color: var(--text-muted); font-size: 13px; }
+
       .btn-edit {
         background: rgba(59, 130, 246, 0.15);
         color: #3b82f6;
@@ -429,12 +459,15 @@ export class CafeListComponent implements OnInit {
   isLoading = true;
   isAdmin = false;
 
+  etapas = ETAPAS_CAFE;
+
   // Edicion
   registroEditando: CafeConJesusResponse | null = null;
   editAsistio = false;
   editFechaAsistencia = '';
   editComentario = '';
   editUsuarioAsignado = '';
+  editEtapa = '';
   isSaving = false;
 
   constructor(
@@ -483,6 +516,16 @@ export class CafeListComponent implements OnInit {
     this.editFechaAsistencia = r.fechaAsistencia || '';
     this.editComentario = r.comentario || '';
     this.editUsuarioAsignado = r.usuarioAsignado || '';
+    this.editEtapa = r.etapa || '';
+  }
+
+  getEtapaLabel(value: string): string {
+    return etapaLabel(value);
+  }
+
+  getEtapaClass(value: string): string {
+    const idx = ETAPAS_CAFE.findIndex(e => e.value === value);
+    return idx >= 0 ? `etapa-${idx + 1}` : '';
   }
 
   onAsistioChange(): void {
@@ -511,6 +554,7 @@ export class CafeListComponent implements OnInit {
       comentario: this.editComentario,
       asistio: this.editAsistio,
       fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
+      etapa: this.editEtapa || undefined,
     };
 
     this.cafeService.actualizar(id, request).subscribe({

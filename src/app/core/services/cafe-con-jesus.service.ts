@@ -3,6 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.prod';
 
+export const ETAPAS_CAFE = [
+  { value: 'PRIMERA_INVITACION', label: 'Primera Invitación' },
+  { value: 'SEGUNDA_INVITACION', label: 'Segunda Invitación' },
+  { value: 'TERCERA_INVITACION', label: 'Tercera Invitación' },
+  { value: 'ASISTIO_OTRA_VEZ',   label: 'Asistió otra vez a la Cate' },
+  { value: 'MENSAJE_FINAL',      label: 'Se deja mensaje final' },
+];
+
+export function etapaLabel(value: string | null | undefined): string {
+  return ETAPAS_CAFE.find(e => e.value === value)?.label ?? '—';
+}
+
 export interface CafeConJesusRequest {
   nombre: string;
   apellido: string;
@@ -13,6 +25,7 @@ export interface CafeConJesusRequest {
   comentario?: string;
   asistio?: boolean;
   fechaAsistencia?: string;
+  etapa?: string;
 }
 
 export interface CafeConJesusResponse {
@@ -35,6 +48,7 @@ export interface CafeConJesusResponse {
   consolidadoId: number;
   archivado: boolean;
   fechaArchivado: string;
+  etapa: string;
 }
 
 export interface CafeAdminDashboard {
@@ -50,6 +64,7 @@ export interface CafeAdminDashboard {
   totalAsistieron: number;
   totalAceptaronAlSenor: number;
   porcentajeConversion: number;
+  etapasResumen: { [key: string]: number };
 }
 
 @Injectable({

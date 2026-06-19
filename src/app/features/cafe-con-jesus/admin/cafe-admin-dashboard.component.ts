@@ -6,6 +6,8 @@ import {
   CafeConJesusService,
   CafeAdminDashboard,
   CafeConJesusResponse,
+  ETAPAS_CAFE,
+  etapaLabel,
 } from '../../../core/services/cafe-con-jesus.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -55,6 +57,33 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
           </div>
         </div>
 
+        <!-- Etapas de seguimiento -->
+        <div class="etapas-section" *ngIf="dashboard.etapasResumen">
+          <h3 class="etapas-titulo">📋 Etapas de seguimiento (activos)</h3>
+          <div class="etapas-grid">
+            <div class="etapa-card etapa-1">
+              <div class="etapa-label">Primera Invitación</div>
+              <div class="etapa-count">{{ dashboard.etapasResumen['PRIMERA_INVITACION'] || 0 }}</div>
+            </div>
+            <div class="etapa-card etapa-2">
+              <div class="etapa-label">Segunda Invitación</div>
+              <div class="etapa-count">{{ dashboard.etapasResumen['SEGUNDA_INVITACION'] || 0 }}</div>
+            </div>
+            <div class="etapa-card etapa-3">
+              <div class="etapa-label">Tercera Invitación</div>
+              <div class="etapa-count">{{ dashboard.etapasResumen['TERCERA_INVITACION'] || 0 }}</div>
+            </div>
+            <div class="etapa-card etapa-4">
+              <div class="etapa-label">Asistió otra vez a la Cate</div>
+              <div class="etapa-count">{{ dashboard.etapasResumen['ASISTIO_OTRA_VEZ'] || 0 }}</div>
+            </div>
+            <div class="etapa-card etapa-5">
+              <div class="etapa-label">Se deja mensaje final</div>
+              <div class="etapa-count">{{ dashboard.etapasResumen['MENSAJE_FINAL'] || 0 }}</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Grupos -->
         <div class="grupos">
           <div class="grupo" *ngFor="let g of grupos">
@@ -86,7 +115,7 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                     <tr>
                       <th>Nombre</th>
                       <th>Teléfono</th>
-                      <th>Edad</th>
+                      <th>Etapa</th>
                       <th>Invitado por</th>
                       <th>Fecha ingreso</th>
                       <th>Asistió</th>
@@ -100,7 +129,10 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                     <tr *ngFor="let r of dashboard![g.key]">
                       <td class="fw-bold">{{ r.nombre }} {{ r.apellido }}</td>
                       <td>{{ r.telefono }}</td>
-                      <td>{{ r.edad || '-' }}</td>
+                      <td>
+                        <span *ngIf="r.etapa" class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
+                        <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
+                      </td>
                       <td>{{ r.invitadoPor || '-' }}</td>
                       <td>{{ r.fechaIngreso | date: 'dd/MM/yyyy' }}</td>
                       <td>
@@ -185,6 +217,13 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
           <div class="form-group" *ngIf="editAsistio">
             <label>Fecha de asistencia</label>
             <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Etapa de seguimiento</label>
+            <select [(ngModel)]="editEtapa" class="form-control">
+              <option value="">— Sin etapa —</option>
+              <option *ngFor="let e of etapas" [value]="e.value">{{ e.label }}</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Comentario</label>
@@ -449,6 +488,66 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
         font-size: 13px;
       }
 
+      /* Etapas */
+      .etapas-section {
+        margin-bottom: 28px;
+      }
+
+      .etapas-titulo {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 14px;
+      }
+
+      .etapas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+      }
+
+      .etapa-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .etapa-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        line-height: 1.3;
+      }
+
+      .etapa-count {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .etapa-1 { border-left: 4px solid #3b82f6; }
+      .etapa-1 .etapa-count { color: #3b82f6; }
+      .etapa-2 { border-left: 4px solid #6366f1; }
+      .etapa-2 .etapa-count { color: #6366f1; }
+      .etapa-3 { border-left: 4px solid #8b5cf6; }
+      .etapa-3 .etapa-count { color: #8b5cf6; }
+      .etapa-4 { border-left: 4px solid #22c55e; }
+      .etapa-4 .etapa-count { color: #22c55e; }
+      .etapa-5 { border-left: 4px solid #6b7280; }
+      .etapa-5 .etapa-count { color: #6b7280; }
+
+      .badge-etapa {
+        padding: 3px 9px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .text-muted-sm { color: var(--text-muted); font-size: 13px; }
+
       .loading {
         display: flex;
         flex-direction: column;
@@ -619,10 +718,13 @@ export class CafeAdminDashboardComponent implements OnInit {
   registroAsignando: CafeConJesusResponse | null = null;
   asignarUsername = '';
 
+  etapas = ETAPAS_CAFE;
+
   registroEditando: CafeConJesusResponse | null = null;
   editAsistio = false;
   editFechaAsistencia = '';
   editComentario = '';
+  editEtapa = '';
 
   constructor(
     private cafeService: CafeConJesusService,
@@ -695,6 +797,16 @@ export class CafeAdminDashboardComponent implements OnInit {
     this.editAsistio = r.asistio || false;
     this.editFechaAsistencia = r.fechaAsistencia || '';
     this.editComentario = r.comentario || '';
+    this.editEtapa = r.etapa || '';
+  }
+
+  getEtapaLabel(value: string): string {
+    return etapaLabel(value);
+  }
+
+  getEtapaClass(value: string): string {
+    const idx = ETAPAS_CAFE.findIndex(e => e.value === value);
+    return idx >= 0 ? `etapa-${idx + 1}` : '';
   }
 
   cerrarEditar(): void {
@@ -721,6 +833,7 @@ export class CafeAdminDashboardComponent implements OnInit {
       comentario: this.editComentario,
       asistio: this.editAsistio,
       fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
+      etapa: this.editEtapa || undefined,
     }).subscribe({
       next: () => {
         this.notificationService.success('Registro actualizado');
