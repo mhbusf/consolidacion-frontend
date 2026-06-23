@@ -47,13 +47,9 @@ import { User } from '../../../core/models/auth.model';
               <th>Apellido</th>
               <th>Telefono</th>
               <th>Edad</th>
-              <th>Invitado por</th>
-              <th>Tel. Invitado por</th>
               <th>Fecha Ingreso</th>
               <th>Asistio</th>
-              <th>Fecha Asistencia</th>
               <th>Etapa</th>
-              <th>Comentario</th>
               <th>Registrado por</th>
               <th>Asignado a</th>
               <th>Acciones</th>
@@ -65,20 +61,16 @@ import { User } from '../../../core/models/auth.model';
               <td>{{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
               <td>{{ r.edad || '-' }}</td>
-              <td>{{ r.invitadoPor || '-' }}</td>
-              <td>{{ r.telefonoInvitadoPor || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
               <td>
                 <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
                   {{ r.asistio ? 'Si' : 'No' }}
                 </span>
               </td>
-              <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date : 'dd/MM/yyyy') : '-' }}</td>
               <td>
                 <span *ngIf="r.etapa" class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
                 <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
               </td>
-              <td class="comentario-cell">{{ r.comentario || '-' }}</td>
               <td>
                 <span class="user-badge">{{ r.registradoPor }}</span>
               </td>
