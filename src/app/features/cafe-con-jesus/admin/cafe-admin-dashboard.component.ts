@@ -117,8 +117,11 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                       <th>Teléfono</th>
                       <th>Etapa</th>
                       <th>Invitado por</th>
+                      <th>Tel. Invitado por</th>
+                      <th>Comentario</th>
                       <th>Fecha ingreso</th>
                       <th>Asistió</th>
+                      <th>Fecha asistencia</th>
                       <th *ngIf="g.key !== 'pasaronAConsolidacion'">Asignado a</th>
                       <th *ngIf="g.key === 'pasaronAConsolidacion'">Consolidado</th>
                       <th *ngIf="g.key === 'archivados'">Fecha archivado</th>
@@ -134,12 +137,15 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                         <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
                       </td>
                       <td>{{ r.invitadoPor || '-' }}</td>
+                      <td>{{ r.telefonoInvitadoPor || '-' }}</td>
+                      <td class="td-comentario">{{ r.comentario || '-' }}</td>
                       <td>{{ r.fechaIngreso | date: 'dd/MM/yyyy' }}</td>
                       <td>
                         <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
                           {{ r.asistio ? 'Sí' : 'No' }}
                         </span>
                       </td>
+                      <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</td>
                       <td *ngIf="g.key !== 'pasaronAConsolidacion'">
                         <span class="user-badge badge-asignado" *ngIf="r.usuarioAsignado">{{ r.usuarioAsignado }}</span>
                         <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
@@ -547,6 +553,13 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
       }
 
       .text-muted-sm { color: var(--text-muted); font-size: 13px; }
+
+      .td-comentario {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       .loading {
         display: flex;
