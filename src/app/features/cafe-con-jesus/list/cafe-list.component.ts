@@ -43,8 +43,7 @@ import { User } from '../../../core/models/auth.model';
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Apellido</th>
+              <th>Nombre y Apellido</th>
               <th>Telefono</th>
               <th>Edad</th>
               <th>Fecha Ingreso</th>
@@ -57,8 +56,7 @@ import { User } from '../../../core/models/auth.model';
           </thead>
           <tbody>
             <tr *ngFor="let r of registros">
-              <td class="fw-bold">{{ r.nombre }}</td>
-              <td>{{ r.apellido }}</td>
+              <td class="fw-bold">{{ r.nombre }} {{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
               <td>{{ r.edad || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
@@ -178,8 +176,8 @@ import { User } from '../../../core/models/auth.model';
 
       .data-table {
         width: 100%;
-        min-width: 1600px;
         border-collapse: collapse;
+        table-layout: fixed;
       }
 
       .data-table thead {
@@ -187,21 +185,39 @@ import { User } from '../../../core/models/auth.model';
       }
 
       .data-table th {
-        padding: 14px 16px;
+        padding: 10px 10px;
         text-align: left;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--text-muted);
         border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .data-table td {
-        padding: 14px 16px;
+        padding: 10px 10px;
         color: var(--text-primary);
         border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
+
+      /* Anchos proporcionales de columnas */
+      .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 18%; } /* Nombre */
+      .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 10%; } /* Teléfono */
+      .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 5%;  } /* Edad */
+      .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 10%; } /* Fecha ingreso */
+      .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 7%;  } /* Asistió */
+      .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 16%; } /* Etapa */
+      .data-table th:nth-child(7), .data-table td:nth-child(7) { width: 12%; } /* Registrado por */
+      .data-table th:nth-child(8), .data-table td:nth-child(8) { width: 12%; } /* Asignado a */
+      .data-table th:nth-child(9), .data-table td:nth-child(9) { width: 10%; } /* Acciones */
 
       .data-table tbody tr {
         transition: background 0.2s;
