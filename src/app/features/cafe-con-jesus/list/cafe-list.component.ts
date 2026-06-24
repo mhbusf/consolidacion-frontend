@@ -43,7 +43,8 @@ import { User } from '../../../core/models/auth.model';
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nombre y Apellido</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
               <th>Telefono</th>
               <th>Edad</th>
               <th>Fecha Ingreso</th>
@@ -56,7 +57,8 @@ import { User } from '../../../core/models/auth.model';
           </thead>
           <tbody>
             <tr *ngFor="let r of registros">
-              <td class="fw-bold">{{ r.nombre }} {{ r.apellido }}</td>
+              <td class="fw-bold nombre-link" (click)="verDetalle(r)">{{ r.nombre }}</td>
+              <td>{{ r.apellido }}</td>
               <td>{{ r.telefono }}</td>
               <td>{{ r.edad || '-' }}</td>
               <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
@@ -85,6 +87,75 @@ import { User } from '../../../core/models/auth.model';
             </tr>
           </tbody>
         </table>
+
+        <!-- Modal detalle -->
+        <div class="modal-overlay" *ngIf="registroDetalle" (click)="cerrarDetalle()">
+          <div class="detalle-card" (click)="$event.stopPropagation()">
+            <div class="detalle-header">
+              <div class="detalle-avatar">{{ registroDetalle.nombre[0] }}{{ registroDetalle.apellido[0] }}</div>
+              <div>
+                <h3 class="detalle-nombre">{{ registroDetalle.nombre }} {{ registroDetalle.apellido }}</h3>
+                <span class="badge-etapa" *ngIf="registroDetalle.etapa" [ngClass]="getEtapaClass(registroDetalle.etapa)">
+                  {{ getEtapaLabel(registroDetalle.etapa) }}
+                </span>
+                <span class="text-muted-sm" *ngIf="!registroDetalle.etapa">Sin etapa asignada</span>
+              </div>
+              <button class="detalle-close" (click)="cerrarDetalle()">✕</button>
+            </div>
+
+            <div class="detalle-grid">
+              <div class="detalle-item">
+                <span class="detalle-label">Teléfono</span>
+                <span class="detalle-value">{{ registroDetalle.telefono || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Edad</span>
+                <span class="detalle-value">{{ registroDetalle.edad || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Fecha de ingreso</span>
+                <span class="detalle-value">{{ registroDetalle.fechaIngreso | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Asistió al Café</span>
+                <span class="badge" [class.badge-success]="registroDetalle.asistio" [class.badge-pending]="!registroDetalle.asistio">
+                  {{ registroDetalle.asistio ? 'Sí' : 'No' }}
+                </span>
+              </div>
+              <div class="detalle-item" *ngIf="registroDetalle.fechaAsistencia">
+                <span class="detalle-label">Fecha de asistencia</span>
+                <span class="detalle-value">{{ registroDetalle.fechaAsistencia | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Invitado por</span>
+                <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Tel. Invitado por</span>
+                <span class="detalle-value">{{ registroDetalle.telefonoInvitadoPor || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Registrado por</span>
+                <span class="detalle-value">{{ registroDetalle.registradoPor || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Asignado a</span>
+                <span class="user-badge badge-asignado" *ngIf="registroDetalle.usuarioAsignado">{{ registroDetalle.usuarioAsignado }}</span>
+                <span class="badge badge-pending" *ngIf="!registroDetalle.usuarioAsignado">Sin asignar</span>
+              </div>
+            </div>
+
+            <div class="detalle-comentario" *ngIf="registroDetalle.comentario">
+              <span class="detalle-label">Comentario</span>
+              <p class="detalle-comentario-texto">{{ registroDetalle.comentario }}</p>
+            </div>
+
+            <div class="detalle-actions">
+              <button class="btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+              <button class="btn-edit" (click)="editarDesdeDetalle()">Editar</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Modal editar -->
         <div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
@@ -176,8 +247,8 @@ import { User } from '../../../core/models/auth.model';
 
       .data-table {
         width: 100%;
+        min-width: 1600px;
         border-collapse: collapse;
-        table-layout: fixed;
       }
 
       .data-table thead {
@@ -185,39 +256,21 @@ import { User } from '../../../core/models/auth.model';
       }
 
       .data-table th {
-        padding: 10px 10px;
+        padding: 14px 16px;
         text-align: left;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--text-muted);
         border-bottom: 1px solid var(--border-color);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
 
       .data-table td {
-        padding: 10px 10px;
+        padding: 14px 16px;
         color: var(--text-primary);
         border-bottom: 1px solid var(--border-color);
-        font-size: 13px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
-
-      /* Anchos proporcionales de columnas */
-      .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 18%; } /* Nombre */
-      .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 10%; } /* Teléfono */
-      .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 5%;  } /* Edad */
-      .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 10%; } /* Fecha ingreso */
-      .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 7%;  } /* Asistió */
-      .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 16%; } /* Etapa */
-      .data-table th:nth-child(7), .data-table td:nth-child(7) { width: 12%; } /* Registrado por */
-      .data-table th:nth-child(8), .data-table td:nth-child(8) { width: 12%; } /* Asignado a */
-      .data-table th:nth-child(9), .data-table td:nth-child(9) { width: 10%; } /* Acciones */
 
       .data-table tbody tr {
         transition: background 0.2s;
@@ -372,6 +425,17 @@ import { User } from '../../../core/models/auth.model';
         align-items: center;
       }
 
+      .nombre-link {
+        cursor: pointer;
+        color: var(--primary-light);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .nombre-link:hover {
+        opacity: 0.8;
+      }
+
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -383,6 +447,122 @@ import { User } from '../../../core/models/auth.model';
         align-items: center;
         justify-content: center;
         z-index: 1000;
+      }
+
+      /* Tarjeta detalle */
+      .detalle-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        width: 90%;
+        max-width: 560px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        overflow: hidden;
+      }
+
+      .detalle-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 24px 20px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+      }
+
+      .detalle-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+        flex-shrink: 0;
+        text-transform: uppercase;
+      }
+
+      .detalle-nombre {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+      }
+
+      .detalle-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background 0.2s;
+      }
+
+      .detalle-close:hover {
+        background: var(--bg-hover);
+      }
+
+      .detalle-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        padding: 8px 0;
+      }
+
+      .detalle-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .detalle-item:nth-last-child(-n+2) {
+        border-bottom: none;
+      }
+
+      .detalle-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+      }
+
+      .detalle-value {
+        font-size: 14px;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .detalle-comentario {
+        padding: 12px 24px 16px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .detalle-comentario-texto {
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-top: 6px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .detalle-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-secondary);
       }
 
       .modal-content {
@@ -469,6 +649,9 @@ export class CafeListComponent implements OnInit {
 
   etapas = ETAPAS_CAFE;
 
+  // Detalle
+  registroDetalle: CafeConJesusResponse | null = null;
+
   // Edicion
   registroEditando: CafeConJesusResponse | null = null;
   editAsistio = false;
@@ -516,6 +699,20 @@ export class CafeListComponent implements OnInit {
 
   nuevoRegistro(): void {
     this.router.navigate(['/cafe-con-jesus/nuevo']);
+  }
+
+  verDetalle(r: CafeConJesusResponse): void {
+    this.registroDetalle = r;
+  }
+
+  cerrarDetalle(): void {
+    this.registroDetalle = null;
+  }
+
+  editarDesdeDetalle(): void {
+    const r = this.registroDetalle!;
+    this.registroDetalle = null;
+    this.editarRegistro(r);
   }
 
   editarRegistro(r: CafeConJesusResponse): void {
