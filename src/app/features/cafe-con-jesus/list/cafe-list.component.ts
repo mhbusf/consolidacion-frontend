@@ -113,8 +113,12 @@ import { User } from '../../../core/models/auth.model';
                 <span class="detalle-value">{{ registroDetalle.edad || '-' }}</span>
               </div>
               <div class="detalle-item">
-                <span class="detalle-label">Fecha de ingreso</span>
-                <span class="detalle-value">{{ registroDetalle.fechaIngreso | date: 'dd/MM/yyyy' }}</span>
+                <span class="detalle-label">Invitado por</span>
+                <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-label">Tel. Invitado por</span>
+                <span class="detalle-value">{{ registroDetalle.telefonoInvitadoPor || '-' }}</span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-label">Asistió al Café</span>
@@ -122,17 +126,9 @@ import { User } from '../../../core/models/auth.model';
                   {{ registroDetalle.asistio ? 'Sí' : 'No' }}
                 </span>
               </div>
-              <div class="detalle-item" *ngIf="registroDetalle.fechaAsistencia">
-                <span class="detalle-label">Fecha de asistencia</span>
-                <span class="detalle-value">{{ registroDetalle.fechaAsistencia | date: 'dd/MM/yyyy' }}</span>
-              </div>
               <div class="detalle-item">
-                <span class="detalle-label">Invitado por</span>
-                <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Tel. Invitado por</span>
-                <span class="detalle-value">{{ registroDetalle.telefonoInvitadoPor || '-' }}</span>
+                <span class="detalle-label">Fecha asistencia</span>
+                <span class="detalle-value">{{ registroDetalle.fechaAsistencia ? (registroDetalle.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-label">Registrado por</span>
@@ -145,9 +141,35 @@ import { User } from '../../../core/models/auth.model';
               </div>
             </div>
 
-            <div class="detalle-comentario" *ngIf="registroDetalle.comentario">
-              <span class="detalle-label">Comentario</span>
-              <p class="detalle-comentario-texto">{{ registroDetalle.comentario }}</p>
+            <!-- Historial de comentarios -->
+            <div class="detalle-comentarios">
+              <div class="detalle-comentarios-titulo">Comentarios</div>
+
+              <div class="comentarios-lista" *ngIf="registroDetalle.comentarios?.length; else sinComentarios">
+                <div class="comentario-item" *ngFor="let c of registroDetalle.comentarios">
+                  <div class="comentario-meta">
+                    <span class="comentario-usuario">{{ c.usuario }}</span>
+                    <span class="comentario-fecha">{{ c.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <p class="comentario-texto">{{ c.contenido }}</p>
+                </div>
+              </div>
+              <ng-template #sinComentarios>
+                <p class="sin-comentarios">Sin comentarios aún.</p>
+              </ng-template>
+
+              <!-- Agregar comentario -->
+              <div class="nuevo-comentario">
+                <textarea
+                  [(ngModel)]="nuevoComentario"
+                  class="form-control"
+                  rows="2"
+                  placeholder="Escribir comentario...">
+                </textarea>
+                <button class="btn-agregar-comentario" (click)="agregarComentario()" [disabled]="!nuevoComentario.trim() || isSavingComentario">
+                  {{ isSavingComentario ? 'Guardando...' : 'Agregar comentario' }}
+                </button>
+              </div>
             </div>
 
             <div class="detalle-actions">
@@ -543,18 +565,96 @@ import { User } from '../../../core/models/auth.model';
         font-weight: 500;
       }
 
-      .detalle-comentario {
-        padding: 12px 24px 16px;
+      .detalle-comentarios {
         border-top: 1px solid var(--border-color);
+        padding: 16px 24px;
       }
 
-      .detalle-comentario-texto {
-        font-size: 14px;
+      .detalle-comentarios-titulo {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .comentarios-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+        padding-right: 4px;
+      }
+
+      .comentario-item {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 10px 14px;
+      }
+
+      .comentario-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+
+      .comentario-usuario {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary-light);
+      }
+
+      .comentario-fecha {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .comentario-texto {
+        font-size: 13px;
         color: var(--text-primary);
-        margin-top: 6px;
-        line-height: 1.6;
+        line-height: 1.5;
+        margin: 0;
         white-space: pre-wrap;
       }
+
+      .sin-comentarios {
+        font-size: 13px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 8px 0 12px;
+      }
+
+      .nuevo-comentario {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        margin-top: 4px;
+      }
+
+      .nuevo-comentario .form-control {
+        flex: 1;
+        resize: none;
+        font-size: 13px;
+      }
+
+      .btn-agregar-comentario {
+        background: var(--primary-light);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+
+      .btn-agregar-comentario:hover { opacity: 0.9; }
+      .btn-agregar-comentario:disabled { opacity: 0.5; cursor: not-allowed; }
 
       .detalle-actions {
         display: flex;
@@ -651,6 +751,8 @@ export class CafeListComponent implements OnInit {
 
   // Detalle
   registroDetalle: CafeConJesusResponse | null = null;
+  nuevoComentario = '';
+  isSavingComentario = false;
 
   // Edicion
   registroEditando: CafeConJesusResponse | null = null;
@@ -707,6 +809,24 @@ export class CafeListComponent implements OnInit {
 
   cerrarDetalle(): void {
     this.registroDetalle = null;
+    this.nuevoComentario = '';
+  }
+
+  agregarComentario(): void {
+    if (!this.registroDetalle || !this.nuevoComentario.trim()) return;
+    this.isSavingComentario = true;
+    this.cafeService.agregarComentario(this.registroDetalle.id, this.nuevoComentario.trim()).subscribe({
+      next: (actualizado) => {
+        this.registroDetalle = actualizado;
+        this.nuevoComentario = '';
+        this.isSavingComentario = false;
+        this.cargarRegistros();
+      },
+      error: () => {
+        this.notificationService.error('Error al agregar comentario');
+        this.isSavingComentario = false;
+      },
+    });
   }
 
   editarDesdeDetalle(): void {

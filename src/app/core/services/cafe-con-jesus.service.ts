@@ -28,6 +28,13 @@ export interface CafeConJesusRequest {
   etapa?: string;
 }
 
+export interface CafeComentario {
+  id: number;
+  contenido: string;
+  usuario: string;
+  fechaCreacion: string;
+}
+
 export interface CafeConJesusResponse {
   id: number;
   nombre: string;
@@ -49,6 +56,7 @@ export interface CafeConJesusResponse {
   archivado: boolean;
   fechaArchivado: string;
   etapa: string;
+  comentarios: CafeComentario[];
 }
 
 export interface CafeAdminDashboard {
@@ -109,5 +117,9 @@ export class CafeConJesusService {
 
   desarchivar(id: number): Observable<string> {
     return this.http.put(`${this.apiUrl}/${id}/desarchivar`, null, { responseType: 'text' });
+  }
+
+  agregarComentario(id: number, contenido: string): Observable<CafeConJesusResponse> {
+    return this.http.post<CafeConJesusResponse>(`${this.apiUrl}/${id}/comentarios`, { contenido });
   }
 }
