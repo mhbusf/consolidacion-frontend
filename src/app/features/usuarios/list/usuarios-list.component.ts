@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
@@ -9,7 +10,7 @@ import { User } from '../../../core/models/auth.model';
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="container">
       <div class="header">
@@ -21,6 +22,16 @@ import { User } from '../../../core/models/auth.model';
 
       <div *ngIf="isLoading" class="loading">
         Cargando usuarios...
+      </div>
+
+      <div class="search-bar" *ngIf="!isLoading">
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar por usuario o correo..."
+          class="search-input"
+        />
+        <span class="search-count">{{ usuariosFiltrados.length }} resultado{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</span>
       </div>
 
       <div class="usuarios-table" *ngIf="!isLoading">
@@ -36,7 +47,7 @@ import { User } from '../../../core/models/auth.model';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let user of usuariosConStats">
+            <tr *ngFor="let user of usuariosFiltrados">
               <td><strong>{{ user.usuario.username }}</strong></td>
               <td>{{ user.usuario.email }}</td>
               <td>
@@ -116,6 +127,34 @@ import { User } from '../../../core/models/auth.model';
       padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      max-width: 400px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+    }
+
+    .search-count {
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
     .loading {
@@ -235,6 +274,16 @@ export class UsuariosListComponent implements OnInit {
   usuariosConStats: any[] = [];
   consolidados: any[] = [];
   isLoading = true;
+  busqueda = '';
+
+  get usuariosFiltrados(): any[] {
+    const q = this.busqueda.trim().toLowerCase();
+    if (!q) return this.usuariosConStats;
+    return this.usuariosConStats.filter(u =>
+      u.usuario.username.toLowerCase().includes(q) ||
+      (u.usuario.email || '').toLowerCase().includes(q)
+    );
+  }
 
   constructor(
     private authService: AuthService,
