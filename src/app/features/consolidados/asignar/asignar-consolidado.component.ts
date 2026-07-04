@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
@@ -10,28 +10,30 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-asignar-consolidado',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="container">
       <h2>Asignar Consolidado</h2>
-
+    
       <div class="card">
         <p><strong>ID del Consolidado:</strong> {{ consolidadoId }}</p>
-
+    
         <div class="form-group">
           <label for="usuario">Seleccionar Usuario:</label>
           <select id="usuario" [(ngModel)]="usuarioSeleccionado" class="form-control">
             <option value="">-- Seleccione un usuario --</option>
-            <option *ngFor="let user of usuarios" [value]="user.username">
-              {{ user.username }} ({{ user.email }})
-            </option>
+            @for (user of usuarios; track user) {
+              <option [value]="user.username">
+                {{ user.username }} ({{ user.email }})
+              </option>
+            }
           </select>
         </div>
-
+    
         <div class="actions">
           <button class="btn-secondary" (click)="cancelar()">Cancelar</button>
-          <button 
-            class="btn-primary" 
+          <button
+            class="btn-primary"
             (click)="asignar()"
             [disabled]="!usuarioSeleccionado || isLoading">
             {{ isLoading ? 'Asignando...' : 'Asignar' }}
@@ -39,7 +41,8 @@ import { NotificationService } from '../../../core/services/notification.service
         </div>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 600px;

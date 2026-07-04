@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -7,65 +7,75 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="container">
       <div class="card">
         <h2>Cambiar Contraseña</h2>
-        
+    
         <form [formGroup]="passwordForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="oldPassword">Contraseña Actual</label>
-            <input 
-              type="password" 
-              id="oldPassword" 
-              formControlName="oldPassword" 
+            <input
+              type="password"
+              id="oldPassword"
+              formControlName="oldPassword"
               class="form-control">
-            <div class="error" *ngIf="passwordForm.get('oldPassword')?.invalid && passwordForm.get('oldPassword')?.touched">
-              Contraseña actual requerida
-            </div>
+            @if (passwordForm.get('oldPassword')?.invalid && passwordForm.get('oldPassword')?.touched) {
+              <div class="error">
+                Contraseña actual requerida
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="newPassword">Nueva Contraseña</label>
-            <input 
-              type="password" 
-              id="newPassword" 
-              formControlName="newPassword" 
+            <input
+              type="password"
+              id="newPassword"
+              formControlName="newPassword"
               class="form-control"
               placeholder="Mínimo 6 caracteres">
-            <div class="error" *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
-              Nueva contraseña requerida (mínimo 6 caracteres)
-            </div>
+            @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
+              <div class="error">
+                Nueva contraseña requerida (mínimo 6 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="confirmPassword">Confirmar Nueva Contraseña</label>
-            <input 
-              type="password" 
-              id="confirmPassword" 
-              formControlName="confirmPassword" 
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
               class="form-control">
-            <div class="error" *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched">
-              Las contraseñas no coinciden
+            @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
+              <div class="error">
+                Las contraseñas no coinciden
+              </div>
+            }
+          </div>
+    
+          @if (errorMessage) {
+            <div class="error">
+              {{ errorMessage }}
             </div>
-          </div>
-
-          <div class="error" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
-
-          <div class="success" *ngIf="successMessage">
-            {{ successMessage }}
-          </div>
-
+          }
+    
+          @if (successMessage) {
+            <div class="success">
+              {{ successMessage }}
+            </div>
+          }
+    
           <div class="actions">
             <button type="button" class="btn-secondary" (click)="cancelar()">
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              class="btn-primary" 
+            <button
+              type="submit"
+              class="btn-primary"
               [disabled]="passwordForm.invalid || isLoading">
               {{ isLoading ? 'Guardando...' : 'Cambiar Contraseña' }}
             </button>
@@ -73,7 +83,8 @@ import { AuthService } from '../../../core/services/auth.service';
         </form>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 500px;

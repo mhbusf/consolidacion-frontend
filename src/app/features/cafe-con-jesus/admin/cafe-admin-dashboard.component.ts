@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -30,13 +30,15 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
           {{ isLoading ? 'Actualizando...' : 'Refrescar' }}
         </button>
       </div>
-
-      <div *ngIf="isLoading && !dashboard" class="loading">
-        <div class="spinner"></div>
-        <p>Cargando dashboard...</p>
-      </div>
-
-      <ng-container *ngIf="dashboard">
+    
+      @if (isLoading && !dashboard) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Cargando dashboard...</p>
+        </div>
+      }
+    
+      @if (dashboard) {
         <!-- Métricas -->
         <div class="metrics">
           <div class="metric-card">
@@ -56,195 +58,234 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
             <div class="metric-value">{{ dashboard.porcentajeConversion }}%</div>
           </div>
         </div>
-
         <!-- Etapas de seguimiento -->
-        <div class="etapas-section" *ngIf="dashboard.etapasResumen">
-          <h3 class="etapas-titulo">📋 Etapas de seguimiento (activos)</h3>
-          <div class="etapas-grid">
-            <div class="etapa-card etapa-1">
-              <div class="etapa-label">Primera Invitación</div>
-              <div class="etapa-count">{{ dashboard.etapasResumen['PRIMERA_INVITACION'] || 0 }}</div>
-            </div>
-            <div class="etapa-card etapa-2">
-              <div class="etapa-label">Segunda Invitación</div>
-              <div class="etapa-count">{{ dashboard.etapasResumen['SEGUNDA_INVITACION'] || 0 }}</div>
-            </div>
-            <div class="etapa-card etapa-3">
-              <div class="etapa-label">Tercera Invitación</div>
-              <div class="etapa-count">{{ dashboard.etapasResumen['TERCERA_INVITACION'] || 0 }}</div>
-            </div>
-            <div class="etapa-card etapa-4">
-              <div class="etapa-label">Asistió otra vez a la Cate</div>
-              <div class="etapa-count">{{ dashboard.etapasResumen['ASISTIO_OTRA_VEZ'] || 0 }}</div>
-            </div>
-            <div class="etapa-card etapa-5">
-              <div class="etapa-label">Se deja mensaje final</div>
-              <div class="etapa-count">{{ dashboard.etapasResumen['MENSAJE_FINAL'] || 0 }}</div>
+        @if (dashboard.etapasResumen) {
+          <div class="etapas-section">
+            <h3 class="etapas-titulo">📋 Etapas de seguimiento (activos)</h3>
+            <div class="etapas-grid">
+              <div class="etapa-card etapa-1">
+                <div class="etapa-label">Primera Invitación</div>
+                <div class="etapa-count">{{ dashboard.etapasResumen['PRIMERA_INVITACION'] || 0 }}</div>
+              </div>
+              <div class="etapa-card etapa-2">
+                <div class="etapa-label">Segunda Invitación</div>
+                <div class="etapa-count">{{ dashboard.etapasResumen['SEGUNDA_INVITACION'] || 0 }}</div>
+              </div>
+              <div class="etapa-card etapa-3">
+                <div class="etapa-label">Tercera Invitación</div>
+                <div class="etapa-count">{{ dashboard.etapasResumen['TERCERA_INVITACION'] || 0 }}</div>
+              </div>
+              <div class="etapa-card etapa-4">
+                <div class="etapa-label">Asistió otra vez a la Cate</div>
+                <div class="etapa-count">{{ dashboard.etapasResumen['ASISTIO_OTRA_VEZ'] || 0 }}</div>
+              </div>
+              <div class="etapa-card etapa-5">
+                <div class="etapa-label">Se deja mensaje final</div>
+                <div class="etapa-count">{{ dashboard.etapasResumen['MENSAJE_FINAL'] || 0 }}</div>
+              </div>
             </div>
           </div>
-        </div>
-
+        }
         <!-- Grupos -->
         <div class="grupos">
-          <div class="grupo" *ngFor="let g of grupos">
-            <button
-              class="grupo-header"
-              [class.grupo-header-open]="grupoAbierto === g.key"
-              [ngClass]="g.colorClass"
-              (click)="toggleGrupo(g.key)"
-            >
-              <div class="grupo-icon">{{ g.icon }}</div>
-              <div class="grupo-info">
-                <div class="grupo-titulo">{{ g.titulo }}</div>
-                <div class="grupo-descripcion">{{ g.descripcion }}</div>
-              </div>
-              <div class="grupo-count">
-                {{ dashboard![g.totalKey] }}
-              </div>
-              <div class="grupo-arrow" [class.open]="grupoAbierto === g.key">▼</div>
-            </button>
-
-            <div class="grupo-body" *ngIf="grupoAbierto === g.key">
-              <div *ngIf="dashboard![g.key].length === 0" class="empty-grupo">
-                <p>No hay registros en este grupo.</p>
-              </div>
-
-              <div class="table-wrap" *ngIf="dashboard![g.key].length > 0">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Teléfono</th>
-                      <th>Etapa</th>
-                      <th>Invitado por</th>
-                      <th>Tel. Invitado por</th>
-                      <th>Comentario</th>
-                      <th>Fecha ingreso</th>
-                      <th>Asistió</th>
-                      <th>Fecha asistencia</th>
-                      <th *ngIf="g.key !== 'pasaronAConsolidacion'">Asignado a</th>
-                      <th *ngIf="g.key === 'pasaronAConsolidacion'">Consolidado</th>
-                      <th *ngIf="g.key === 'archivados'">Fecha archivado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let r of dashboard![g.key]">
-                      <td class="fw-bold">{{ r.nombre }} {{ r.apellido }}</td>
-                      <td>{{ r.telefono }}</td>
-                      <td>
-                        <span *ngIf="r.etapa" class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
-                        <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
-                      </td>
-                      <td>{{ r.invitadoPor || '-' }}</td>
-                      <td>{{ r.telefonoInvitadoPor || '-' }}</td>
-                      <td class="td-comentario">{{ r.comentario || '-' }}</td>
-                      <td>{{ r.fechaIngreso | date: 'dd/MM/yyyy' }}</td>
-                      <td>
-                        <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
-                          {{ r.asistio ? 'Sí' : 'No' }}
-                        </span>
-                      </td>
-                      <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</td>
-                      <td *ngIf="g.key !== 'pasaronAConsolidacion'">
-                        <span class="user-badge badge-asignado" *ngIf="r.usuarioAsignado">{{ r.usuarioAsignado }}</span>
-                        <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
-                      </td>
-                      <td *ngIf="g.key === 'pasaronAConsolidacion'">
-                        <a class="link" (click)="verConsolidado(r)">Ver #{{ r.consolidadoId }}</a>
-                      </td>
-                      <td *ngIf="g.key === 'archivados'">
-                        {{ r.fechaArchivado ? (r.fechaArchivado | date: 'dd/MM/yyyy') : '-' }}
-                      </td>
-                      <td class="actions-cell">
-                        <ng-container [ngSwitch]="g.key">
-                          <ng-container *ngSwitchCase="'sinAsignar'">
-                            <button class="btn-asignar" (click)="abrirAsignar(r)">Asignar</button>
-                            <button class="btn-edit" (click)="abrirEditar(r)">Editar</button>
-                            <button class="btn-convertir" (click)="convertir(r)">Aceptó al Señor</button>
-                            <button class="btn-warning" (click)="archivar(r)">Archivar</button>
-                          </ng-container>
-                          <ng-container *ngSwitchCase="'asignados'">
-                            <button class="btn-asignar" (click)="abrirAsignar(r)">Reasignar</button>
-                            <button class="btn-edit" (click)="abrirEditar(r)">Editar</button>
-                            <button class="btn-convertir" (click)="convertir(r)">Aceptó al Señor</button>
-                            <button class="btn-warning" (click)="archivar(r)">Archivar</button>
-                          </ng-container>
-                          <ng-container *ngSwitchCase="'pasaronAConsolidacion'">
-                            <button class="btn-edit" (click)="verConsolidado(r)">Ver consolidado</button>
-                          </ng-container>
-                          <ng-container *ngSwitchCase="'archivados'">
-                            <button class="btn-edit" (click)="desarchivar(r)">Desarchivar</button>
-                          </ng-container>
-                        </ng-container>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+          @for (g of grupos; track g) {
+            <div class="grupo">
+              <button
+                class="grupo-header"
+                [class.grupo-header-open]="grupoAbierto === g.key"
+                [ngClass]="g.colorClass"
+                (click)="toggleGrupo(g.key)"
+                >
+                <div class="grupo-icon">{{ g.icon }}</div>
+                <div class="grupo-info">
+                  <div class="grupo-titulo">{{ g.titulo }}</div>
+                  <div class="grupo-descripcion">{{ g.descripcion }}</div>
+                </div>
+                <div class="grupo-count">
+                  {{ dashboard![g.totalKey] }}
+                </div>
+                <div class="grupo-arrow" [class.open]="grupoAbierto === g.key">▼</div>
+              </button>
+              @if (grupoAbierto === g.key) {
+                <div class="grupo-body">
+                  @if (dashboard![g.key].length === 0) {
+                    <div class="empty-grupo">
+                      <p>No hay registros en este grupo.</p>
+                    </div>
+                  }
+                  @if (dashboard![g.key].length > 0) {
+                    <div class="table-wrap">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Etapa</th>
+                            <th>Invitado por</th>
+                            <th>Tel. Invitado por</th>
+                            <th>Comentario</th>
+                            <th>Fecha ingreso</th>
+                            <th>Asistió</th>
+                            <th>Fecha asistencia</th>
+                            @if (g.key !== 'pasaronAConsolidacion') {
+                              <th>Asignado a</th>
+                            }
+                            @if (g.key === 'pasaronAConsolidacion') {
+                              <th>Consolidado</th>
+                            }
+                            @if (g.key === 'archivados') {
+                              <th>Fecha archivado</th>
+                            }
+                            <th>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (r of dashboard![g.key]; track r) {
+                            <tr>
+                              <td class="fw-bold">{{ r.nombre }} {{ r.apellido }}</td>
+                              <td>{{ r.telefono }}</td>
+                              <td>
+                                @if (r.etapa) {
+                                  <span class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
+                                }
+                                @if (!r.etapa) {
+                                  <span class="text-muted-sm">—</span>
+                                }
+                              </td>
+                              <td>{{ r.invitadoPor || '-' }}</td>
+                              <td>{{ r.telefonoInvitadoPor || '-' }}</td>
+                              <td class="td-comentario">{{ r.comentario || '-' }}</td>
+                              <td>{{ r.fechaIngreso | date: 'dd/MM/yyyy' }}</td>
+                              <td>
+                                <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
+                                  {{ r.asistio ? 'Sí' : 'No' }}
+                                </span>
+                              </td>
+                              <td>{{ r.fechaAsistencia ? (r.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</td>
+                              @if (g.key !== 'pasaronAConsolidacion') {
+                                <td>
+                                  @if (r.usuarioAsignado) {
+                                    <span class="user-badge badge-asignado">{{ r.usuarioAsignado }}</span>
+                                  }
+                                  @if (!r.usuarioAsignado) {
+                                    <span class="badge badge-pending">Sin asignar</span>
+                                  }
+                                </td>
+                              }
+                              @if (g.key === 'pasaronAConsolidacion') {
+                                <td>
+                                  <a class="link" (click)="verConsolidado(r)">Ver #{{ r.consolidadoId }}</a>
+                                </td>
+                              }
+                              @if (g.key === 'archivados') {
+                                <td>
+                                  {{ r.fechaArchivado ? (r.fechaArchivado | date: 'dd/MM/yyyy') : '-' }}
+                                </td>
+                              }
+                              <td class="actions-cell">
+                                @switch (g.key) {
+                                  @case ('sinAsignar') {
+                                    <button class="btn-asignar" (click)="abrirAsignar(r)">Asignar</button>
+                                    <button class="btn-edit" (click)="abrirEditar(r)">Editar</button>
+                                    <button class="btn-convertir" (click)="convertir(r)">Aceptó al Señor</button>
+                                    <button class="btn-warning" (click)="archivar(r)">Archivar</button>
+                                  }
+                                  @case ('asignados') {
+                                    <button class="btn-asignar" (click)="abrirAsignar(r)">Reasignar</button>
+                                    <button class="btn-edit" (click)="abrirEditar(r)">Editar</button>
+                                    <button class="btn-convertir" (click)="convertir(r)">Aceptó al Señor</button>
+                                    <button class="btn-warning" (click)="archivar(r)">Archivar</button>
+                                  }
+                                  @case ('pasaronAConsolidacion') {
+                                    <button class="btn-edit" (click)="verConsolidado(r)">Ver consolidado</button>
+                                  }
+                                  @case ('archivados') {
+                                    <button class="btn-edit" (click)="desarchivar(r)">Desarchivar</button>
+                                  }
+                                }
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    
+      <!-- Modal asignar -->
+      @if (registroAsignando) {
+        <div class="modal-overlay" (click)="cerrarAsignar()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <h3>Asignar consolidador</h3>
+            <p class="modal-sub">{{ registroAsignando.nombre }} {{ registroAsignando.apellido }}</p>
+            <div class="form-group">
+              <label>Consolidador</label>
+              <select [(ngModel)]="asignarUsername" class="form-control">
+                <option value="">Sin asignar</option>
+                @for (u of usuarios; track u) {
+                  <option [value]="u.username">{{ u.username }}</option>
+                }
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button class="btn-secondary" (click)="cerrarAsignar()">Cancelar</button>
+              <button class="btn-primary" (click)="confirmarAsignar()" [disabled]="!asignarUsername || isSaving">
+                {{ isSaving ? 'Guardando...' : 'Asignar' }}
+              </button>
             </div>
           </div>
         </div>
-      </ng-container>
-
-      <!-- Modal asignar -->
-      <div class="modal-overlay" *ngIf="registroAsignando" (click)="cerrarAsignar()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <h3>Asignar consolidador</h3>
-          <p class="modal-sub">{{ registroAsignando.nombre }} {{ registroAsignando.apellido }}</p>
-          <div class="form-group">
-            <label>Consolidador</label>
-            <select [(ngModel)]="asignarUsername" class="form-control">
-              <option value="">Sin asignar</option>
-              <option *ngFor="let u of usuarios" [value]="u.username">{{ u.username }}</option>
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button class="btn-secondary" (click)="cerrarAsignar()">Cancelar</button>
-            <button class="btn-primary" (click)="confirmarAsignar()" [disabled]="!asignarUsername || isSaving">
-              {{ isSaving ? 'Guardando...' : 'Asignar' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
+      }
+    
       <!-- Modal editar -->
-      <div class="modal-overlay" *ngIf="registroEditando" (click)="cerrarEditar()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <h3>Editar registro</h3>
-          <p class="modal-sub">{{ registroEditando.nombre }} {{ registroEditando.apellido }}</p>
-          <div class="form-group">
-            <label>Asistió al Café con Jesús</label>
-            <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
-              <option [ngValue]="false">No</option>
-              <option [ngValue]="true">Sí</option>
-            </select>
-          </div>
-          <div class="form-group" *ngIf="editAsistio">
-            <label>Fecha de asistencia</label>
-            <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Etapa de seguimiento</label>
-            <select [(ngModel)]="editEtapa" class="form-control">
-              <option value="">— Sin etapa —</option>
-              <option *ngFor="let e of etapas" [value]="e.value">{{ e.label }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Comentario</label>
-            <textarea [(ngModel)]="editComentario" class="form-control" rows="3" placeholder="Agregar comentario..."></textarea>
-          </div>
-          <div class="modal-actions">
-            <button class="btn-secondary" (click)="cerrarEditar()">Cancelar</button>
-            <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
-              {{ isSaving ? 'Guardando...' : 'Guardar' }}
-            </button>
+      @if (registroEditando) {
+        <div class="modal-overlay" (click)="cerrarEditar()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <h3>Editar registro</h3>
+            <p class="modal-sub">{{ registroEditando.nombre }} {{ registroEditando.apellido }}</p>
+            <div class="form-group">
+              <label>Asistió al Café con Jesús</label>
+              <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
+                <option [ngValue]="false">No</option>
+                <option [ngValue]="true">Sí</option>
+              </select>
+            </div>
+            @if (editAsistio) {
+              <div class="form-group">
+                <label>Fecha de asistencia</label>
+                <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
+              </div>
+            }
+            <div class="form-group">
+              <label>Etapa de seguimiento</label>
+              <select [(ngModel)]="editEtapa" class="form-control">
+                <option value="">— Sin etapa —</option>
+                @for (e of etapas; track e) {
+                  <option [value]="e.value">{{ e.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Comentario</label>
+              <textarea [(ngModel)]="editComentario" class="form-control" rows="3" placeholder="Agregar comentario..."></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn-secondary" (click)="cerrarEditar()">Cancelar</button>
+              <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
+                {{ isSaving ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .container {

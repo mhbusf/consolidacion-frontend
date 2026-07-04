@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +10,7 @@ import { User } from '../../../core/models/auth.model';
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="container">
       <div class="header">
@@ -19,88 +19,100 @@ import { User } from '../../../core/models/auth.model';
           <button class="btn-primary" (click)="crearUsuario()">+ Crear Usuario</button>
         </div>
       </div>
-
-      <div *ngIf="isLoading" class="loading">
-        Cargando usuarios...
-      </div>
-
-      <div class="search-bar" *ngIf="!isLoading">
-        <input
-          type="text"
-          [(ngModel)]="busqueda"
-          placeholder="Buscar por usuario o correo..."
-          class="search-input"
-        />
-        <span class="search-count">{{ usuariosFiltrados.length }} resultado{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</span>
-      </div>
-
-      <div class="usuarios-table" *ngIf="!isLoading">
-        <table>
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Email</th>
-              <th>Roles</th>
-              <th>Estado</th>
-              <th>Consolidados</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of usuariosFiltrados">
-              <td><strong>{{ user.usuario.username }}</strong></td>
-              <td>{{ user.usuario.email }}</td>
-              <td>
-                <span class="badge" *ngFor="let role of user.usuario.roles">
-                  {{ role.name.replace('ROLE_', '') }}
-                </span>
-              </td>
-              <td>
-                <span [class]="user.usuario.enabled ? 'status-active' : 'status-inactive'">
-                  {{ user.usuario.enabled ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td>
-                <div class="stats-mini">
-                  <span class="stat-item" title="Creados">📝 {{ user.creados }}</span>
-                  <span class="stat-item" title="Asignados">📌 {{ user.asignados }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <button 
-                    class="btn-small btn-info"
-                    (click)="verConsolidados(user.usuario.username)"
-                    title="Ver consolidados">
-                    📊 Consolidados
-                  </button>
-                  <button 
-                    class="btn-small btn-warning"
-                    (click)="cambiarPassword(user.usuario.username)"
-                    title="Cambiar contraseña">
-                    🔑 Cambiar Pass
-                  </button>
-                  <button 
-                    class="btn-small btn-primary"
-                    (click)="asignarRol(user.usuario.username)"
-                    *ngIf="!tieneRolAdmin(user.usuario)"
-                    title="Hacer administrador">
-                    ⭐ Admin
-                  </button>
-                  <button 
-                    class="btn-small btn-danger"
-                    (click)="eliminarUsuario(user.usuario.username)"
-                    title="Eliminar usuario">
-                    🗑️ Eliminar
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    
+      @if (isLoading) {
+        <div class="loading">
+          Cargando usuarios...
+        </div>
+      }
+    
+      @if (!isLoading) {
+        <div class="search-bar">
+          <input
+            type="text"
+            [(ngModel)]="busqueda"
+            placeholder="Buscar por usuario o correo..."
+            class="search-input"
+            />
+          <span class="search-count">{{ usuariosFiltrados.length }} resultado{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</span>
+        </div>
+      }
+    
+      @if (!isLoading) {
+        <div class="usuarios-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Estado</th>
+                <th>Consolidados</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of usuariosFiltrados; track user) {
+                <tr>
+                  <td><strong>{{ user.usuario.username }}</strong></td>
+                  <td>{{ user.usuario.email }}</td>
+                  <td>
+                    @for (role of user.usuario.roles; track role) {
+                      <span class="badge">
+                        {{ role.name.replace('ROLE_', '') }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    <span [class]="user.usuario.enabled ? 'status-active' : 'status-inactive'">
+                      {{ user.usuario.enabled ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="stats-mini">
+                      <span class="stat-item" title="Creados">📝 {{ user.creados }}</span>
+                      <span class="stat-item" title="Asignados">📌 {{ user.asignados }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button
+                        class="btn-small btn-info"
+                        (click)="verConsolidados(user.usuario.username)"
+                        title="Ver consolidados">
+                        📊 Consolidados
+                      </button>
+                      <button
+                        class="btn-small btn-warning"
+                        (click)="cambiarPassword(user.usuario.username)"
+                        title="Cambiar contraseña">
+                        🔑 Cambiar Pass
+                      </button>
+                      @if (!tieneRolAdmin(user.usuario)) {
+                        <button
+                          class="btn-small btn-primary"
+                          (click)="asignarRol(user.usuario.username)"
+                          title="Hacer administrador">
+                          ⭐ Admin
+                        </button>
+                      }
+                      <button
+                        class="btn-small btn-danger"
+                        (click)="eliminarUsuario(user.usuario.username)"
+                        title="Eliminar usuario">
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 1400px;

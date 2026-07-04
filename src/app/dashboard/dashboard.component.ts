@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -18,9 +18,9 @@ import { User } from '../core/models/auth.model';
         <span class="title-icon">📊</span>
         Dashboard de Seguimiento
       </h1>
-
+    
       <!-- SOLO MOSTRAR SI HAY DATOS -->
-      <ng-container *ngIf="dashboard">
+      @if (dashboard) {
         <div class="stats-grid">
           <!-- Total Consolidados -->
           <div class="stat-card stat-total" (click)="verConsolidados()">
@@ -30,7 +30,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Total Consolidados</div>
             </div>
           </div>
-
           <!-- En Proceso -->
           <div class="stat-card stat-process" (click)="verConsolidados()">
             <div class="stat-icon">🔄</div>
@@ -41,7 +40,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">En Proceso</div>
             </div>
           </div>
-
           <!-- Al Día -->
           <div class="stat-card stat-success">
             <div class="stat-icon">✅</div>
@@ -50,7 +48,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Al Día</div>
             </div>
           </div>
-
           <!-- Con Atrasos -->
           <div class="stat-card stat-warning">
             <div class="stat-icon">⚠️</div>
@@ -61,7 +58,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Con Atrasos</div>
             </div>
           </div>
-
           <!-- Sin Asignar -->
           <div class="stat-card stat-danger">
             <div class="stat-icon">🚨</div>
@@ -70,7 +66,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Sin Asignar</div>
             </div>
           </div>
-
           <!-- Con GDC -->
           <div class="stat-card stat-info">
             <div class="stat-icon">📝</div>
@@ -79,7 +74,6 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Con GDC Asignado</div>
             </div>
           </div>
-
           <!-- Cafe con Jesus -->
           <div class="stat-card stat-cafe" (click)="verCafeConJesus()">
             <div class="stat-icon">☕</div>
@@ -88,100 +82,107 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Cafe con Jesus</div>
             </div>
           </div>
-
         </div>
-
         <!-- Histórico GDC -->
-        <div class="section" *ngIf="historico.length > 0">
-          <h2 class="section-title">🗂️ Histórico GDC ({{ historico.length }})</h2>
-          <div class="table-container">
-            <table class="stats-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>GDC</th>
-                  <th>Usuario Asignado</th>
-                  <th>Comuna</th>
-                  <th>Teléfono</th>
-                  <th>Fecha Cierre</th>
-                  <th>Comentario Cierre</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let h of historico">
-                  <td class="fw-bold">{{ h.nombre }}</td>
-                  <td>
-                    <span class="badge-gdc">{{ h.gdc }}</span>
-                  </td>
-                  <td>
-                    <div class="user-cell">
-                      <span class="user-avatar">{{ getInitials(h.usuarioAsignado || '') }}</span>
-                      <span class="user-name">{{ h.usuarioAsignado || 'Sin asignar' }}</span>
-                    </div>
-                  </td>
-                  <td class="text-muted-cell">{{ h.comuna?.nombre || '—' }}</td>
-                  <td class="text-muted-cell">{{ h.telefono || '—' }}</td>
-                  <td class="text-muted-cell">{{ h.fechaCierre | date:'dd/MM/yyyy' }}</td>
-                  <td class="comentario-cell">{{ h.comentarioCierre || '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="section empty-historico" *ngIf="historico.length === 0 && !isLoadingHistorico">
-          <h2 class="section-title">🗂️ Histórico GDC</h2>
-          <div class="empty-historico-msg">
-            <span class="empty-icon-sm">📭</span>
-            <p>Aún no hay consolidados cerrados con GDC.</p>
-          </div>
-        </div>
-
-        <!-- Estadísticas por Reunión -->
-        <div class="section" *ngIf="dashboard.estadisticasPorReunion?.length">
-          <h2 class="section-title">🏛️ Consolidados por Reunión</h2>
-          <div class="reunion-grid">
-            <div class="reunion-card" *ngFor="let r of dashboard.estadisticasPorReunion">
-              <div class="reunion-nombre">{{ r.nombreReunion }}</div>
-              <div class="reunion-count">{{ r.totalConsolidados }}</div>
-              <div class="reunion-label">consolidados</div>
+        @if (historico.length > 0) {
+          <div class="section">
+            <h2 class="section-title">🗂️ Histórico GDC ({{ historico.length }})</h2>
+            <div class="table-container">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>GDC</th>
+                    <th>Usuario Asignado</th>
+                    <th>Comuna</th>
+                    <th>Teléfono</th>
+                    <th>Fecha Cierre</th>
+                    <th>Comentario Cierre</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (h of historico; track h) {
+                    <tr>
+                      <td class="fw-bold">{{ h.nombre }}</td>
+                      <td>
+                        <span class="badge-gdc">{{ h.gdc }}</span>
+                      </td>
+                      <td>
+                        <div class="user-cell">
+                          <span class="user-avatar">{{ getInitials(h.usuarioAsignado || '') }}</span>
+                          <span class="user-name">{{ h.usuarioAsignado || 'Sin asignar' }}</span>
+                        </div>
+                      </td>
+                      <td class="text-muted-cell">{{ h.comuna?.nombre || '—' }}</td>
+                      <td class="text-muted-cell">{{ h.telefono || '—' }}</td>
+                      <td class="text-muted-cell">{{ h.fechaCierre | date:'dd/MM/yyyy' }}</td>
+                      <td class="comentario-cell">{{ h.comentarioCierre || '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-
+        }
+        @if (historico.length === 0 && !isLoadingHistorico) {
+          <div class="section empty-historico">
+            <h2 class="section-title">🗂️ Histórico GDC</h2>
+            <div class="empty-historico-msg">
+              <span class="empty-icon-sm">📭</span>
+              <p>Aún no hay consolidados cerrados con GDC.</p>
+            </div>
+          </div>
+        }
+        <!-- Estadísticas por Reunión -->
+        @if (dashboard.estadisticasPorReunion?.length) {
+          <div class="section">
+            <h2 class="section-title">🏛️ Consolidados por Reunión</h2>
+            <div class="reunion-grid">
+              @for (r of dashboard.estadisticasPorReunion; track r) {
+                <div class="reunion-card">
+                  <div class="reunion-nombre">{{ r.nombreReunion }}</div>
+                  <div class="reunion-count">{{ r.totalConsolidados }}</div>
+                  <div class="reunion-label">consolidados</div>
+                </div>
+              }
+            </div>
+          </div>
+        }
         <!-- Estadísticas por Usuario -->
-        <div class="section" *ngIf="dashboard.estadisticasPorUsuario?.length">
-          <h2 class="section-title">📈 Estadísticas por Usuario</h2>
-          <div class="table-container">
-            <table class="stats-table">
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Email</th>
-                  <th class="text-center">Total Asignados</th>
-                  <th class="text-center">Al Día</th>
-                  <th class="text-center">Con Atrasos</th>
-                  <th>Cumplimiento</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let stat of dashboard.estadisticasPorUsuario">
-                  <td class="user-cell">
-                    <span class="user-avatar">{{
-                      getInitials(stat.username)
-                    }}</span>
-                    <span class="user-name">{{ stat.username }}</span>
-                  </td>
-                  <td class="email-cell">{{ stat.email }}</td>
-                  <td class="number-cell">{{ stat.totalAsignados }}</td>
-                  <td class="number-cell success-text">{{ stat.alDia }}</td>
-                  <td class="number-cell warning-text">
-                    {{ stat.conAtrasos }}
-                  </td>
-                  <td class="progress-cell">
-                    <div class="progress-bar">
-                      <div
-                        class="progress-fill"
+        @if (dashboard.estadisticasPorUsuario?.length) {
+          <div class="section">
+            <h2 class="section-title">📈 Estadísticas por Usuario</h2>
+            <div class="table-container">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th class="text-center">Total Asignados</th>
+                    <th class="text-center">Al Día</th>
+                    <th class="text-center">Con Atrasos</th>
+                    <th>Cumplimiento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (stat of dashboard.estadisticasPorUsuario; track stat) {
+                    <tr>
+                      <td class="user-cell">
+                        <span class="user-avatar">{{
+                          getInitials(stat.username)
+                        }}</span>
+                        <span class="user-name">{{ stat.username }}</span>
+                      </td>
+                      <td class="email-cell">{{ stat.email }}</td>
+                      <td class="number-cell">{{ stat.totalAsignados }}</td>
+                      <td class="number-cell success-text">{{ stat.alDia }}</td>
+                      <td class="number-cell warning-text">
+                        {{ stat.conAtrasos }}
+                      </td>
+                      <td class="progress-cell">
+                        <div class="progress-bar">
+                          <div
+                            class="progress-fill"
                         [style.width.%]="
                           calcularPorcentaje(stat.alDia, stat.totalAsignados)
                         "
@@ -206,37 +207,39 @@ import { User } from '../core/models/auth.model';
                               stat.totalAsignados
                             ) < 50
                         }"
-                      ></div>
-                    </div>
-                    <span class="progress-text"
-                      >{{
-                        calcularPorcentaje(stat.alDia, stat.totalAsignados)
-                      }}%</span
+                          ></div>
+                        </div>
+                        <span class="progress-text"
+                          >{{
+                          calcularPorcentaje(stat.alDia, stat.totalAsignados)
+                          }}%</span
+                          >
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+          <!-- Consolidados con Atrasos -->
+          @if (dashboard.consolidadosConAtrasos?.length) {
+            <div class="section">
+              <h2 class="section-title">
+                ⚠️ Consolidados con Atrasos ({{
+                dashboard.consolidadosConAtrasos.length
+                }})
+              </h2>
+              <div class="atrasos-grid">
+                @for (consolidado of dashboard.consolidadosConAtrasos; track consolidado) {
+                  <div
+                    class="atraso-card"
+                    (click)="verDetalle(consolidado.id)"
                     >
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Consolidados con Atrasos -->
-        <div class="section" *ngIf="dashboard.consolidadosConAtrasos?.length">
-          <h2 class="section-title">
-            ⚠️ Consolidados con Atrasos ({{
-              dashboard.consolidadosConAtrasos.length
-            }})
-          </h2>
-          <div class="atrasos-grid">
-            <div
-              class="atraso-card"
-              *ngFor="let consolidado of dashboard.consolidadosConAtrasos"
-              (click)="verDetalle(consolidado.id)"
-            >
-              <div class="atraso-header">
-                <h3>{{ consolidado.titulo }}</h3>
-                <span
-                  class="atraso-badge"
+                    <div class="atraso-header">
+                      <h3>{{ consolidado.titulo }}</h3>
+                      <span
+                        class="atraso-badge"
                   [ngClass]="{
                     'badge-critical': consolidado.diasDeAtraso > 5,
                     'badge-high':
@@ -244,210 +247,235 @@ import { User } from '../core/models/auth.model';
                       consolidado.diasDeAtraso <= 5,
                     'badge-medium': consolidado.diasDeAtraso <= 2
                   }"
-                >
-                  {{ consolidado.diasDeAtraso }} día{{
-                    consolidado.diasDeAtraso !== 1 ? 's' : ''
-                  }}
-                </span>
+                        >
+                        {{ consolidado.diasDeAtraso }} día{{
+                        consolidado.diasDeAtraso !== 1 ? 's' : ''
+                        }}
+                      </span>
+                    </div>
+                    <div class="atraso-info">
+                      <div class="info-row">
+                        <span class="info-label">👤 Asignado a:</span>
+                        <span class="info-value">{{ consolidado.asignadoA }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">📅 Fecha ingreso:</span>
+                        <span class="info-value">{{
+                          consolidado.fechaIngreso | date : 'dd/MM/yyyy'
+                        }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">📊 Estado:</span>
+                        <span
+                          class="badge"
+                          [ngClass]="getBadgeClass(consolidado.estado)"
+                          >
+                          {{ getEstadoLabel(consolidado.estado) }}
+                        </span>
+                      </div>
+                    </div>
+                    @if (consolidado.comentariosPendientes?.length) {
+                      <div
+                        class="pendientes-list"
+                        >
+                        <div class="pendientes-header">Comentarios Pendientes:</div>
+                        @for (pendiente of consolidado.comentariosPendientes; track pendiente) {
+                          <div
+                            class="pendiente-item"
+                            >
+                            <span class="pendiente-tipo">{{ pendiente.tipo }}</span>
+                            <span class="pendiente-atraso"
+                              >{{ pendiente.diasDeAtraso }} día{{
+                              pendiente.diasDeAtraso !== 1 ? 's' : ''
+                              }}</span
+                              >
+                            </div>
+                          }
+                        </div>
+                      }
+                      <div class="card-footer">
+                        <span class="view-link">Ver detalle →</span>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
-              <div class="atraso-info">
-                <div class="info-row">
-                  <span class="info-label">👤 Asignado a:</span>
-                  <span class="info-value">{{ consolidado.asignadoA }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">📅 Fecha ingreso:</span>
-                  <span class="info-value">{{
-                    consolidado.fechaIngreso | date : 'dd/MM/yyyy'
-                  }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">📊 Estado:</span>
-                  <span
-                    class="badge"
-                    [ngClass]="getBadgeClass(consolidado.estado)"
-                  >
-                    {{ getEstadoLabel(consolidado.estado) }}
-                  </span>
-                </div>
-              </div>
+            }
+            <!-- Mensaje cuando todo está al día -->
+            @if (!dashboard.consolidadosConAtrasos?.length) {
               <div
-                class="pendientes-list"
-                *ngIf="consolidado.comentariosPendientes?.length"
-              >
-                <div class="pendientes-header">Comentarios Pendientes:</div>
-                <div
-                  class="pendiente-item"
-                  *ngFor="let pendiente of consolidado.comentariosPendientes"
+                class="success-state"
                 >
-                  <span class="pendiente-tipo">{{ pendiente.tipo }}</span>
-                  <span class="pendiente-atraso"
-                    >{{ pendiente.diasDeAtraso }} día{{
-                      pendiente.diasDeAtraso !== 1 ? 's' : ''
-                    }}</span
-                  >
+                <div class="success-icon">🎉</div>
+                <h3>¡Excelente trabajo!</h3>
+                <p>No hay consolidados con atrasos en este momento.</p>
+              </div>
+            }
+          }
+    
+          <!-- Sección Cartera por Consolidador -->
+          <div class="section section-consolidador">
+            <h2 class="section-title">👤 Cartera por Consolidador</h2>
+    
+            <div class="selector-card">
+              <label class="selector-label">Selecciona un consolidador</label>
+              <div class="selector-row">
+                <select [(ngModel)]="usernameSeleccionado" class="form-control" (ngModelChange)="onSeleccionarConsolidador()">
+                  <option value="">-- Selecciona --</option>
+                  @for (u of usuarios; track u) {
+                    <option [value]="u.username">{{ u.username }}</option>
+                  }
+                </select>
+                @if (isLoadingResumen) {
+                  <div class="spinner-inline"></div>
+                }
+              </div>
+            </div>
+    
+            @if (!usernameSeleccionado && !isLoadingResumen) {
+              <div class="resumen-empty">
+                <span class="empty-icon-sm">👤</span>
+                <p>Selecciona un consolidador para ver su cartera</p>
+              </div>
+            }
+    
+            @if (resumenConsolidador && !isLoadingResumen) {
+              <!-- Métricas -->
+              <div class="resumen-metrics">
+                <div class="resumen-metric metric-blue">
+                  <div class="resumen-metric-label">Café con Jesús</div>
+                  <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes }}</div>
+                </div>
+                <div class="resumen-metric metric-green">
+                  <div class="resumen-metric-label">Consolidados</div>
+                  <div class="resumen-metric-value">{{ resumenConsolidador.totalConsolidados }}</div>
+                </div>
+                <div class="resumen-metric metric-purple">
+                  <div class="resumen-metric-label">Total personas</div>
+                  <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes + resumenConsolidador.totalConsolidados }}</div>
                 </div>
               </div>
-              <div class="card-footer">
-                <span class="view-link">Ver detalle →</span>
+              <!-- Tabla Café con Jesús -->
+              <div class="resumen-seccion">
+                <div class="resumen-seccion-header header-cafe">
+                  <span>☕</span>
+                  <span class="resumen-seccion-titulo">Café con Jesús</span>
+                  <span class="resumen-count">{{ resumenConsolidador.totalCafes }}</span>
+                </div>
+                @if (resumenConsolidador.cafes.length === 0) {
+                  <div class="resumen-seccion-empty">
+                    No tiene personas asignadas en Café con Jesús
+                  </div>
+                }
+                @if (resumenConsolidador.cafes.length > 0) {
+                  <div class="table-container">
+                    <table class="stats-table">
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Teléfono</th>
+                          <th>Edad</th>
+                          <th>Invitado por</th>
+                          <th>Fecha ingreso</th>
+                          <th>Asistió</th>
+                          <th>Comentario</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (c of resumenConsolidador.cafes; track c) {
+                          <tr>
+                            <td class="fw-bold">{{ c.nombre }} {{ c.apellido }}</td>
+                            <td class="text-muted-cell">{{ c.telefono }}</td>
+                            <td class="text-muted-cell">{{ c.edad || '—' }}</td>
+                            <td class="text-muted-cell">{{ c.invitadoPor || '—' }}</td>
+                            <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
+                            <td>
+                              <span class="badge" [class.badge-success]="c.asistio" [class.badge-warning]="!c.asistio">
+                                {{ c.asistio ? 'Sí' : 'No' }}
+                              </span>
+                            </td>
+                            <td class="comentario-cell">{{ c.comentario || '—' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
               </div>
-            </div>
+              <!-- Tabla Consolidados -->
+              <div class="resumen-seccion">
+                <div class="resumen-seccion-header header-consolidados">
+                  <span>👥</span>
+                  <span class="resumen-seccion-titulo">Consolidados</span>
+                  <span class="resumen-count">{{ resumenConsolidador.totalConsolidados }}</span>
+                </div>
+                @if (resumenConsolidador.consolidados.length === 0) {
+                  <div class="resumen-seccion-empty">
+                    No tiene personas asignadas en Consolidados
+                  </div>
+                }
+                @if (resumenConsolidador.consolidados.length > 0) {
+                  <div class="table-container">
+                    <table class="stats-table">
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Teléfono</th>
+                          <th>Edad</th>
+                          <th>Quién invitó</th>
+                          <th>Fecha ingreso</th>
+                          <th>Estado</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (c of resumenConsolidador.consolidados; track c) {
+                          <tr>
+                            <td class="fw-bold">{{ c.nombre }}</td>
+                            <td class="text-muted-cell">{{ c.telefono }}</td>
+                            <td class="text-muted-cell">{{ c.edad || '—' }}</td>
+                            <td class="text-muted-cell">{{ c.quienInvito || '—' }}</td>
+                            <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
+                            <td>
+                              <span class="badge" [ngClass]="getBadgeEstado(c.estado)">
+                                {{ getLabelEstado(c.estado) }}
+                              </span>
+                            </td>
+                            <td>
+                              <button class="btn-ver" (click)="verDetalle(c.id)">Ver</button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            }
           </div>
+    
+          <!-- Estado de carga -->
+          @if (isLoading) {
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Cargando dashboard...</p>
+            </div>
+          }
+    
+          <!-- Mensaje cuando no hay datos -->
+          @if (!isLoading && !dashboard) {
+            <div class="empty-state">
+              <div class="empty-icon">📊</div>
+              <h3>Sin datos disponibles</h3>
+              <p>No se pudo cargar la información del dashboard.</p>
+              <button class="btn-retry" (click)="cargarDashboard()">
+                🔄 Reintentar
+              </button>
+            </div>
+          }
         </div>
-
-        <!-- Mensaje cuando todo está al día -->
-        <div
-          class="success-state"
-          *ngIf="!dashboard.consolidadosConAtrasos?.length"
-        >
-          <div class="success-icon">🎉</div>
-          <h3>¡Excelente trabajo!</h3>
-          <p>No hay consolidados con atrasos en este momento.</p>
-        </div>
-      </ng-container>
-
-      <!-- Sección Cartera por Consolidador -->
-      <div class="section section-consolidador">
-        <h2 class="section-title">👤 Cartera por Consolidador</h2>
-
-        <div class="selector-card">
-          <label class="selector-label">Selecciona un consolidador</label>
-          <div class="selector-row">
-            <select [(ngModel)]="usernameSeleccionado" class="form-control" (ngModelChange)="onSeleccionarConsolidador()">
-              <option value="">-- Selecciona --</option>
-              <option *ngFor="let u of usuarios" [value]="u.username">{{ u.username }}</option>
-            </select>
-            <div class="spinner-inline" *ngIf="isLoadingResumen"></div>
-          </div>
-        </div>
-
-        <div *ngIf="!usernameSeleccionado && !isLoadingResumen" class="resumen-empty">
-          <span class="empty-icon-sm">👤</span>
-          <p>Selecciona un consolidador para ver su cartera</p>
-        </div>
-
-        <ng-container *ngIf="resumenConsolidador && !isLoadingResumen">
-          <!-- Métricas -->
-          <div class="resumen-metrics">
-            <div class="resumen-metric metric-blue">
-              <div class="resumen-metric-label">Café con Jesús</div>
-              <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes }}</div>
-            </div>
-            <div class="resumen-metric metric-green">
-              <div class="resumen-metric-label">Consolidados</div>
-              <div class="resumen-metric-value">{{ resumenConsolidador.totalConsolidados }}</div>
-            </div>
-            <div class="resumen-metric metric-purple">
-              <div class="resumen-metric-label">Total personas</div>
-              <div class="resumen-metric-value">{{ resumenConsolidador.totalCafes + resumenConsolidador.totalConsolidados }}</div>
-            </div>
-          </div>
-
-          <!-- Tabla Café con Jesús -->
-          <div class="resumen-seccion">
-            <div class="resumen-seccion-header header-cafe">
-              <span>☕</span>
-              <span class="resumen-seccion-titulo">Café con Jesús</span>
-              <span class="resumen-count">{{ resumenConsolidador.totalCafes }}</span>
-            </div>
-            <div *ngIf="resumenConsolidador.cafes.length === 0" class="resumen-seccion-empty">
-              No tiene personas asignadas en Café con Jesús
-            </div>
-            <div class="table-container" *ngIf="resumenConsolidador.cafes.length > 0">
-              <table class="stats-table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Teléfono</th>
-                    <th>Edad</th>
-                    <th>Invitado por</th>
-                    <th>Fecha ingreso</th>
-                    <th>Asistió</th>
-                    <th>Comentario</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let c of resumenConsolidador.cafes">
-                    <td class="fw-bold">{{ c.nombre }} {{ c.apellido }}</td>
-                    <td class="text-muted-cell">{{ c.telefono }}</td>
-                    <td class="text-muted-cell">{{ c.edad || '—' }}</td>
-                    <td class="text-muted-cell">{{ c.invitadoPor || '—' }}</td>
-                    <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
-                    <td>
-                      <span class="badge" [class.badge-success]="c.asistio" [class.badge-warning]="!c.asistio">
-                        {{ c.asistio ? 'Sí' : 'No' }}
-                      </span>
-                    </td>
-                    <td class="comentario-cell">{{ c.comentario || '—' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Tabla Consolidados -->
-          <div class="resumen-seccion">
-            <div class="resumen-seccion-header header-consolidados">
-              <span>👥</span>
-              <span class="resumen-seccion-titulo">Consolidados</span>
-              <span class="resumen-count">{{ resumenConsolidador.totalConsolidados }}</span>
-            </div>
-            <div *ngIf="resumenConsolidador.consolidados.length === 0" class="resumen-seccion-empty">
-              No tiene personas asignadas en Consolidados
-            </div>
-            <div class="table-container" *ngIf="resumenConsolidador.consolidados.length > 0">
-              <table class="stats-table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Teléfono</th>
-                    <th>Edad</th>
-                    <th>Quién invitó</th>
-                    <th>Fecha ingreso</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let c of resumenConsolidador.consolidados">
-                    <td class="fw-bold">{{ c.nombre }}</td>
-                    <td class="text-muted-cell">{{ c.telefono }}</td>
-                    <td class="text-muted-cell">{{ c.edad || '—' }}</td>
-                    <td class="text-muted-cell">{{ c.quienInvito || '—' }}</td>
-                    <td class="text-muted-cell">{{ c.fechaIngreso | date:'dd/MM/yyyy' }}</td>
-                    <td>
-                      <span class="badge" [ngClass]="getBadgeEstado(c.estado)">
-                        {{ getLabelEstado(c.estado) }}
-                      </span>
-                    </td>
-                    <td>
-                      <button class="btn-ver" (click)="verDetalle(c.id)">Ver</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </ng-container>
-      </div>
-
-      <!-- Estado de carga -->
-      <div class="loading" *ngIf="isLoading">
-        <div class="spinner"></div>
-        <p>Cargando dashboard...</p>
-      </div>
-
-      <!-- Mensaje cuando no hay datos -->
-      <div class="empty-state" *ngIf="!isLoading && !dashboard">
-        <div class="empty-icon">📊</div>
-        <h3>Sin datos disponibles</h3>
-        <p>No se pudo cargar la información del dashboard.</p>
-        <button class="btn-retry" (click)="cargarDashboard()">
-          🔄 Reintentar
-        </button>
-      </div>
-    </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .dashboard-container {

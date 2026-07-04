@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -17,12 +17,12 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
 @Component({
   selector: 'app-consolidado-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="container">
       <div class="form-card">
         <h2>Nuevo Consolidado</h2>
-
+    
         <form [formGroup]="consolidadoForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="nombre">Nombre Completo *</label>
@@ -32,18 +32,19 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               formControlName="nombre"
               class="form-control"
               placeholder="Ej: Juan Pérez"
-            />
-            <div
-              class="error"
-              *ngIf="
-                consolidadoForm.get('nombre')?.invalid &&
-                consolidadoForm.get('nombre')?.touched
-              "
-            >
-              El nombre es requerido (mínimo 3 caracteres)
-            </div>
+              />
+            @if (
+              consolidadoForm.get('nombre')?.invalid &&
+              consolidadoForm.get('nombre')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                El nombre es requerido (mínimo 3 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-row">
             <div class="form-group">
               <label for="telefono">Teléfono *</label>
@@ -53,31 +54,34 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
                 formControlName="telefono"
                 class="form-control"
                 placeholder="+56912345678"
-              />
-              <div
-                class="error"
-                *ngIf="
-                  consolidadoForm.get('telefono')?.invalid &&
-                  consolidadoForm.get('telefono')?.touched
-                "
-              >
-                <span
-                  *ngIf="consolidadoForm.get('telefono')?.hasError('required')"
-                >
-                  El teléfono es requerido
-                </span>
-                <span
-                  *ngIf="
+                />
+              @if (
+                consolidadoForm.get('telefono')?.invalid &&
+                consolidadoForm.get('telefono')?.touched
+                ) {
+                <div
+                  class="error"
+                  >
+                  @if (consolidadoForm.get('telefono')?.hasError('required')) {
+                    <span
+                      >
+                      El teléfono es requerido
+                    </span>
+                  }
+                  @if (
                     consolidadoForm
-                      .get('telefono')
-                      ?.hasError('telefonoInvalido')
-                  "
-                >
-                  Formato inválido. Use: +56912345678 o 912345678
-                </span>
-              </div>
+                    .get('telefono')
+                    ?.hasError('telefonoInvalido')
+                    ) {
+                    <span
+                      >
+                      Formato inválido. Use: +56912345678 o 912345678
+                    </span>
+                  }
+                </div>
+              }
             </div>
-
+    
             <div class="form-group">
               <label for="edad">Edad *</label>
               <input
@@ -86,19 +90,20 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
                 formControlName="edad"
                 class="form-control"
                 placeholder="25"
-              />
-              <div
-                class="error"
-                *ngIf="
-                  consolidadoForm.get('edad')?.invalid &&
-                  consolidadoForm.get('edad')?.touched
-                "
-              >
-                Edad debe ser entre 1 y 120 años
-              </div>
+                />
+              @if (
+                consolidadoForm.get('edad')?.invalid &&
+                consolidadoForm.get('edad')?.touched
+                ) {
+                <div
+                  class="error"
+                  >
+                  Edad debe ser entre 1 y 120 años
+                </div>
+              }
             </div>
           </div>
-
+    
           <div class="form-group">
             <label for="comunaId">Comuna *</label>
             <select
@@ -106,39 +111,42 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               formControlName="comunaId"
               class="form-control"
               [disabled]="isLoadingComunas"
-            >
+              >
               <option [ngValue]="0">
                 {{
-                  isLoadingComunas
-                    ? 'Cargando comunas...'
-                    : 'Seleccione una comuna'
+                isLoadingComunas
+                ? 'Cargando comunas...'
+                : 'Seleccione una comuna'
                 }}
               </option>
-
-              <optgroup
-                *ngFor="let provincia of getProvincias()"
-                [label]="provincia"
-              >
-                <option
-                  *ngFor="let comuna of getComunasPorProvincia(provincia)"
-                  [ngValue]="comuna.id"
-                >
-                  {{ comuna.nombre }}
-                </option>
-              </optgroup>
+    
+              @for (provincia of getProvincias(); track provincia) {
+                <optgroup
+                  [label]="provincia"
+                  >
+                  @for (comuna of getComunasPorProvincia(provincia); track comuna) {
+                    <option
+                      [ngValue]="comuna.id"
+                      >
+                      {{ comuna.nombre }}
+                    </option>
+                  }
+                </optgroup>
+              }
             </select>
-
-            <div
-              class="error"
-              *ngIf="
-                consolidadoForm.get('comunaId')?.invalid &&
-                consolidadoForm.get('comunaId')?.touched
-              "
-            >
-              Debe seleccionar una comuna
-            </div>
+    
+            @if (
+              consolidadoForm.get('comunaId')?.invalid &&
+              consolidadoForm.get('comunaId')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                Debe seleccionar una comuna
+              </div>
+            }
           </div>
-
+    
           <!-- ← NUEVO: Selector de Reunión -->
           <div class="form-group">
             <label for="reunionId">¿En qué reunión llegó?</label>
@@ -147,21 +155,23 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               formControlName="reunionId"
               class="form-control"
               [disabled]="isLoadingReuniones"
-            >
+              >
               <option [ngValue]="null">
                 {{
-                  isLoadingReuniones
-                    ? 'Cargando reuniones...'
-                    : 'Seleccione una reunión (opcional)'
+                isLoadingReuniones
+                ? 'Cargando reuniones...'
+                : 'Seleccione una reunión (opcional)'
                 }}
               </option>
-              <option *ngFor="let reunion of reuniones" [ngValue]="reunion.id">
-                {{ reunion.nombre }}
-              </option>
+              @for (reunion of reuniones; track reunion) {
+                <option [ngValue]="reunion.id">
+                  {{ reunion.nombre }}
+                </option>
+              }
             </select>
             <small class="form-text">Este campo es opcional</small>
           </div>
-
+    
           <div class="form-group">
             <label for="quienInvito">¿Quién lo invitó? *</label>
             <input
@@ -170,18 +180,19 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               formControlName="quienInvito"
               class="form-control"
               placeholder="Ej: María González"
-            />
-            <div
-              class="error"
-              *ngIf="
-                consolidadoForm.get('quienInvito')?.invalid &&
-                consolidadoForm.get('quienInvito')?.touched
-              "
-            >
-              Este campo es requerido
-            </div>
+              />
+            @if (
+              consolidadoForm.get('quienInvito')?.invalid &&
+              consolidadoForm.get('quienInvito')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                Este campo es requerido
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="motivoOracion">Motivo de Oración *</label>
             <textarea
@@ -191,42 +202,46 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               rows="4"
               placeholder="Describe el motivo de oración o necesidad..."
             ></textarea>
-            <div
-              class="error"
-              *ngIf="
-                consolidadoForm.get('motivoOracion')?.invalid &&
-                consolidadoForm.get('motivoOracion')?.touched
-              "
-            >
-              El motivo de oración es requerido (mínimo 10 caracteres)
+            @if (
+              consolidadoForm.get('motivoOracion')?.invalid &&
+              consolidadoForm.get('motivoOracion')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                El motivo de oración es requerido (mínimo 10 caracteres)
+              </div>
+            }
+          </div>
+    
+          @if (errorMessage) {
+            <div class="error">
+              {{ errorMessage }}
             </div>
-          </div>
-
-          <div class="error" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
-
+          }
+    
           <div class="form-actions">
             <button
               type="button"
               class="btn-secondary"
               (click)="cancelar()"
               [disabled]="isLoading"
-            >
+              >
               Cancelar
             </button>
             <button
               type="submit"
               class="btn-primary"
               [disabled]="consolidadoForm.invalid || isLoading"
-            >
+              >
               {{ isLoading ? 'Guardando...' : 'Guardar' }}
             </button>
           </div>
         </form>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .container {

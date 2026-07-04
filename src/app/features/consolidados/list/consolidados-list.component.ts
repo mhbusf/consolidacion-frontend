@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -16,117 +16,146 @@ import { User } from '../../../core/models/auth.model';
       <div class="header">
         <h2>{{ vistaGDC ? 'Consolidados Cerrados con GDC' : 'Consolidados' }}</h2>
         <div class="header-actions">
-          <button *ngIf="isAdmin && vistaGDC" class="btn-secondary" (click)="volverActivos()">← Volver a Activos</button>
-          <button *ngIf="!vistaGDC" class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
+          @if (isAdmin && vistaGDC) {
+            <button class="btn-secondary" (click)="volverActivos()">← Volver a Activos</button>
+          }
+          @if (!vistaGDC) {
+            <button class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
+          }
         </div>
       </div>
-
+    
       <!-- Filtros solo para Admin (vista activos) -->
-      <div class="filters" *ngIf="isAdmin && !vistaGDC">
-        <div class="filter-group">
-          <label>Filtrar por:</label>
-          <select [(ngModel)]="filtroSeleccionado" (change)="aplicarFiltro()" class="form-control">
-            <option value="todos">Todos los consolidados</option>
-            <option value="sin-asignar">Sin asignar</option>
-            <option value="por-usuario">Por usuario específico</option>
-            <option value="mis-consolidados">Mis consolidados creados</option>
-          </select>
-        </div>
-
-        <div class="filter-group" *ngIf="filtroSeleccionado === 'por-usuario'">
-          <label>Usuario:</label>
-          <select [(ngModel)]="usuarioFiltro" (change)="filtrarPorUsuario()" class="form-control">
-            <option value="">Seleccione un usuario</option>
-            <option *ngFor="let user of usuarios" [value]="user.username">
-              {{ user.username }} ({{ user.email }})
-            </option>
-          </select>
-        </div>
-
-        <div class="stats">
-          <div class="stat-card">
-            <div class="stat-number">{{ consolidados.length }}</div>
-            <div class="stat-label">Total Mostrados</div>
+      @if (isAdmin && !vistaGDC) {
+        <div class="filters">
+          <div class="filter-group">
+            <label>Filtrar por:</label>
+            <select [(ngModel)]="filtroSeleccionado" (change)="aplicarFiltro()" class="form-control">
+              <option value="todos">Todos los consolidados</option>
+              <option value="sin-asignar">Sin asignar</option>
+              <option value="por-usuario">Por usuario específico</option>
+              <option value="mis-consolidados">Mis consolidados creados</option>
+            </select>
           </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ totalConsolidados }}</div>
-            <div class="stat-label">Total General</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ sinAsignar }}</div>
-            <div class="stat-label">Sin Asignar</div>
-          </div>
-          <div class="stat-card stat-card-gdc" (click)="verCerradosGDC()">
-            <div class="stat-number">{{ totalCerradosGDC }}</div>
-            <div class="stat-label">Cerrados con GDC</div>
-            <div class="stat-hint">Click para ver</div>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="isLoading" class="loading">
-        Cargando consolidados...
-      </div>
-
-      <div *ngIf="!isLoading && consolidados.length === 0" class="empty-state">
-        <p>No hay consolidados {{ filtroTexto }}</p>
-      </div>
-
-      <div class="consolidados-grid" *ngIf="!isLoading && consolidados.length > 0">
-        <div class="consolidado-card" [class.card-gdc]="vistaGDC" *ngFor="let c of consolidados">
-          <div class="card-header">
-            <h3>{{ c.nombre }}</h3>
-            <div class="badges">
-              <span class="badge badge-gdc" *ngIf="vistaGDC">
-                GDC: {{ c.gdc }}
-              </span>
-              <span class="badge" *ngIf="!vistaGDC && c.usuarioAsignado">
-                Asignado a: {{ c.usuarioAsignado }}
-              </span>
-              <span class="badge badge-warning" *ngIf="!vistaGDC && !c.usuarioAsignado">
-                Sin asignar
-              </span>
+          @if (filtroSeleccionado === 'por-usuario') {
+            <div class="filter-group">
+              <label>Usuario:</label>
+              <select [(ngModel)]="usuarioFiltro" (change)="filtrarPorUsuario()" class="form-control">
+                <option value="">Seleccione un usuario</option>
+                @for (user of usuarios; track user) {
+                  <option [value]="user.username">
+                    {{ user.username }} ({{ user.email }})
+                  </option>
+                }
+              </select>
+            </div>
+          }
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-number">{{ consolidados.length }}</div>
+              <div class="stat-label">Total Mostrados</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">{{ totalConsolidados }}</div>
+              <div class="stat-label">Total General</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">{{ sinAsignar }}</div>
+              <div class="stat-label">Sin Asignar</div>
+            </div>
+            <div class="stat-card stat-card-gdc" (click)="verCerradosGDC()">
+              <div class="stat-number">{{ totalCerradosGDC }}</div>
+              <div class="stat-label">Cerrados con GDC</div>
+              <div class="stat-hint">Click para ver</div>
             </div>
           </div>
-
-          <div class="card-body">
-            <p><strong>Teléfono:</strong> {{ c.telefono }}</p>
-            <p><strong>Edad:</strong> {{ c.edad }} años</p>
-            <p><strong>Invitado por:</strong> {{ c.quienInvito }}</p>
-            <p><strong>Motivo:</strong> {{ c.motivoOracion }}</p>
-            <p *ngIf="vistaGDC && c.comentarioCierre"><strong>Cierre:</strong> {{ c.comentarioCierre }}</p>
-            <p *ngIf="vistaGDC && c.fechaCierre" class="meta">
-              <small>Cerrado: {{ c.fechaCierre | date:'dd/MM/yyyy HH:mm' }}</small>
-            </p>
-            <p class="meta" *ngIf="!vistaGDC">
-              <small>Reportado por: {{ c.usuarioReporta }}</small>
-            </p>
-            <p class="meta">
-              <small>Fecha ingreso: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
-            </p>
-          </div>
-
-          <div class="card-actions">
-            <button class="btn-secondary" (click)="verDetalle(c.id)">
-              Ver Detalle
-            </button>
-            <button
-              *ngIf="isAdmin && !vistaGDC && !c.usuarioAsignado"
-              class="btn-success"
-              (click)="asignar(c.id)">
-              Asignar
-            </button>
-            <button
-              *ngIf="isAdmin && !vistaGDC && c.usuarioAsignado"
-              class="btn-info"
-              (click)="reasignar(c.id)">
-              Reasignar
-            </button>
-          </div>
         </div>
-      </div>
+      }
+    
+      @if (isLoading) {
+        <div class="loading">
+          Cargando consolidados...
+        </div>
+      }
+    
+      @if (!isLoading && consolidados.length === 0) {
+        <div class="empty-state">
+          <p>No hay consolidados {{ filtroTexto }}</p>
+        </div>
+      }
+    
+      @if (!isLoading && consolidados.length > 0) {
+        <div class="consolidados-grid">
+          @for (c of consolidados; track c) {
+            <div class="consolidado-card" [class.card-gdc]="vistaGDC">
+              <div class="card-header">
+                <h3>{{ c.nombre }}</h3>
+                <div class="badges">
+                  @if (vistaGDC) {
+                    <span class="badge badge-gdc">
+                      GDC: {{ c.gdc }}
+                    </span>
+                  }
+                  @if (!vistaGDC && c.usuarioAsignado) {
+                    <span class="badge">
+                      Asignado a: {{ c.usuarioAsignado }}
+                    </span>
+                  }
+                  @if (!vistaGDC && !c.usuarioAsignado) {
+                    <span class="badge badge-warning">
+                      Sin asignar
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="card-body">
+                <p><strong>Teléfono:</strong> {{ c.telefono }}</p>
+                <p><strong>Edad:</strong> {{ c.edad }} años</p>
+                <p><strong>Invitado por:</strong> {{ c.quienInvito }}</p>
+                <p><strong>Motivo:</strong> {{ c.motivoOracion }}</p>
+                @if (vistaGDC && c.comentarioCierre) {
+                  <p><strong>Cierre:</strong> {{ c.comentarioCierre }}</p>
+                }
+                @if (vistaGDC && c.fechaCierre) {
+                  <p class="meta">
+                    <small>Cerrado: {{ c.fechaCierre | date:'dd/MM/yyyy HH:mm' }}</small>
+                  </p>
+                }
+                @if (!vistaGDC) {
+                  <p class="meta">
+                    <small>Reportado por: {{ c.usuarioReporta }}</small>
+                  </p>
+                }
+                <p class="meta">
+                  <small>Fecha ingreso: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
+                </p>
+              </div>
+              <div class="card-actions">
+                <button class="btn-secondary" (click)="verDetalle(c.id)">
+                  Ver Detalle
+                </button>
+                @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
+                  <button
+                    class="btn-success"
+                    (click)="asignar(c.id)">
+                    Asignar
+                  </button>
+                }
+                @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
+                  <button
+                    class="btn-info"
+                    (click)="reasignar(c.id)">
+                    Reasignar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 1400px;

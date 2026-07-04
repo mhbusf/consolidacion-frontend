@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -13,13 +13,13 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="login-container">
       <div class="login-card">
         <h2>Iniciar Sesión</h2>
         <p class="subtitle">Sistema de Consolidación</p>
-
+    
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="username">Usuario</label>
@@ -29,18 +29,19 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="username"
               class="form-control"
               placeholder="Ingresa tu usuario"
-            />
-            <div
-              class="error"
-              *ngIf="
-                loginForm.get('username')?.invalid &&
-                loginForm.get('username')?.touched
-              "
-            >
-              Usuario requerido
-            </div>
+              />
+            @if (
+              loginForm.get('username')?.invalid &&
+              loginForm.get('username')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                Usuario requerido
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="password">Contraseña</label>
             <input
@@ -49,33 +50,37 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="password"
               class="form-control"
               placeholder="Ingresa tu contraseña"
-            />
-            <div
-              class="error"
-              *ngIf="
-                loginForm.get('password')?.invalid &&
-                loginForm.get('password')?.touched
-              "
-            >
-              Contraseña requerida
+              />
+            @if (
+              loginForm.get('password')?.invalid &&
+              loginForm.get('password')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                Contraseña requerida
+              </div>
+            }
+          </div>
+    
+          @if (errorMessage) {
+            <div class="error">
+              {{ errorMessage }}
             </div>
-          </div>
-
-          <div class="error" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
-
+          }
+    
           <button
             type="submit"
             class="btn-primary btn-block"
             [disabled]="loginForm.invalid || isLoading"
-          >
+            >
             {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
           </button>
         </form>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .login-container {

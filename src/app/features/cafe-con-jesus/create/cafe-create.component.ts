@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -13,12 +13,12 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-cafe-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="container">
       <div class="form-card">
         <h2>Nuevo Ingreso - Cafe con Jesus</h2>
-
+    
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="nombre">Nombre *</label>
@@ -28,15 +28,16 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="nombre"
               class="form-control"
               placeholder="Ej: Juan"
-            />
-            <div
-              class="error"
-              *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched"
-            >
-              El nombre es requerido (minimo 2 caracteres)
-            </div>
+              />
+            @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
+              <div
+                class="error"
+                >
+                El nombre es requerido (minimo 2 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="apellido">Apellido *</label>
             <input
@@ -45,17 +46,18 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="apellido"
               class="form-control"
               placeholder="Ej: Perez"
-            />
-            <div
-              class="error"
-              *ngIf="
-                form.get('apellido')?.invalid && form.get('apellido')?.touched
-              "
-            >
-              El apellido es requerido (minimo 2 caracteres)
-            </div>
+              />
+            @if (
+              form.get('apellido')?.invalid && form.get('apellido')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                El apellido es requerido (minimo 2 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="telefono">Telefono *</label>
             <input
@@ -64,17 +66,18 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="telefono"
               class="form-control"
               placeholder="+56912345678"
-            />
-            <div
-              class="error"
-              *ngIf="
-                form.get('telefono')?.invalid && form.get('telefono')?.touched
-              "
-            >
-              El telefono es requerido
-            </div>
+              />
+            @if (
+              form.get('telefono')?.invalid && form.get('telefono')?.touched
+              ) {
+              <div
+                class="error"
+                >
+                El telefono es requerido
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="edad">Edad</label>
             <input
@@ -83,9 +86,9 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="edad"
               class="form-control"
               placeholder="Ej: 25"
-            />
+              />
           </div>
-
+    
           <div class="form-group">
             <label for="invitadoPor">Invitado por</label>
             <input
@@ -94,9 +97,9 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="invitadoPor"
               class="form-control"
               placeholder="Nombre de quien lo invito"
-            />
+              />
           </div>
-
+    
           <div class="form-group">
             <label for="telefonoInvitadoPor">Telefono de quien invito</label>
             <input
@@ -105,30 +108,31 @@ import { NotificationService } from '../../../core/services/notification.service
               formControlName="telefonoInvitadoPor"
               class="form-control"
               placeholder="+56912345678"
-            />
+              />
           </div>
-
+    
           <div class="form-actions">
             <button
               type="button"
               class="btn-secondary"
               (click)="cancelar()"
               [disabled]="isLoading"
-            >
+              >
               Cancelar
             </button>
             <button
               type="submit"
               class="btn-primary"
               [disabled]="form.invalid || isLoading"
-            >
+              >
               {{ isLoading ? 'Guardando...' : 'Guardar' }}
             </button>
           </div>
         </form>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .container {

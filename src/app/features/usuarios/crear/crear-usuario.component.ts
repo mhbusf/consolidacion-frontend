@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -8,52 +8,58 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-crear-usuario',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   template: `
     <div class="container">
       <div class="card">
         <h2>Crear Nuevo Usuario</h2>
-        
+    
         <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="username">Usuario *</label>
-            <input 
-              type="text" 
-              id="username" 
-              formControlName="username" 
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
               class="form-control"
               placeholder="Nombre de usuario">
-            <div class="error" *ngIf="userForm.get('username')?.invalid && userForm.get('username')?.touched">
-              Usuario requerido (mínimo 3 caracteres)
-            </div>
+            @if (userForm.get('username')?.invalid && userForm.get('username')?.touched) {
+              <div class="error">
+                Usuario requerido (mínimo 3 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="email">Email *</label>
-            <input 
-              type="email" 
-              id="email" 
-              formControlName="email" 
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
               class="form-control"
               placeholder="usuario@ejemplo.com">
-            <div class="error" *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched">
-              Email válido requerido
-            </div>
+            @if (userForm.get('email')?.invalid && userForm.get('email')?.touched) {
+              <div class="error">
+                Email válido requerido
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="password">Contraseña *</label>
-            <input 
-              type="password" 
-              id="password" 
-              formControlName="password" 
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
               class="form-control"
               placeholder="Mínimo 6 caracteres">
-            <div class="error" *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched">
-              Contraseña requerida (mínimo 6 caracteres)
-            </div>
+            @if (userForm.get('password')?.invalid && userForm.get('password')?.touched) {
+              <div class="error">
+                Contraseña requerida (mínimo 6 caracteres)
+              </div>
+            }
           </div>
-
+    
           <div class="form-group">
             <label for="role">Rol *</label>
             <select id="role" formControlName="role" class="form-control">
@@ -61,26 +67,32 @@ import { NotificationService } from '../../../core/services/notification.service
               <option value="ROLE_USER">Usuario</option>
               <option value="ROLE_ADMIN">Administrador</option>
             </select>
-            <div class="error" *ngIf="userForm.get('role')?.invalid && userForm.get('role')?.touched">
-              Debe seleccionar un rol
+            @if (userForm.get('role')?.invalid && userForm.get('role')?.touched) {
+              <div class="error">
+                Debe seleccionar un rol
+              </div>
+            }
+          </div>
+    
+          @if (errorMessage) {
+            <div class="error">
+              {{ errorMessage }}
             </div>
-          </div>
-
-          <div class="error" *ngIf="errorMessage">
-            {{ errorMessage }}
-          </div>
-
-          <div class="success" *ngIf="successMessage">
-            {{ successMessage }}
-          </div>
-
+          }
+    
+          @if (successMessage) {
+            <div class="success">
+              {{ successMessage }}
+            </div>
+          }
+    
           <div class="actions">
             <button type="button" class="btn-secondary" (click)="cancelar()">
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              class="btn-primary" 
+            <button
+              type="submit"
+              class="btn-primary"
               [disabled]="userForm.invalid || isLoading">
               {{ isLoading ? 'Creando...' : 'Crear Usuario' }}
             </button>
@@ -88,7 +100,8 @@ import { NotificationService } from '../../../core/services/notification.service
         </form>
       </div>
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 600px;

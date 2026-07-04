@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,6 +14,7 @@ import { NotificationService } from '../../../core/services/notification.service
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './consolidado-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './consolidado-detail.component.css'
 })
 export class ConsolidadoDetailComponent implements OnInit {

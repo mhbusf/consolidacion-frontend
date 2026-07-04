@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,205 +24,238 @@ import { User } from '../../../core/models/auth.model';
           + Nuevo Ingreso
         </button>
       </div>
-
-      <div *ngIf="isLoading" class="loading">
-        <div class="spinner"></div>
-        <p>Cargando registros...</p>
-      </div>
-
-      <div *ngIf="!isLoading && registros.length === 0" class="empty-state">
-        <div class="empty-icon">☕</div>
-        <h3>Sin registros</h3>
-        <p>Aun no hay registros de Cafe con Jesus.</p>
-        <button class="btn-primary" (click)="nuevoRegistro()">
-          + Crear primer registro
-        </button>
-      </div>
-
-      <div class="table-container" *ngIf="!isLoading && registros.length > 0">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Telefono</th>
-              <th>Edad</th>
-              <th>Fecha Ingreso</th>
-              <th>Asistio</th>
-              <th>Etapa</th>
-              <th>Registrado por</th>
-              <th>Asignado a</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let r of registros">
-              <td class="fw-bold nombre-link" (click)="verDetalle(r)">{{ r.nombre }}</td>
-              <td>{{ r.apellido }}</td>
-              <td>{{ r.telefono }}</td>
-              <td>{{ r.edad || '-' }}</td>
-              <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
-              <td>
-                <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
-                  {{ r.asistio ? 'Si' : 'No' }}
-                </span>
-              </td>
-              <td>
-                <span *ngIf="r.etapa" class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
-                <span *ngIf="!r.etapa" class="text-muted-sm">—</span>
-              </td>
-              <td>
-                <span class="user-badge">{{ r.registradoPor }}</span>
-              </td>
-              <td>
-                <span class="user-badge badge-asignado" *ngIf="r.usuarioAsignado">{{ r.usuarioAsignado }}</span>
-                <span *ngIf="!r.usuarioAsignado" class="badge badge-pending">Sin asignar</span>
-              </td>
-              <td class="actions-cell">
-                <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
-                <button class="btn-convertir" *ngIf="!r.convertidoAConsolidado" (click)="convertirAConsolidado(r)">
-                  Acepto al Senor
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Modal detalle -->
-        <div class="modal-overlay" *ngIf="registroDetalle" (click)="cerrarDetalle()">
-          <div class="detalle-card" (click)="$event.stopPropagation()">
-            <div class="detalle-header">
-              <div class="detalle-avatar">{{ registroDetalle.nombre[0] }}{{ registroDetalle.apellido[0] }}</div>
-              <div>
-                <h3 class="detalle-nombre">{{ registroDetalle.nombre }} {{ registroDetalle.apellido }}</h3>
-                <span class="badge-etapa" *ngIf="registroDetalle.etapa" [ngClass]="getEtapaClass(registroDetalle.etapa)">
-                  {{ getEtapaLabel(registroDetalle.etapa) }}
-                </span>
-                <span class="text-muted-sm" *ngIf="!registroDetalle.etapa">Sin etapa asignada</span>
-              </div>
-              <button class="detalle-close" (click)="cerrarDetalle()">✕</button>
-            </div>
-
-            <div class="detalle-grid">
-              <div class="detalle-item">
-                <span class="detalle-label">Teléfono</span>
-                <span class="detalle-value">{{ registroDetalle.telefono || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Edad</span>
-                <span class="detalle-value">{{ registroDetalle.edad || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Invitado por</span>
-                <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Tel. Invitado por</span>
-                <span class="detalle-value">{{ registroDetalle.telefonoInvitadoPor || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Asistió al Café</span>
-                <span class="badge" [class.badge-success]="registroDetalle.asistio" [class.badge-pending]="!registroDetalle.asistio">
-                  {{ registroDetalle.asistio ? 'Sí' : 'No' }}
-                </span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Fecha asistencia</span>
-                <span class="detalle-value">{{ registroDetalle.fechaAsistencia ? (registroDetalle.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Registrado por</span>
-                <span class="detalle-value">{{ registroDetalle.registradoPor || '-' }}</span>
-              </div>
-              <div class="detalle-item">
-                <span class="detalle-label">Asignado a</span>
-                <span class="user-badge badge-asignado" *ngIf="registroDetalle.usuarioAsignado">{{ registroDetalle.usuarioAsignado }}</span>
-                <span class="badge badge-pending" *ngIf="!registroDetalle.usuarioAsignado">Sin asignar</span>
-              </div>
-            </div>
-
-            <!-- Historial de comentarios -->
-            <div class="detalle-comentarios">
-              <div class="detalle-comentarios-titulo">Comentarios</div>
-
-              <div class="comentarios-lista" *ngIf="registroDetalle.comentarios?.length; else sinComentarios">
-                <div class="comentario-item" *ngFor="let c of registroDetalle.comentarios">
-                  <div class="comentario-meta">
-                    <span class="comentario-usuario">{{ c.usuario }}</span>
-                    <span class="comentario-fecha">{{ c.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+    
+      @if (isLoading) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Cargando registros...</p>
+        </div>
+      }
+    
+      @if (!isLoading && registros.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">☕</div>
+          <h3>Sin registros</h3>
+          <p>Aun no hay registros de Cafe con Jesus.</p>
+          <button class="btn-primary" (click)="nuevoRegistro()">
+            + Crear primer registro
+          </button>
+        </div>
+      }
+    
+      @if (!isLoading && registros.length > 0) {
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Telefono</th>
+                <th>Edad</th>
+                <th>Fecha Ingreso</th>
+                <th>Asistio</th>
+                <th>Etapa</th>
+                <th>Registrado por</th>
+                <th>Asignado a</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of registros; track r) {
+                <tr>
+                  <td class="fw-bold nombre-link" (click)="verDetalle(r)">{{ r.nombre }}</td>
+                  <td>{{ r.apellido }}</td>
+                  <td>{{ r.telefono }}</td>
+                  <td>{{ r.edad || '-' }}</td>
+                  <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
+                      {{ r.asistio ? 'Si' : 'No' }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (r.etapa) {
+                      <span class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
+                    }
+                    @if (!r.etapa) {
+                      <span class="text-muted-sm">—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="user-badge">{{ r.registradoPor }}</span>
+                  </td>
+                  <td>
+                    @if (r.usuarioAsignado) {
+                      <span class="user-badge badge-asignado">{{ r.usuarioAsignado }}</span>
+                    }
+                    @if (!r.usuarioAsignado) {
+                      <span class="badge badge-pending">Sin asignar</span>
+                    }
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
+                    @if (!r.convertidoAConsolidado) {
+                      <button class="btn-convertir" (click)="convertirAConsolidado(r)">
+                        Acepto al Senor
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <!-- Modal detalle -->
+          @if (registroDetalle) {
+            <div class="modal-overlay" (click)="cerrarDetalle()">
+              <div class="detalle-card" (click)="$event.stopPropagation()">
+                <div class="detalle-header">
+                  <div class="detalle-avatar">{{ registroDetalle.nombre[0] }}{{ registroDetalle.apellido[0] }}</div>
+                  <div>
+                    <h3 class="detalle-nombre">{{ registroDetalle.nombre }} {{ registroDetalle.apellido }}</h3>
+                    @if (registroDetalle.etapa) {
+                      <span class="badge-etapa" [ngClass]="getEtapaClass(registroDetalle.etapa)">
+                        {{ getEtapaLabel(registroDetalle.etapa) }}
+                      </span>
+                    }
+                    @if (!registroDetalle.etapa) {
+                      <span class="text-muted-sm">Sin etapa asignada</span>
+                    }
                   </div>
-                  <p class="comentario-texto">{{ c.contenido }}</p>
+                  <button class="detalle-close" (click)="cerrarDetalle()">✕</button>
+                </div>
+                <div class="detalle-grid">
+                  <div class="detalle-item">
+                    <span class="detalle-label">Teléfono</span>
+                    <span class="detalle-value">{{ registroDetalle.telefono || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Edad</span>
+                    <span class="detalle-value">{{ registroDetalle.edad || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Invitado por</span>
+                    <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Tel. Invitado por</span>
+                    <span class="detalle-value">{{ registroDetalle.telefonoInvitadoPor || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Asistió al Café</span>
+                    <span class="badge" [class.badge-success]="registroDetalle.asistio" [class.badge-pending]="!registroDetalle.asistio">
+                      {{ registroDetalle.asistio ? 'Sí' : 'No' }}
+                    </span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Fecha asistencia</span>
+                    <span class="detalle-value">{{ registroDetalle.fechaAsistencia ? (registroDetalle.fechaAsistencia | date: 'dd/MM/yyyy') : '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Registrado por</span>
+                    <span class="detalle-value">{{ registroDetalle.registradoPor || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Asignado a</span>
+                    @if (registroDetalle.usuarioAsignado) {
+                      <span class="user-badge badge-asignado">{{ registroDetalle.usuarioAsignado }}</span>
+                    }
+                    @if (!registroDetalle.usuarioAsignado) {
+                      <span class="badge badge-pending">Sin asignar</span>
+                    }
+                  </div>
+                </div>
+                <!-- Historial de comentarios -->
+                <div class="detalle-comentarios">
+                  <div class="detalle-comentarios-titulo">Comentarios</div>
+                  @if (registroDetalle.comentarios?.length) {
+                    <div class="comentarios-lista">
+                      @for (c of registroDetalle.comentarios; track c) {
+                        <div class="comentario-item">
+                          <div class="comentario-meta">
+                            <span class="comentario-usuario">{{ c.usuario }}</span>
+                            <span class="comentario-fecha">{{ c.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
+                          <p class="comentario-texto">{{ c.contenido }}</p>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="sin-comentarios">Sin comentarios aún.</p>
+                  }
+                  <!-- Agregar comentario -->
+                  <div class="nuevo-comentario">
+                    <textarea
+                      [(ngModel)]="nuevoComentario"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Escribir comentario...">
+                    </textarea>
+                    <button class="btn-agregar-comentario" (click)="agregarComentario()" [disabled]="!nuevoComentario.trim() || isSavingComentario">
+                      {{ isSavingComentario ? 'Guardando...' : 'Agregar comentario' }}
+                    </button>
+                  </div>
+                </div>
+                <div class="detalle-actions">
+                  <button class="btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+                  <button class="btn-edit" (click)="editarDesdeDetalle()">Editar</button>
                 </div>
               </div>
-              <ng-template #sinComentarios>
-                <p class="sin-comentarios">Sin comentarios aún.</p>
-              </ng-template>
-
-              <!-- Agregar comentario -->
-              <div class="nuevo-comentario">
-                <textarea
-                  [(ngModel)]="nuevoComentario"
-                  class="form-control"
-                  rows="2"
-                  placeholder="Escribir comentario...">
-                </textarea>
-                <button class="btn-agregar-comentario" (click)="agregarComentario()" [disabled]="!nuevoComentario.trim() || isSavingComentario">
-                  {{ isSavingComentario ? 'Guardando...' : 'Agregar comentario' }}
-                </button>
+            </div>
+          }
+          <!-- Modal editar -->
+          @if (registroEditando) {
+            <div class="modal-overlay" (click)="cancelarEdicion()">
+              <div class="modal-content" (click)="$event.stopPropagation()">
+                <h3>Editar Registro</h3>
+                <div class="form-group">
+                  <label>Consolidador asignado</label>
+                  <select [(ngModel)]="editUsuarioAsignado" class="form-control">
+                    <option value="">Sin asignar</option>
+                    @for (u of usuarios; track u) {
+                      <option [value]="u.username">{{ u.username }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Asistio al Cafe con Jesus</label>
+                  <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
+                    <option [ngValue]="false">No</option>
+                    <option [ngValue]="true">Si</option>
+                  </select>
+                </div>
+                @if (editAsistio) {
+                  <div class="form-group">
+                    <label>Fecha de Asistencia</label>
+                    <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
+                  </div>
+                }
+                <div class="form-group">
+                  <label>Etapa de seguimiento</label>
+                  <select [(ngModel)]="editEtapa" class="form-control">
+                    <option value="">— Sin etapa —</option>
+                    @for (e of etapas; track e) {
+                      <option [value]="e.value">{{ e.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Comentario</label>
+                  <textarea [(ngModel)]="editComentario" class="form-control" rows="3" placeholder="Agregar comentario..."></textarea>
+                </div>
+                <div class="modal-actions">
+                  <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+                  <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
+                    {{ isSaving ? 'Guardando...' : 'Guardar' }}
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div class="detalle-actions">
-              <button class="btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
-              <button class="btn-edit" (click)="editarDesdeDetalle()">Editar</button>
-            </div>
-          </div>
+          }
         </div>
-
-        <!-- Modal editar -->
-        <div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <h3>Editar Registro</h3>
-            <div class="form-group">
-              <label>Consolidador asignado</label>
-              <select [(ngModel)]="editUsuarioAsignado" class="form-control">
-                <option value="">Sin asignar</option>
-                <option *ngFor="let u of usuarios" [value]="u.username">{{ u.username }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Asistio al Cafe con Jesus</label>
-              <select [(ngModel)]="editAsistio" class="form-control" (ngModelChange)="onAsistioChange()">
-                <option [ngValue]="false">No</option>
-                <option [ngValue]="true">Si</option>
-              </select>
-            </div>
-            <div class="form-group" *ngIf="editAsistio">
-              <label>Fecha de Asistencia</label>
-              <input type="date" [(ngModel)]="editFechaAsistencia" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Etapa de seguimiento</label>
-              <select [(ngModel)]="editEtapa" class="form-control">
-                <option value="">— Sin etapa —</option>
-                <option *ngFor="let e of etapas" [value]="e.value">{{ e.label }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Comentario</label>
-              <textarea [(ngModel)]="editComentario" class="form-control" rows="3" placeholder="Agregar comentario..."></textarea>
-            </div>
-            <div class="modal-actions">
-              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
-              <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
-                {{ isSaving ? 'Guardando...' : 'Guardar' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      }
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .container {

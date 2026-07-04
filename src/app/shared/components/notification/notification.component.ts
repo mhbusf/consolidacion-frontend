@@ -1,23 +1,25 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-notification',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="notification-container">
-      <div 
-        *ngIf="message" 
-        [class]="'notification notification-' + type"
-        [@slideIn]>
-        <span class="icon">{{ getIcon() }}</span>
-        <span class="message">{{ message }}</span>
-        <button class="close" (click)="close()">×</button>
-      </div>
+      @if (message) {
+        <div
+          [class]="'notification notification-' + type"
+          [@slideIn]>
+          <span class="icon">{{ getIcon() }}</span>
+          <span class="message">{{ message }}</span>
+          <button class="close" (click)="close()">×</button>
+        </div>
+      }
     </div>
-  `,
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .notification-container {
       position: fixed;

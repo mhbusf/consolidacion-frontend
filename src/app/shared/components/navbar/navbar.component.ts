@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,77 +10,92 @@ import { JwtResponse } from '../../../core/models/auth.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <nav class="navbar" *ngIf="authService.isAuthenticated()">
-      <div class="nav-container">
-        <div class="nav-brand">
-          <a routerLink="/consolidados">
-            <span class="brand-icon">📋</span>
-            <span class="brand-text">Sistema de Consolidación</span>
-          </a>
-        </div>
-
-        <ul class="nav-menu">
-          <li *ngIf="isAdmin">
-            <a routerLink="/dashboard" routerLinkActive="active">
-              <span class="menu-icon">📊</span>
-              Dashboard
+    @if (authService.isAuthenticated()) {
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-brand">
+            <a routerLink="/consolidados">
+              <span class="brand-icon">📋</span>
+              <span class="brand-text">Sistema de Consolidación</span>
             </a>
-          </li>
-          <li>
-            <a routerLink="/consolidados" routerLinkActive="active">
-              <span class="menu-icon">👥</span>
-              Consolidados
-            </a>
-          </li>
-          <li>
-            <a routerLink="/cafe-con-jesus" routerLinkActive="active">
-              <span class="menu-icon">☕</span>
-              Cafe con Jesus
-            </a>
-          </li>
-          <li *ngIf="isAdmin">
-            <a routerLink="/cafe-admin" routerLinkActive="active">
-              <span class="menu-icon">📋</span>
-              Admin Café
-            </a>
-          </li>
-          <li *ngIf="isAdmin">
-            <a routerLink="/usuarios" routerLinkActive="active">
-              <span class="menu-icon">🔐</span>
-              Usuarios
-            </a>
-          </li>
-          <li *ngIf="isAdmin">
-            <a routerLink="/usuarios/crear" routerLinkActive="active">
-              <span class="menu-icon">➕</span>
-              Crear Usuario
-            </a>
-          </li>
-        </ul>
-
-        <div class="nav-user" *ngIf="currentUser$ | async as user">
-          <div class="dropdown" [class.open]="dropdownOpen">
-            <button class="dropdown-toggle" (click)="toggleDropdown($event)">
-              <span class="user-icon">👤</span>
-              <span class="user-name">{{ user.username }}</span>
-              <span class="badge-role" *ngIf="isAdmin">ADMIN</span>
-              <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="dropdown-menu" *ngIf="dropdownOpen">
-              <a routerLink="/cambiar-password" (click)="dropdownOpen = false">
-                <span class="menu-icon">🔑</span>
-                Cambiar Contraseña
-              </a>
-              <a (click)="logout()" class="logout">
-                <span class="menu-icon">🚪</span>
-                Cerrar Sesión
-              </a>
-            </div>
           </div>
+          <ul class="nav-menu">
+            @if (isAdmin) {
+              <li>
+                <a routerLink="/dashboard" routerLinkActive="active">
+                  <span class="menu-icon">📊</span>
+                  Dashboard
+                </a>
+              </li>
+            }
+            <li>
+              <a routerLink="/consolidados" routerLinkActive="active">
+                <span class="menu-icon">👥</span>
+                Consolidados
+              </a>
+            </li>
+            <li>
+              <a routerLink="/cafe-con-jesus" routerLinkActive="active">
+                <span class="menu-icon">☕</span>
+                Cafe con Jesus
+              </a>
+            </li>
+            @if (isAdmin) {
+              <li>
+                <a routerLink="/cafe-admin" routerLinkActive="active">
+                  <span class="menu-icon">📋</span>
+                  Admin Café
+                </a>
+              </li>
+            }
+            @if (isAdmin) {
+              <li>
+                <a routerLink="/usuarios" routerLinkActive="active">
+                  <span class="menu-icon">🔐</span>
+                  Usuarios
+                </a>
+              </li>
+            }
+            @if (isAdmin) {
+              <li>
+                <a routerLink="/usuarios/crear" routerLinkActive="active">
+                  <span class="menu-icon">➕</span>
+                  Crear Usuario
+                </a>
+              </li>
+            }
+          </ul>
+          @if (currentUser$ | async; as user) {
+            <div class="nav-user">
+              <div class="dropdown" [class.open]="dropdownOpen">
+                <button class="dropdown-toggle" (click)="toggleDropdown($event)">
+                  <span class="user-icon">👤</span>
+                  <span class="user-name">{{ user.username }}</span>
+                  @if (isAdmin) {
+                    <span class="badge-role">ADMIN</span>
+                  }
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                @if (dropdownOpen) {
+                  <div class="dropdown-menu">
+                    <a routerLink="/cambiar-password" (click)="dropdownOpen = false">
+                      <span class="menu-icon">🔑</span>
+                      Cambiar Contraseña
+                    </a>
+                    <a (click)="logout()" class="logout">
+                      <span class="menu-icon">🚪</span>
+                      Cerrar Sesión
+                    </a>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
-      </div>
-    </nav>
-  `,
+      </nav>
+    }
+    `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .navbar {
