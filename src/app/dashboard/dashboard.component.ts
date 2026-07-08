@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { DashboardService, ConsolidadorResumen } from '../core/services/dashboard.service';
 import { ConsolidadoService } from '../core/services/consolidado.service';
 import { AuthService } from '../core/services/auth.service';
-import { Dashboard, ConsolidadoResponse } from '../core/models/consolidado.model';
+import { Dashboard, ConsolidadoEstado, ConsolidadoResponse } from '../core/models/consolidado.model';
 import { User } from '../core/models/auth.model';
 
 @Component({
@@ -230,77 +230,80 @@ import { User } from '../core/models/auth.model';
                 dashboard.consolidadosConAtrasos.length
                 }})
               </h2>
-              <div class="atrasos-grid">
-                @for (consolidado of dashboard.consolidadosConAtrasos; track consolidado) {
-                  <div
-                    class="atraso-card"
-                    (click)="verDetalle(consolidado.id)"
-                    >
-                    <div class="atraso-header">
-                      <h3>{{ consolidado.titulo }}</h3>
-                      <span
-                        class="atraso-badge"
-                  [ngClass]="{
-                    'badge-critical': consolidado.diasDeAtraso > 5,
-                    'badge-high':
-                      consolidado.diasDeAtraso > 2 &&
-                      consolidado.diasDeAtraso <= 5,
-                    'badge-medium': consolidado.diasDeAtraso <= 2
-                  }"
-                        >
-                        {{ consolidado.diasDeAtraso }} día{{
-                        consolidado.diasDeAtraso !== 1 ? 's' : ''
-                        }}
-                      </span>
-                    </div>
-                    <div class="atraso-info">
-                      <div class="info-row">
-                        <span class="info-label">👤 Asignado a:</span>
-                        <span class="info-value">{{ consolidado.asignadoA }}</span>
-                      </div>
-                      <div class="info-row">
-                        <span class="info-label">📅 Fecha ingreso:</span>
-                        <span class="info-value">{{
-                          consolidado.fechaIngreso | date : 'dd/MM/yyyy'
-                        }}</span>
-                      </div>
-                      <div class="info-row">
-                        <span class="info-label">📊 Estado:</span>
-                        <span
-                          class="badge"
-                          [ngClass]="getBadgeClass(consolidado.estado)"
-                          >
-                          {{ getEstadoLabel(consolidado.estado) }}
-                        </span>
-                      </div>
-                    </div>
-                    @if (consolidado.comentariosPendientes?.length) {
-                      <div
-                        class="pendientes-list"
-                        >
-                        <div class="pendientes-header">Comentarios Pendientes:</div>
-                        @for (pendiente of consolidado.comentariosPendientes; track pendiente) {
-                          <div
-                            class="pendiente-item"
-                            >
-                            <span class="pendiente-tipo">{{ pendiente.tipo }}</span>
-                            <span class="pendiente-atraso"
-                              >{{ pendiente.diasDeAtraso }} día{{
-                              pendiente.diasDeAtraso !== 1 ? 's' : ''
-                              }}</span
-                              >
-                            </div>
-                          }
-                        </div>
-                      }
-                      <div class="card-footer">
-                        <span class="view-link">Ver detalle →</span>
-                      </div>
-                    </div>
-                  }
-                </div>
+              <div class="search-bar">
+                <input
+                  type="search"
+                  [(ngModel)]="busquedaAtrasos"
+                  class="form-control search-input"
+                  placeholder="Buscar por nombre, asignado, estado o comentario pendiente..."
+                />
               </div>
-            }
+
+              @if (consolidadosConAtrasosFiltrados.length === 0) {
+                <div class="resumen-seccion-empty">
+                  No hay resultados para "{{ busquedaAtrasos }}".
+                </div>
+              }
+
+              @if (consolidadosConAtrasosFiltrados.length > 0) {
+                <div class="table-container">
+                  <table class="stats-table">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Asignado a</th>
+                        <th>Fecha ingreso</th>
+                        <th>Estado</th>
+                        <th>Días atraso</th>
+                        <th>Comentarios pendientes</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (consolidado of consolidadosConAtrasosFiltrados; track consolidado) {
+                        <tr>
+                          <td class="fw-bold">{{ consolidado.titulo }}</td>
+                          <td class="text-muted-cell">{{ consolidado.asignadoA }}</td>
+                          <td class="text-muted-cell">{{ consolidado.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
+                          <td>
+                            <span class="badge" [ngClass]="getBadgeClass(consolidado.estado)">
+                              {{ getEstadoLabel(consolidado.estado) }}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              class="atraso-badge"
+                              [ngClass]="{
+                                'badge-critical': consolidado.diasDeAtraso > 5,
+                                'badge-high': consolidado.diasDeAtraso > 2 && consolidado.diasDeAtraso <= 5,
+                                'badge-medium': consolidado.diasDeAtraso <= 2
+                              }"
+                            >
+                              {{ consolidado.diasDeAtraso }} día{{ consolidado.diasDeAtraso !== 1 ? 's' : '' }}
+                            </span>
+                          </td>
+                          <td class="comentario-cell">
+                            @if (consolidado.comentariosPendientes?.length) {
+                              @for (pendiente of consolidado.comentariosPendientes; track pendiente) {
+                                <span class="pendiente-inline">
+                                  {{ pendiente.tipo }} ({{ pendiente.diasDeAtraso }} día{{ pendiente.diasDeAtraso !== 1 ? 's' : '' }})
+                                </span>
+                              }
+                            } @else {
+                              —
+                            }
+                          </td>
+                          <td>
+                            <button class="btn-ver" (click)="verDetalle(consolidado.id)">Ver</button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+          }
             <!-- Mensaje cuando todo está al día -->
             @if (!dashboard.consolidadosConAtrasos?.length) {
               <div
@@ -599,6 +602,14 @@ import { User } from '../core/models/auth.model';
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+
+      .search-bar {
+        margin-bottom: 16px;
+      }
+
+      .search-input {
+        max-width: 520px;
       }
 
       /* Tabla de Estadísticas */
@@ -905,6 +916,12 @@ import { User } from '../core/models/auth.model';
         font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
+      }
+
+      .pendiente-inline {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--text-secondary);
       }
 
       .card-footer {
@@ -1270,10 +1287,6 @@ import { User } from '../core/models/auth.model';
           grid-template-columns: 1fr;
         }
 
-        .atrasos-grid {
-          grid-template-columns: 1fr;
-        }
-
         .stats-table {
           font-size: 14px;
         }
@@ -1297,6 +1310,7 @@ export class DashboardComponent implements OnInit {
   usernameSeleccionado = '';
   resumenConsolidador: ConsolidadorResumen | null = null;
   isLoadingResumen = false;
+  busquedaAtrasos = '';
 
   constructor(
     private dashboardService: DashboardService,
@@ -1406,6 +1420,21 @@ export class DashboardComponent implements OnInit {
       PENDIENTE: 'Pendiente', GDC: 'En GDC', CERRADO: 'Cerrado'
     };
     return map[estado] || estado;
+  }
+
+  get consolidadosConAtrasosFiltrados(): ConsolidadoEstado[] {
+    const consolidados = this.dashboard?.consolidadosConAtrasos || [];
+    const term = this.busquedaAtrasos.trim().toLowerCase();
+    if (!term) return consolidados;
+
+    return consolidados.filter(c => [
+      c.titulo,
+      c.asignadoA,
+      c.estado,
+      c.fechaIngreso,
+      c.diasDeAtraso?.toString(),
+      ...(c.comentariosPendientes || []).flatMap(p => [p.tipo, p.diasDeAtraso?.toString()]),
+    ].some(value => (value || '').toLowerCase().includes(term)));
   }
 
   verConsolidados(): void {

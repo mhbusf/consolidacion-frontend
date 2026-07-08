@@ -83,75 +83,84 @@ import { User } from '../../../core/models/auth.model';
           <p>No hay consolidados {{ filtroTexto }}</p>
         </div>
       }
-    
+     
       @if (!isLoading && consolidados.length > 0) {
-        <div class="consolidados-grid">
-          @for (c of consolidados; track c) {
-            <div class="consolidado-card" [class.card-gdc]="vistaGDC">
-              <div class="card-header">
-                <h3>{{ c.nombre }}</h3>
-                <div class="badges">
-                  @if (vistaGDC) {
-                    <span class="badge badge-gdc">
-                      GDC: {{ c.gdc }}
-                    </span>
-                  }
-                  @if (!vistaGDC && c.usuarioAsignado) {
-                    <span class="badge">
-                      Asignado a: {{ c.usuarioAsignado }}
-                    </span>
-                  }
-                  @if (!vistaGDC && !c.usuarioAsignado) {
-                    <span class="badge badge-warning">
-                      Sin asignar
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="card-body">
-                <p><strong>Teléfono:</strong> {{ c.telefono }}</p>
-                <p><strong>Edad:</strong> {{ c.edad }} años</p>
-                <p><strong>Invitado por:</strong> {{ c.quienInvito }}</p>
-                <p><strong>Motivo:</strong> {{ c.motivoOracion }}</p>
-                @if (vistaGDC && c.comentarioCierre) {
-                  <p><strong>Cierre:</strong> {{ c.comentarioCierre }}</p>
-                }
-                @if (vistaGDC && c.fechaCierre) {
-                  <p class="meta">
-                    <small>Cerrado: {{ c.fechaCierre | date:'dd/MM/yyyy HH:mm' }}</small>
-                  </p>
-                }
-                @if (!vistaGDC) {
-                  <p class="meta">
-                    <small>Reportado por: {{ c.usuarioReporta }}</small>
-                  </p>
-                }
-                <p class="meta">
-                  <small>Fecha ingreso: {{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</small>
-                </p>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary" (click)="verDetalle(c.id)">
-                  Ver Detalle
-                </button>
-                @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
-                  <button
-                    class="btn-success"
-                    (click)="asignar(c.id)">
-                    Asignar
-                  </button>
-                }
-                @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
-                  <button
-                    class="btn-info"
-                    (click)="reasignar(c.id)">
-                    Reasignar
-                  </button>
-                }
-              </div>
-            </div>
-          }
+        <div class="search-bar">
+          <input
+            type="search"
+            [(ngModel)]="busqueda"
+            class="form-control search-input"
+            placeholder="Buscar por nombre, telefono, invitado, asignado o estado..."
+          />
         </div>
+
+        @if (consolidadosFiltrados.length === 0) {
+          <div class="empty-state">
+            <p>No hay resultados para "{{ busqueda }}".</p>
+          </div>
+        }
+
+        @if (consolidadosFiltrados.length > 0) {
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Edad</th>
+                  <th>Quién invitó</th>
+                  <th>Motivo</th>
+                  <th>Fecha ingreso</th>
+                  <th>Reportado por</th>
+                  <th>{{ vistaGDC ? 'GDC' : 'Asignado a' }}</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of consolidadosFiltrados; track c) {
+                  <tr>
+                    <td class="fw-bold nombre-link" (click)="verDetalle(c.id)">{{ c.nombre }}</td>
+                    <td>{{ c.telefono }}</td>
+                    <td>{{ c.edad || '-' }}</td>
+                    <td>{{ c.quienInvito || '—' }}</td>
+                    <td class="comentario-cell">{{ c.motivoOracion || '—' }}</td>
+                    <td>{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ c.usuarioReporta || '—' }}</td>
+                    <td>
+                      @if (vistaGDC) {
+                        <span class="badge badge-gdc">{{ c.gdc || '—' }}</span>
+                      }
+                      @if (!vistaGDC && c.usuarioAsignado) {
+                        <span class="user-badge">{{ c.usuarioAsignado }}</span>
+                      }
+                      @if (!vistaGDC && !c.usuarioAsignado) {
+                        <span class="badge badge-warning">Sin asignar</span>
+                      }
+                    </td>
+                    <td>
+                      @if (vistaGDC && c.comentarioCierre) {
+                        <span class="comentario-cell">{{ c.comentarioCierre }}</span>
+                      }
+                      @if (!vistaGDC) {
+                        <span class="badge">{{ c.estado || '—' }}</span>
+                      }
+                    </td>
+                    <td class="actions-cell">
+                      <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
+                      @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
+                        <button class="btn-success" (click)="asignar(c.id)">Asignar</button>
+                      }
+                      @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
+                        <button class="btn-info" (click)="reasignar(c.id)">Reasignar</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       }
     </div>
     `,
@@ -208,6 +217,14 @@ import { User } from '../../../core/models/auth.model';
       color: var(--text-primary);
     }
 
+    .search-bar {
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      max-width: 520px;
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -242,40 +259,72 @@ import { User } from '../../../core/models/auth.model';
       color: var(--text-muted);
     }
 
-    .consolidados-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 20px;
-    }
-
-    .consolidado-card {
+    .table-container {
       background: var(--bg-card);
       border-radius: 8px;
       border: 1px solid var(--border-color);
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
+      overflow-x: auto;
     }
 
-    .consolidado-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    .data-table {
+      width: 100%;
+      min-width: 1200px;
+      border-collapse: collapse;
     }
 
-    .card-header {
+    .data-table thead {
       background: var(--bg-secondary);
-      padding: 15px;
+    }
+
+    .data-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
       border-bottom: 1px solid var(--border-color);
     }
 
-    .card-header h3 {
-      margin: 0 0 10px 0;
+    .data-table td {
+      padding: 14px 16px;
       color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
     }
 
-    .badges {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
+    .data-table tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .fw-bold { font-weight: 600; }
+
+    .nombre-link {
+      cursor: pointer;
+      color: var(--primary-light);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .user-badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .comentario-cell {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .badge {
@@ -322,35 +371,10 @@ import { User } from '../../../core/models/auth.model';
       opacity: 0.8;
     }
 
-    .card-gdc {
-      border-color: #8b5cf6;
-    }
-
-    .card-gdc .card-header {
-      background: rgba(139, 92, 246, 0.08);
-    }
-
-    .card-body {
-      padding: 15px;
-    }
-
-    .card-body p {
-      margin: 8px 0;
-      color: var(--text-secondary);
-    }
-
-    .meta {
-      color: var(--text-muted);
-      font-style: italic;
-      margin-top: 10px;
-    }
-
-    .card-actions {
-      padding: 15px;
-      border-top: 1px solid var(--border-color);
+    .actions-cell {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
     }
 
     .btn-primary, .btn-secondary, .btn-success, .btn-info {
@@ -395,6 +419,7 @@ export class ConsolidadosListComponent implements OnInit {
 
   filtroSeleccionado = 'todos';
   usuarioFiltro = '';
+  busqueda = '';
 
   totalConsolidados = 0;
   sinAsignar = 0;
@@ -495,6 +520,25 @@ export class ConsolidadosListComponent implements OnInit {
      c.usuarioReporta === this.usuarioFiltro
     );
     }
+  }
+
+  get consolidadosFiltrados(): ConsolidadoResponse[] {
+    const term = this.busqueda.trim().toLowerCase();
+    if (!term) return this.consolidados;
+
+    return this.consolidados.filter(c => [
+      c.nombre,
+      c.telefono,
+      c.edad?.toString(),
+      c.quienInvito,
+      c.motivoOracion,
+      c.usuarioReporta,
+      c.usuarioAsignado,
+      c.estado,
+      c.gdc,
+      c.comentarioCierre,
+      c.fechaIngreso,
+    ].some(value => (value || '').toLowerCase().includes(term)));
   }
 
   get filtroTexto(): string {
