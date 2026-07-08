@@ -28,6 +28,34 @@ import { NotificationService } from '../../../core/services/notification.service
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input 
+                type="text" 
+                id="nombre" 
+                formControlName="nombre" 
+                class="form-control"
+                placeholder="Nombre">
+              <div class="error" *ngIf="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched">
+                Nombre requerido
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellido</label>
+              <input 
+                type="text" 
+                id="apellido" 
+                formControlName="apellido" 
+                class="form-control"
+                placeholder="Apellido">
+              <div class="error" *ngIf="registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched">
+                Apellido requerido
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="email">Email</label>
             <input 
@@ -118,6 +146,12 @@ import { NotificationService } from '../../../core/services/notification.service
       margin-bottom: 20px;
     }
 
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
     label {
       display: block;
       margin-bottom: 5px;
@@ -189,6 +223,17 @@ import { NotificationService } from '../../../core/services/notification.service
     .login-link a:hover {
       text-decoration: underline;
     }
+
+    @media (max-width: 640px) {
+      .register-card {
+        padding: 24px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
   `]
 })
 export class RegisterComponent {
@@ -205,6 +250,8 @@ export class RegisterComponent {
   ) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
+      nombre: ['', [Validators.required, Validators.maxLength(100)]],
+      apellido: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
@@ -227,9 +274,9 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const { username, email, password } = this.registerForm.value;
+    const { username, nombre, apellido, email, password } = this.registerForm.value;
 
-    this.authService.register({ username, email, password }).subscribe({
+    this.authService.register({ username, nombre, apellido, email, password }).subscribe({
       next: () => {
         this.notificationService.success('Usuario registrado correctamente');
       setTimeout(() => {

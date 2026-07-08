@@ -7,6 +7,8 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+  nombre: string;
+  apellido: string;
 }
 
 export interface JwtResponse {
@@ -25,6 +27,8 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  nombre?: string | null;
+  apellido?: string | null;
   enabled: boolean;
   roles: Role[];
 }

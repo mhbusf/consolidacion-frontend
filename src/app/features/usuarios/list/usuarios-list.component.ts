@@ -31,7 +31,8 @@ import { User } from '../../../core/models/auth.model';
           <input
             type="text"
             [(ngModel)]="busqueda"
-            placeholder="Buscar por usuario o correo..."
+            placeholder="Buscar por nombre, apellido, usuario o correo..."
+            aria-label="Buscar por nombre, apellido, usuario o correo"
             class="search-input"
             />
           <span class="search-count">{{ usuariosFiltrados.length }} resultado{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</span>
@@ -44,6 +45,7 @@ import { User } from '../../../core/models/auth.model';
             <thead>
               <tr>
                 <th>Usuario</th>
+                <th>Nombre</th>
                 <th>Email</th>
                 <th>Roles</th>
                 <th>Estado</th>
@@ -55,6 +57,7 @@ import { User } from '../../../core/models/auth.model';
               @for (user of usuariosFiltrados; track user) {
                 <tr>
                   <td><strong>{{ user.usuario.username }}</strong></td>
+                  <td>{{ nombreCompleto(user.usuario) || 'Sin nombre registrado' }}</td>
                   <td>{{ user.usuario.email }}</td>
                   <td>
                     @for (role of user.usuario.roles; track role) {
@@ -293,7 +296,10 @@ export class UsuariosListComponent implements OnInit {
     if (!q) return this.usuariosConStats;
     return this.usuariosConStats.filter(u =>
       u.usuario.username.toLowerCase().includes(q) ||
-      (u.usuario.email || '').toLowerCase().includes(q)
+      (u.usuario.email || '').toLowerCase().includes(q) ||
+      (u.usuario.nombre || '').toLowerCase().includes(q) ||
+      (u.usuario.apellido || '').toLowerCase().includes(q) ||
+      this.nombreCompleto(u.usuario).toLowerCase().includes(q)
     );
   }
 
@@ -339,6 +345,13 @@ export class UsuariosListComponent implements OnInit {
 
   tieneRolAdmin(user: User): boolean {
     return user.roles.some(r => r.name === 'ROLE_ADMIN');
+  }
+
+  nombreCompleto(user: User): string {
+    return [user.nombre, user.apellido]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
   }
 
   crearUsuario(): void {
