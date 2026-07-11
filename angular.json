@@ -28,7 +28,8 @@
             "scripts": []
           },
           "configurations": {
-            "production": {
+              "production": {
+              "serviceWorker": "ngsw-config.json",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
