@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/login",
+  "start_url": "/",
   "lang": "es-CL",
   "icons": [
     {
