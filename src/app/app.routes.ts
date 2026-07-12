@@ -17,6 +17,20 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { roles: ['ROLE_ADMIN'] }
   },
+
+  {
+    path: 'consolidados-atrasos',
+    loadComponent: () => import('./features/admin/consolidados-atrasos/consolidados-atrasos.component').then(m => m.ConsolidadosAtrasosComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+
+  {
+    path: 'estadisticas-gdc',
+    loadComponent: () => import('./features/admin/estadisticas-gdc/estadisticas-gdc.component').then(m => m.EstadisticasGdcComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
   
   {
     path: 'consolidados',

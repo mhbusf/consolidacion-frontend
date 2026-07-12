@@ -27,6 +27,18 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   Dashboard
                 </a>
               </li>
+              <li>
+                <a routerLink="/consolidados-atrasos" routerLinkActive="active">
+                  <span class="menu-icon">⚠️</span>
+                  Atrasos
+                </a>
+              </li>
+              <li>
+                <a routerLink="/estadisticas-gdc" routerLinkActive="active">
+                  <span class="menu-icon">📈</span>
+                  Estadísticas GDC
+                </a>
+              </li>
             }
             <li>
               <a routerLink="/consolidados" routerLinkActive="active">
