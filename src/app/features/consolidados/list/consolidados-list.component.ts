@@ -85,18 +85,72 @@ import { User } from '../../../core/models/auth.model';
       }
      
       @if (!isLoading && consolidados.length > 0) {
-        <div class="search-bar">
-          <input
-            type="search"
-            [(ngModel)]="busqueda"
-            class="form-control search-input"
-            placeholder="Buscar por nombre, telefono, invitado, asignado o estado..."
-          />
+        <div class="advanced-filters">
+          <div class="filter-field filter-field-search">
+            <label>Buscar</label>
+            <input
+              type="search"
+              [(ngModel)]="busqueda"
+              class="form-control"
+              placeholder="Nombre, telefono, invitado, asignado, motivo..."
+            />
+          </div>
+
+          <div class="filter-field">
+            <label>Estado</label>
+            <select [(ngModel)]="estadoFiltro" class="form-control">
+              <option value="todos">Todos</option>
+              @for (estado of estadosDisponibles; track estado) {
+                <option [value]="estado">{{ getEstadoLabel(estado) }}</option>
+              }
+            </select>
+          </div>
+
+          @if (!vistaGDC) {
+            <div class="filter-field">
+              <label>Asignación</label>
+              <select [(ngModel)]="asignacionFiltro" class="form-control">
+                <option value="todos">Todos</option>
+                <option value="asignados">Asignados</option>
+                <option value="sin-asignar">Sin asignar</option>
+                <option value="mis-asignados">Asignados a mí</option>
+                <option value="reportados-por-mi">Reportados por mí</option>
+              </select>
+            </div>
+          }
+
+          @if (isAdmin && !vistaGDC) {
+            <div class="filter-field">
+              <label>Usuario</label>
+              <select [(ngModel)]="usuarioAvanzadoFiltro" class="form-control">
+                <option value="todos">Todos</option>
+                @for (user of usuarios; track user.username) {
+                  <option [value]="user.username">{{ user.username }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="filter-field">
+            <label>Fecha</label>
+            <select [(ngModel)]="fechaFiltro" class="form-control">
+              <option value="todos">Todas</option>
+              <option value="hoy">Hoy</option>
+              <option value="7-dias">Últimos 7 días</option>
+              <option value="30-dias">Últimos 30 días</option>
+              <option value="90-dias">Últimos 90 días</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <div class="results-count">{{ consolidadosFiltrados.length }} de {{ consolidados.length }}</div>
+            <button class="btn-secondary" type="button" (click)="limpiarFiltrosAvanzados()">Limpiar</button>
+          </div>
         </div>
 
         @if (consolidadosFiltrados.length === 0) {
           <div class="empty-state">
-            <p>No hay resultados para "{{ busqueda }}".</p>
+            <p>No hay resultados con los filtros seleccionados.</p>
           </div>
         }
 
@@ -143,7 +197,7 @@ import { User } from '../../../core/models/auth.model';
                         <span class="comentario-cell">{{ c.comentarioCierre }}</span>
                       }
                       @if (!vistaGDC) {
-                        <span class="badge">{{ c.estado || '—' }}</span>
+                        <span class="badge" [ngClass]="getEstadoClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
                       }
                     </td>
                     <td class="actions-cell">
@@ -217,12 +271,44 @@ import { User } from '../../../core/models/auth.model';
       color: var(--text-primary);
     }
 
-    .search-bar {
+    .advanced-filters {
+      display: grid;
+      grid-template-columns: minmax(260px, 2fr) repeat(4, minmax(160px, 1fr)) auto;
+      gap: 14px;
+      align-items: end;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
       margin-bottom: 16px;
     }
 
-    .search-input {
-      max-width: 520px;
+    .filter-field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .filter-field .form-control {
+      max-width: none;
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+      min-width: 150px;
+    }
+
+    .results-count {
+      color: var(--text-secondary);
+      font-size: 13px;
+      white-space: nowrap;
     }
 
     .stats {
@@ -343,6 +429,24 @@ import { User } from '../../../core/models/auth.model';
       border: 1px solid var(--warning);
     }
 
+    .badge-primary {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+      border: 1px solid #3b82f6;
+    }
+
+    .badge-secondary {
+      background: rgba(100, 116, 139, 0.1);
+      color: #94a3b8;
+      border: 1px solid #64748b;
+    }
+
+    .badge-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
     .badge-gdc {
       background: rgba(139, 92, 246, 0.1);
       color: #8b5cf6;
@@ -406,6 +510,32 @@ import { User } from '../../../core/models/auth.model';
     button:hover {
       opacity: 0.9;
     }
+
+    @media (max-width: 1100px) {
+      .advanced-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .filter-field-search,
+      .filter-actions {
+        grid-column: 1 / -1;
+      }
+
+      .filter-actions {
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .advanced-filters {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-field-search,
+      .filter-actions {
+        grid-column: auto;
+      }
+    }
   `]
 })
 export class ConsolidadosListComponent implements OnInit {
@@ -420,6 +550,10 @@ export class ConsolidadosListComponent implements OnInit {
   filtroSeleccionado = 'todos';
   usuarioFiltro = '';
   busqueda = '';
+  estadoFiltro = 'todos';
+  asignacionFiltro = 'todos';
+  usuarioAvanzadoFiltro = 'todos';
+  fechaFiltro = 'todos';
 
   totalConsolidados = 0;
   sinAsignar = 0;
@@ -522,23 +656,104 @@ export class ConsolidadosListComponent implements OnInit {
     }
   }
 
+  get estadosDisponibles(): string[] {
+    const estados = this.consolidados
+      .map(c => c.estado)
+      .filter((estado): estado is string => !!estado);
+    return [...new Set(estados)].sort();
+  }
+
   get consolidadosFiltrados(): ConsolidadoResponse[] {
     const term = this.busqueda.trim().toLowerCase();
-    if (!term) return this.consolidados;
 
-    return this.consolidados.filter(c => [
-      c.nombre,
-      c.telefono,
-      c.edad?.toString(),
-      c.quienInvito,
-      c.motivoOracion,
-      c.usuarioReporta,
-      c.usuarioAsignado,
-      c.estado,
-      c.gdc,
-      c.comentarioCierre,
-      c.fechaIngreso,
-    ].some(value => (value || '').toLowerCase().includes(term)));
+    return this.consolidados.filter(c => {
+      const matchesText = !term || [
+        c.nombre,
+        c.telefono,
+        c.edad?.toString(),
+        c.quienInvito,
+        c.motivoOracion,
+        c.usuarioReporta,
+        c.usuarioAsignado,
+        c.estado,
+        c.gdc,
+        c.comentarioCierre,
+        c.fechaIngreso,
+      ].some(value => (value || '').toLowerCase().includes(term));
+
+      const matchesEstado = this.estadoFiltro === 'todos' || c.estado === this.estadoFiltro;
+      const matchesAsignacion = this.matchesAsignacion(c);
+      const matchesUsuario = this.usuarioAvanzadoFiltro === 'todos' ||
+        c.usuarioAsignado === this.usuarioAvanzadoFiltro ||
+        c.usuarioReporta === this.usuarioAvanzadoFiltro;
+      const matchesFecha = this.matchesFecha(c.fechaIngreso);
+
+      return matchesText && matchesEstado && matchesAsignacion && matchesUsuario && matchesFecha;
+    });
+  }
+
+  limpiarFiltrosAvanzados(): void {
+    this.busqueda = '';
+    this.estadoFiltro = 'todos';
+    this.asignacionFiltro = 'todos';
+    this.usuarioAvanzadoFiltro = 'todos';
+    this.fechaFiltro = 'todos';
+  }
+
+  getEstadoLabel(estado?: string): string {
+    const labels: Record<string, string> = {
+      PENDIENTE: 'Pendiente',
+      ASIGNADO: 'Asignado',
+      EN_PROCESO: 'En proceso',
+      GDC: 'En GDC',
+      CERRADO: 'Cerrado',
+    };
+    return estado ? labels[estado] || estado : '—';
+  }
+
+  getEstadoClass(estado?: string): string {
+    const classes: Record<string, string> = {
+      PENDIENTE: 'badge-warning',
+      ASIGNADO: 'badge-primary',
+      EN_PROCESO: 'badge-warning',
+      GDC: 'badge-secondary',
+      CERRADO: 'badge-success',
+    };
+    return estado ? classes[estado] || 'badge-secondary' : 'badge-secondary';
+  }
+
+  private matchesAsignacion(c: ConsolidadoResponse): boolean {
+    switch (this.asignacionFiltro) {
+      case 'asignados':
+        return !!c.usuarioAsignado;
+      case 'sin-asignar':
+        return !c.usuarioAsignado;
+      case 'mis-asignados':
+        return c.usuarioAsignado === this.currentUsername;
+      case 'reportados-por-mi':
+        return c.usuarioReporta === this.currentUsername;
+      default:
+        return true;
+    }
+  }
+
+  private matchesFecha(fechaIngreso?: string): boolean {
+    if (this.fechaFiltro === 'todos' || !fechaIngreso) return true;
+
+    const fecha = new Date(fechaIngreso);
+    if (Number.isNaN(fecha.getTime())) return false;
+
+    const hoy = new Date();
+    const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+    if (this.fechaFiltro === 'hoy') {
+      return fecha >= inicioHoy;
+    }
+
+    const dias = this.fechaFiltro === '7-dias' ? 7 : this.fechaFiltro === '30-dias' ? 30 : 90;
+    const limite = new Date(inicioHoy);
+    limite.setDate(limite.getDate() - dias);
+    return fecha >= limite;
   }
 
   get filtroTexto(): string {

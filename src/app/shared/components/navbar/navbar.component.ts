@@ -27,55 +27,72 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   Dashboard
                 </a>
               </li>
-              <li>
-                <a routerLink="/consolidados-atrasos" routerLinkActive="active">
-                  <span class="menu-icon">⚠️</span>
-                  Atrasos
-                </a>
-              </li>
-              <li>
-                <a routerLink="/estadisticas-gdc" routerLinkActive="active">
-                  <span class="menu-icon">📈</span>
-                  Estadísticas GDC
-                </a>
-              </li>
             }
-            <li>
-              <a routerLink="/consolidados" routerLinkActive="active">
+            <li class="nav-group" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc'])">
+              <button class="nav-group-toggle" type="button">
                 <span class="menu-icon">👥</span>
-                Consolidados
-              </a>
+                Consolidación
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="nav-submenu">
+                <a routerLink="/consolidados" routerLinkActive="active">
+                  <span class="menu-icon">👥</span>
+                  Consolidados
+                </a>
+                @if (isAdmin) {
+                  <a routerLink="/consolidados-atrasos" routerLinkActive="active">
+                    <span class="menu-icon">⚠️</span>
+                    Atrasos
+                  </a>
+                  <a routerLink="/estadisticas-gdc" routerLinkActive="active">
+                    <span class="menu-icon">📈</span>
+                    Estadísticas GDC
+                  </a>
+                }
+              </div>
             </li>
-            <li>
-              <a routerLink="/cafe-con-jesus" routerLinkActive="active">
+            <li class="nav-group" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin'])">
+              <button class="nav-group-toggle" type="button">
                 <span class="menu-icon">☕</span>
                 Cafe con Jesus
-              </a>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="nav-submenu">
+                <a routerLink="/cafe-con-jesus" routerLinkActive="active">
+                  <span class="menu-icon">☕</span>
+                  Invitados
+                </a>
+                @if (isAdmin) {
+                  <a routerLink="/cafe-admin" routerLinkActive="active">
+                    <span class="menu-icon">📋</span>
+                    Admin Café
+                  </a>
+                }
+              </div>
             </li>
-            @if (isAdmin) {
-              <li>
-                <a routerLink="/cafe-admin" routerLinkActive="active">
-                  <span class="menu-icon">📋</span>
-                  Admin Café
+            <li class="nav-group" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
+              <button class="nav-group-toggle" type="button">
+                <span class="menu-icon">🔐</span>
+                Usuario
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="nav-submenu">
+                @if (isAdmin) {
+                  <a routerLink="/usuarios" routerLinkActive="active">
+                    <span class="menu-icon">🔐</span>
+                    Usuarios
+                  </a>
+                  <a routerLink="/usuarios/crear" routerLinkActive="active">
+                    <span class="menu-icon">➕</span>
+                    Crear Usuario
+                  </a>
+                }
+                <a routerLink="/change-password" routerLinkActive="active">
+                  <span class="menu-icon">🔑</span>
+                  Cambiar Contraseña
                 </a>
-              </li>
-            }
-            @if (isAdmin) {
-              <li>
-                <a routerLink="/usuarios" routerLinkActive="active">
-                  <span class="menu-icon">🔐</span>
-                  Usuarios
-                </a>
-              </li>
-            }
-            @if (isAdmin) {
-              <li>
-                <a routerLink="/usuarios/crear" routerLinkActive="active">
-                  <span class="menu-icon">➕</span>
-                  Crear Usuario
-                </a>
-              </li>
-            }
+              </div>
+            </li>
           </ul>
           @if (currentUser$ | async; as user) {
             <div class="nav-user">
@@ -90,10 +107,6 @@ import { JwtResponse } from '../../../core/models/auth.model';
                 </button>
                 @if (dropdownOpen) {
                   <div class="dropdown-menu">
-                    <a routerLink="/cambiar-password" (click)="dropdownOpen = false">
-                      <span class="menu-icon">🔑</span>
-                      Cambiar Contraseña
-                    </a>
                     <a (click)="logout()" class="logout">
                       <span class="menu-icon">🚪</span>
                       Cerrar Sesión
@@ -181,6 +194,68 @@ import { JwtResponse } from '../../../core/models/auth.model';
         font-size: 14px;
         font-weight: 500;
         white-space: nowrap;
+      }
+
+      .nav-group {
+        position: relative;
+      }
+
+      .nav-group-toggle {
+        color: rgba(255, 255, 255, 0.8);
+        background: transparent;
+        border: 0;
+        text-decoration: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .nav-group-toggle:hover,
+      .nav-group.active .nav-group-toggle,
+      .nav-group:focus-within .nav-group-toggle {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+      }
+
+      .nav-submenu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        min-width: 220px;
+        background: #334155;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-4px);
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+        z-index: 1000;
+      }
+
+      .nav-group:hover .nav-submenu,
+      .nav-group:focus-within .nav-submenu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+
+      .nav-submenu a {
+        border-radius: 0;
+        padding: 12px 16px;
+        color: #f1f5f9;
+      }
+
+      .nav-submenu a.active {
+        background: rgba(59, 130, 246, 0.22);
       }
 
       .nav-menu a:hover {
@@ -318,6 +393,15 @@ import { JwtResponse } from '../../../core/models/auth.model';
           flex-shrink: 0;
         }
 
+        .nav-group {
+          flex-shrink: 0;
+        }
+
+        .nav-submenu {
+          left: 0;
+          right: auto;
+        }
+
         .user-name {
           display: none;
         }
@@ -356,5 +440,9 @@ export class NavbarComponent implements OnInit {
     this.dropdownOpen = false;
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  isRouteGroupActive(paths: string[]): boolean {
+    return paths.some(path => this.router.url === path || this.router.url.startsWith(`${path}/`));
   }
 }
