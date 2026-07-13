@@ -223,7 +223,7 @@ import { User } from '../../../core/models/auth.model';
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 28px 24px;
     }
 
     .header {
@@ -235,17 +235,23 @@ import { User } from '../../../core/models/auth.model';
       gap: 15px;
     }
 
+    .header h2 {
+      font-size: 30px;
+      letter-spacing: -0.7px;
+    }
+
     .header-actions {
       display: flex;
       gap: 10px;
     }
 
     .filters {
-      background: var(--bg-card);
+      background: rgba(24, 34, 53, 0.92);
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 14px;
       border: 1px solid var(--border-color);
       margin-bottom: 30px;
+      box-shadow: var(--shadow-md);
     }
 
     .filter-group {
@@ -264,7 +270,7 @@ import { User } from '../../../core/models/auth.model';
       max-width: 400px;
       padding: 10px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
+      border-radius: 10px;
       font-size: 14px;
       box-sizing: border-box;
       background: var(--bg-secondary);
@@ -276,11 +282,12 @@ import { User } from '../../../core/models/auth.model';
       grid-template-columns: minmax(260px, 2fr) repeat(4, minmax(160px, 1fr)) auto;
       gap: 14px;
       align-items: end;
-      background: var(--bg-card);
+      background: rgba(24, 34, 53, 0.92);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 14px;
       padding: 16px;
       margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
     }
 
     .filter-field label {
@@ -319,10 +326,10 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .stat-card {
-      background: var(--bg-secondary);
+      background: rgba(17, 24, 39, 0.72);
       color: var(--text-primary);
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 14px;
       text-align: center;
       border: 1px solid var(--border-color);
     }
@@ -346,10 +353,11 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .table-container {
-      background: var(--bg-card);
-      border-radius: 8px;
+      background: rgba(24, 34, 53, 0.92);
+      border-radius: 14px;
       border: 1px solid var(--border-color);
       overflow-x: auto;
+      box-shadow: var(--shadow-md);
     }
 
     .data-table {
@@ -359,11 +367,11 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .data-table thead {
-      background: var(--bg-secondary);
+      background: rgba(17, 24, 39, 0.9);
     }
 
     .data-table th {
-      padding: 14px 16px;
+      padding: 15px 16px;
       text-align: left;
       font-size: 12px;
       font-weight: 600;
@@ -374,7 +382,7 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .data-table td {
-      padding: 14px 16px;
+      padding: 15px 16px;
       color: var(--text-primary);
       border-bottom: 1px solid var(--border-color);
     }
@@ -392,15 +400,14 @@ import { User } from '../../../core/models/auth.model';
     .nombre-link {
       cursor: pointer;
       color: var(--primary-light);
-      text-decoration: underline;
-      text-underline-offset: 3px;
+      text-decoration: none;
     }
 
     .user-badge {
       background: rgba(59, 130, 246, 0.15);
       color: #3b82f6;
       padding: 4px 10px;
-      border-radius: 10px;
+      border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
@@ -419,7 +426,7 @@ import { User } from '../../../core/models/auth.model';
       background: rgba(16, 185, 129, 0.1);
       color: var(--success);
       border: 1px solid var(--success);
-      border-radius: 4px;
+      border-radius: 999px;
       font-size: 12px;
     }
 
@@ -484,11 +491,12 @@ import { User } from '../../../core/models/auth.model';
     .btn-primary, .btn-secondary, .btn-success, .btn-info {
       padding: 8px 16px;
       border: none;
-      border-radius: 4px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
       transition: opacity 0.2s;
       color: white;
+      font-weight: 700;
     }
 
     .btn-primary {

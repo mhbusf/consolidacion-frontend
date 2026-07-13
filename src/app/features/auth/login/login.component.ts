@@ -88,24 +88,30 @@ import { NotificationService } from '../../../core/services/notification.service
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--bg-primary);
+        background:
+          radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.22), transparent 28rem),
+          radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.1), transparent 24rem),
+          var(--bg-primary);
         padding: 20px;
       }
 
       .login-card {
-        background: var(--bg-card);
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        max-width: 400px;
+        background: rgba(24, 34, 53, 0.92);
+        padding: 42px;
+        border-radius: 18px;
+        box-shadow: 0 28px 64px -32px rgba(0, 0, 0, 0.95);
+        max-width: 420px;
         width: 100%;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        backdrop-filter: blur(16px);
       }
 
       h2 {
         margin-bottom: 10px;
         color: var(--text-primary);
         text-align: center;
+        font-size: 28px;
+        letter-spacing: -0.6px;
       }
 
       .subtitle {
@@ -127,9 +133,10 @@ import { NotificationService } from '../../../core/services/notification.service
 
       .form-control {
         width: 100%;
-        padding: 12px;
+        min-height: 44px;
+        padding: 12px 14px;
         border: 1px solid var(--border-color);
-        border-radius: 4px;
+        border-radius: 10px;
         font-size: 14px;
         box-sizing: border-box;
         background: var(--bg-secondary);
@@ -143,7 +150,7 @@ import { NotificationService } from '../../../core/services/notification.service
       .form-control:focus {
         outline: none;
         border-color: var(--primary-light);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16);
       }
 
       .error {
@@ -154,18 +161,21 @@ import { NotificationService } from '../../../core/services/notification.service
 
       .btn-primary {
         width: 100%;
-        padding: 12px;
-        background: var(--primary-light);
+        padding: 13px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 10px;
         font-size: 16px;
+        font-weight: 800;
         cursor: pointer;
-        transition: background 0.3s;
+        transition: transform 0.2s, filter 0.2s;
+        box-shadow: 0 14px 26px -18px rgba(37, 99, 235, 0.95);
       }
 
       .btn-primary:hover:not(:disabled) {
-        background: var(--primary);
+        transform: translateY(-1px);
+        filter: brightness(1.08);
       }
 
       .btn-primary:disabled {

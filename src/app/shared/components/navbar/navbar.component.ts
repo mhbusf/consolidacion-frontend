@@ -124,9 +124,10 @@ import { JwtResponse } from '../../../core/models/auth.model';
   styles: [
     `
       .navbar {
-        background: linear-gradient(135deg, #1e293b 0%, #1e3a8a 100%);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        background: rgba(11, 17, 32, 0.88);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        box-shadow: 0 18px 38px -28px rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(16px);
         position: sticky;
         top: 0;
         z-index: 1000;
@@ -138,8 +139,8 @@ import { JwtResponse } from '../../../core/models/auth.model';
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 24px;
-        min-height: 64px;
+        padding: 0 28px;
+        min-height: 72px;
       }
 
       /* Brand */
@@ -149,8 +150,8 @@ import { JwtResponse } from '../../../core/models/auth.model';
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 18px;
-        font-weight: 700;
+        font-size: 17px;
+        font-weight: 800;
         letter-spacing: -0.5px;
         transition: opacity 0.2s ease;
       }
@@ -173,7 +174,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
         list-style: none;
         margin: 0;
         padding: 0;
-        gap: 4px;
+        gap: 6px;
         flex: 1;
         justify-content: center;
       }
@@ -183,16 +184,16 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-menu a {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(226, 232, 240, 0.82);
         text-decoration: none;
-        padding: 10px 16px;
-        border-radius: 6px;
+        padding: 10px 14px;
+        border-radius: 10px;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
         gap: 6px;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 700;
         white-space: nowrap;
       }
 
@@ -201,18 +202,18 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-group-toggle {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(226, 232, 240, 0.82);
         background: transparent;
         border: 0;
         text-decoration: none;
-        padding: 10px 16px;
-        border-radius: 6px;
+        padding: 10px 14px;
+        border-radius: 10px;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
         gap: 6px;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 700;
         white-space: nowrap;
         cursor: pointer;
       }
@@ -220,7 +221,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
       .nav-group-toggle:hover,
       .nav-group.active .nav-group-toggle,
       .nav-group:focus-within .nav-group-toggle {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(96, 165, 250, 0.14);
         color: white;
       }
 
@@ -229,10 +230,10 @@ import { JwtResponse } from '../../../core/models/auth.model';
         top: calc(100% + 8px);
         left: 0;
         min-width: 220px;
-        background: #334155;
-        border: 1px solid #475569;
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        background: #111827;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 14px;
+        box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.9);
         overflow: hidden;
         opacity: 0;
         visibility: hidden;
@@ -251,20 +252,20 @@ import { JwtResponse } from '../../../core/models/auth.model';
       .nav-submenu a {
         border-radius: 0;
         padding: 12px 16px;
-        color: #f1f5f9;
+        color: #e2e8f0;
       }
 
       .nav-submenu a.active {
-        background: rgba(59, 130, 246, 0.22);
+        background: rgba(96, 165, 250, 0.18);
       }
 
       .nav-menu a:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(96, 165, 250, 0.12);
         color: white;
       }
 
       .nav-menu a.active {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(96, 165, 250, 0.16);
         color: white;
         font-weight: 600;
       }
@@ -283,11 +284,11 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .dropdown-toggle {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(96, 165, 250, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.24);
         color: white;
-        padding: 8px 16px;
-        border-radius: 6px;
+        padding: 9px 14px;
+        border-radius: 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -298,8 +299,8 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .dropdown-toggle:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(96, 165, 250, 0.18);
+        border-color: rgba(96, 165, 250, 0.38);
       }
 
       .user-icon {
@@ -314,7 +315,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .badge-role {
-        background: #3b82f6;
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
         padding: 3px 8px;
         border-radius: 10px;
         font-size: 10px;
@@ -335,12 +336,12 @@ import { JwtResponse } from '../../../core/models/auth.model';
         position: absolute;
         right: 0;
         top: calc(100% + 8px);
-        background: #334155;
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        background: #111827;
+        border-radius: 14px;
+        box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.9);
         min-width: 220px;
         z-index: 1000;
-        border: 1px solid #475569;
+        border: 1px solid rgba(148, 163, 184, 0.22);
         overflow: hidden;
       }
 
@@ -349,19 +350,19 @@ import { JwtResponse } from '../../../core/models/auth.model';
         align-items: center;
         gap: 10px;
         padding: 12px 16px;
-        color: #f1f5f9;
+        color: #e2e8f0;
         text-decoration: none;
         transition: background 0.2s ease;
         font-size: 14px;
       }
 
       .dropdown-menu a:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(96, 165, 250, 0.12);
       }
 
       .dropdown-menu a.logout {
         color: #ef4444;
-        border-top: 1px solid #475569;
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
         cursor: pointer;
       }
 

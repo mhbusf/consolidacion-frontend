@@ -265,21 +265,21 @@ import { User } from '../core/models/auth.model';
   styles: [
     `
       .dashboard-container {
-        padding: 32px;
+        padding: 36px 32px;
         max-width: 1400px;
         margin: 0 auto;
-        background-color: var(--bg-primary);
         min-height: calc(100vh - 64px);
       }
 
       .dashboard-title {
         font-size: 32px;
-        font-weight: 700;
+        font-weight: 800;
         color: var(--text-primary);
         margin-bottom: 32px;
         display: flex;
         align-items: center;
         gap: 12px;
+        letter-spacing: -0.8px;
       }
 
       .title-icon {
@@ -295,8 +295,8 @@ import { User } from '../core/models/auth.model';
       }
 
       .stat-card {
-        background: var(--bg-card);
-        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(24, 34, 53, 0.96), rgba(17, 24, 39, 0.92));
+        border-radius: 16px;
         padding: 24px;
         display: flex;
         align-items: center;
@@ -320,7 +320,7 @@ import { User } from '../core/models/auth.model';
 
       .stat-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--shadow-lg);
       }
 
       .stat-icon {
@@ -397,10 +397,11 @@ import { User } from '../core/models/auth.model';
 
       /* Tabla de Estadísticas */
       .table-container {
-        background: var(--bg-card);
-        border-radius: 12px;
+        background: rgba(24, 34, 53, 0.94);
+        border-radius: 14px;
         overflow: hidden;
         border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
       }
 
       .stats-table {
@@ -409,7 +410,7 @@ import { User } from '../core/models/auth.model';
       }
 
       .stats-table thead {
-        background: var(--bg-secondary);
+        background: rgba(17, 24, 39, 0.9);
       }
 
       .stats-table th {
@@ -859,9 +860,9 @@ import { User } from '../core/models/auth.model';
       }
 
       .reunion-card {
-        background: var(--bg-card);
+        background: rgba(24, 34, 53, 0.94);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 20px;
         text-align: center;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -904,11 +905,12 @@ import { User } from '../core/models/auth.model';
       }
 
       .selector-card {
-        background: var(--bg-card);
+        background: rgba(24, 34, 53, 0.94);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 20px 24px;
         margin-bottom: 24px;
+        box-shadow: var(--shadow-md);
       }
 
       .selector-label {
@@ -932,7 +934,7 @@ import { User } from '../core/models/auth.model';
         width: 100%;
         padding: 10px 14px;
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 14px;
         background: var(--bg-secondary);
         color: var(--text-primary);
@@ -975,9 +977,9 @@ import { User } from '../core/models/auth.model';
       }
 
       .resumen-metric {
-        background: var(--bg-card);
+        background: rgba(24, 34, 53, 0.94);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 20px;
       }
 
@@ -1001,9 +1003,9 @@ import { User } from '../core/models/auth.model';
       }
 
       .resumen-seccion {
-        background: var(--bg-card);
+        background: rgba(24, 34, 53, 0.94);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 14px;
         overflow: hidden;
         margin-bottom: 16px;
       }
