@@ -42,8 +42,28 @@ import { User } from '../../../core/models/auth.model';
           </button>
         </div>
       }
-    
+     
       @if (!isLoading && registros.length > 0) {
+        <div class="search-card">
+          <label for="busquedaInvitados">Buscar invitado</label>
+          <input
+            id="busquedaInvitados"
+            type="search"
+            [(ngModel)]="busqueda"
+            class="form-control search-input"
+            placeholder="Buscar por nombre o apellido..."
+          />
+          <span class="results-count">{{ registrosFiltrados.length }} de {{ registros.length }}</span>
+        </div>
+
+        @if (registrosFiltrados.length === 0) {
+          <div class="empty-state compact-empty">
+            <h3>Sin resultados</h3>
+            <p>No hay invitados que coincidan con "{{ busqueda }}".</p>
+          </div>
+        }
+
+        @if (registrosFiltrados.length > 0) {
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -61,7 +81,7 @@ import { User } from '../../../core/models/auth.model';
               </tr>
             </thead>
             <tbody>
-              @for (r of registros; track r) {
+              @for (r of registrosFiltrados; track r) {
                 <tr>
                   <td class="fw-bold nombre-link" (click)="verDetalle(r)">{{ r.nombre }}</td>
                   <td>{{ r.apellido }}</td>
@@ -252,6 +272,7 @@ import { User } from '../../../core/models/auth.model';
             </div>
           }
         </div>
+        }
       }
     </div>
     `,
@@ -298,6 +319,41 @@ import { User } from '../../../core/models/auth.model';
         border-radius: 12px;
         overflow-x: auto;
         border: 1px solid var(--border-color);
+      }
+
+      .search-card {
+        display: grid;
+        grid-template-columns: minmax(220px, 420px) auto;
+        align-items: end;
+        gap: 10px 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      .search-card label {
+        grid-column: 1 / -1;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      .search-input {
+        max-width: 420px;
+      }
+
+      .results-count {
+        color: var(--text-secondary);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .compact-empty {
+        padding: 28px 20px;
       }
 
       .data-table {
@@ -771,6 +827,12 @@ import { User } from '../../../core/models/auth.model';
         opacity: 0.6;
         cursor: not-allowed;
       }
+
+      @media (max-width: 640px) {
+        .search-card {
+          grid-template-columns: 1fr;
+        }
+      }
     `,
   ],
 })
@@ -779,6 +841,7 @@ export class CafeListComponent implements OnInit {
   usuarios: User[] = [];
   isLoading = true;
   isAdmin = false;
+  busqueda = '';
 
   etapas = ETAPAS_CAFE;
 
@@ -834,6 +897,27 @@ export class CafeListComponent implements OnInit {
 
   nuevoRegistro(): void {
     this.router.navigate(['/cafe-con-jesus/nuevo']);
+  }
+
+  get registrosFiltrados(): CafeConJesusResponse[] {
+    const term = this.normalizarTexto(this.busqueda);
+    if (!term) return this.registros;
+
+    return this.registros.filter(r => {
+      const nombre = this.normalizarTexto(r.nombre);
+      const apellido = this.normalizarTexto(r.apellido);
+      const nombreCompleto = this.normalizarTexto(`${r.nombre || ''} ${r.apellido || ''}`);
+      return nombre.includes(term) || apellido.includes(term) || nombreCompleto.includes(term);
+    });
+  }
+
+  private normalizarTexto(value: string | null | undefined): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
   }
 
   verDetalle(r: CafeConJesusResponse): void {
