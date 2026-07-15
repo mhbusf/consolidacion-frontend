@@ -142,3 +142,18 @@ export interface Dashboard {
   estadisticasPorReunion: ReunionEstadistica[];
   totalCafeConJesus: number;
 }
+
+export interface DuplicateMatch {
+  origen: string;
+  id: number;
+  nombre: string;
+  telefono: string;
+  estado: string;
+  detalle: string;
+  coincidencia: string;
+}
+
+export interface DuplicateValidationResponse {
+  message: string;
+  coincidencias: DuplicateMatch[];
+}

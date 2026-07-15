@@ -9,6 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { CafeConJesusService } from '../../../core/services/cafe-con-jesus.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { DuplicateValidationResponse } from '../../../core/models/consolidado.model';
 
 @Component({
   selector: 'app-cafe-create',
@@ -110,7 +111,26 @@ import { NotificationService } from '../../../core/services/notification.service
               placeholder="+56912345678"
               />
           </div>
-    
+
+          @if (duplicateWarning) {
+            <div class="duplicate-alert">
+              <strong>{{ duplicateWarning.message }}</strong>
+              <p>Revise antes de continuar. No se guardó el registro.</p>
+              <ul>
+                @for (item of duplicateWarning.coincidencias; track item.origen + item.id) {
+                  <li>
+                    <span class="duplicate-source">{{ item.origen }}</span>
+                    <span>{{ item.nombre }}</span>
+                    <span>Tel: {{ item.telefono || '—' }}</span>
+                    <span>{{ item.estado || '—' }}</span>
+                    <span>{{ item.detalle || '—' }}</span>
+                    <span class="duplicate-match">Coincidencia: {{ item.coincidencia }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+     
           <div class="form-actions">
             <button
               type="button"
@@ -193,6 +213,45 @@ import { NotificationService } from '../../../core/services/notification.service
         margin-top: 5px;
       }
 
+      .duplicate-alert {
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.55);
+        border-radius: 12px;
+        color: var(--text-primary);
+        padding: 16px;
+        margin: 20px 0;
+      }
+
+      .duplicate-alert p {
+        color: var(--text-secondary);
+        margin: 4px 0 12px;
+      }
+
+      .duplicate-alert ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .duplicate-alert li {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.45);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .duplicate-source,
+      .duplicate-match {
+        font-weight: 700;
+        color: var(--warning);
+      }
+
       .form-actions {
         display: flex;
         gap: 10px;
@@ -235,6 +294,7 @@ import { NotificationService } from '../../../core/services/notification.service
 export class CafeCreateComponent {
   form: FormGroup;
   isLoading = false;
+  duplicateWarning: DuplicateValidationResponse | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -259,6 +319,7 @@ export class CafeCreateComponent {
     }
 
     this.isLoading = true;
+    this.duplicateWarning = null;
 
     this.cafeService.crear(this.form.value).subscribe({
       next: () => {
@@ -267,6 +328,13 @@ export class CafeCreateComponent {
       },
       error: (error) => {
         console.error('Error:', error);
+        if (error.status === 409 && error.error?.coincidencias) {
+          this.duplicateWarning = error.error as DuplicateValidationResponse;
+          this.notificationService.warning('Se encontraron posibles coincidencias');
+          this.isLoading = false;
+          return;
+        }
+
         this.notificationService.error('Error al crear el registro');
         this.isLoading = false;
       },

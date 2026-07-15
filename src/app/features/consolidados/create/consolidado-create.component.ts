@@ -12,7 +12,7 @@ import { ComunaService } from '../../../core/services/comuna.service';
 import { ReunionService } from '../../../core/services/reunion.service'; // ← NUEVO
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 import { NotificationService } from '../../../core/services/notification.service';
-import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ← AGREGAR Reunion
+import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/models/consolidado.model'; // ← AGREGAR Reunion
 
 @Component({
   selector: 'app-consolidado-create',
@@ -219,6 +219,25 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
               {{ errorMessage }}
             </div>
           }
+
+          @if (duplicateWarning) {
+            <div class="duplicate-alert">
+              <strong>{{ duplicateWarning.message }}</strong>
+              <p>Revise antes de continuar. No se guardó el registro.</p>
+              <ul>
+                @for (item of duplicateWarning.coincidencias; track item.origen + item.id) {
+                  <li>
+                    <span class="duplicate-source">{{ item.origen }}</span>
+                    <span>{{ item.nombre }}</span>
+                    <span>Tel: {{ item.telefono || '—' }}</span>
+                    <span>{{ item.estado || '—' }}</span>
+                    <span>{{ item.detalle || '—' }}</span>
+                    <span class="duplicate-match">Coincidencia: {{ item.coincidencia }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
     
           <div class="form-actions">
             <button
@@ -329,6 +348,45 @@ import { Comuna, Reunion } from '../../../core/models/consolidado.model'; // ←
         margin-top: 5px;
       }
 
+      .duplicate-alert {
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.55);
+        border-radius: 12px;
+        color: var(--text-primary);
+        padding: 16px;
+        margin: 20px 0;
+      }
+
+      .duplicate-alert p {
+        color: var(--text-secondary);
+        margin: 4px 0 12px;
+      }
+
+      .duplicate-alert ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .duplicate-alert li {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.45);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .duplicate-source,
+      .duplicate-match {
+        font-weight: 700;
+        color: var(--warning);
+      }
+
       .form-actions {
         display: flex;
         gap: 10px;
@@ -374,6 +432,7 @@ export class ConsolidadoCreateComponent implements OnInit {
   isLoadingComunas = true;
   isLoadingReuniones = true; // ← NUEVO
   errorMessage = '';
+  duplicateWarning: DuplicateValidationResponse | null = null;
   comunas: Comuna[] = [];
   reuniones: Reunion[] = []; // ← NUEVO
 
@@ -461,6 +520,7 @@ export class ConsolidadoCreateComponent implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.duplicateWarning = null;
 
     const formValue = this.consolidadoForm.value;
 
@@ -481,6 +541,13 @@ export class ConsolidadoCreateComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error Backend:', error);
+        if (error.status === 409 && error.error?.coincidencias) {
+          this.duplicateWarning = error.error as DuplicateValidationResponse;
+          this.notificationService.warning('Se encontraron posibles coincidencias');
+          this.isLoading = false;
+          return;
+        }
+
         this.notificationService.error(
           'Error al crear el consolidado. Verifique los datos.'
         );
