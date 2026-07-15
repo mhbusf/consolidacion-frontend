@@ -11,6 +11,8 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { User } from '../../../core/models/auth.model';
+import { Reunion } from '../../../core/models/consolidado.model';
+import { ReunionService } from '../../../core/services/reunion.service';
 
 @Component({
   selector: 'app-cafe-list',
@@ -72,6 +74,7 @@ import { User } from '../../../core/models/auth.model';
                 <th>Apellido</th>
                 <th>Telefono</th>
                 <th>Edad</th>
+                <th>Culto/Reunión</th>
                 <th>Fecha Ingreso</th>
                 <th>Asistio</th>
                 <th>Etapa</th>
@@ -87,6 +90,7 @@ import { User } from '../../../core/models/auth.model';
                   <td>{{ r.apellido }}</td>
                   <td>{{ r.telefono }}</td>
                   <td>{{ r.edad || '-' }}</td>
+                  <td>{{ r.reunionNombre || '—' }}</td>
                   <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
                   <td>
                     <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
@@ -155,6 +159,10 @@ import { User } from '../../../core/models/auth.model';
                   <div class="detalle-item">
                     <span class="detalle-label">Invitado por</span>
                     <span class="detalle-value">{{ registroDetalle.invitadoPor || '-' }}</span>
+                  </div>
+                  <div class="detalle-item">
+                    <span class="detalle-label">Culto/Reunión</span>
+                    <span class="detalle-value">{{ registroDetalle.reunionNombre || '-' }}</span>
                   </div>
                   <div class="detalle-item">
                     <span class="detalle-label">Tel. Invitado por</span>
@@ -233,6 +241,15 @@ import { User } from '../../../core/models/auth.model';
                     <option value="">Sin asignar</option>
                     @for (u of usuarios; track u) {
                       <option [value]="u.username">{{ u.username }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Culto/Reunión donde llegó</label>
+                  <select [(ngModel)]="editReunionId" class="form-control">
+                    <option [ngValue]="null">Seleccione un culto/reunión</option>
+                    @for (reunion of reuniones; track reunion.id) {
+                      <option [ngValue]="reunion.id">{{ reunion.nombre }}</option>
                     }
                   </select>
                 </div>
@@ -839,6 +856,7 @@ import { User } from '../../../core/models/auth.model';
 export class CafeListComponent implements OnInit {
   registros: CafeConJesusResponse[] = [];
   usuarios: User[] = [];
+  reuniones: Reunion[] = [];
   isLoading = true;
   isAdmin = false;
   busqueda = '';
@@ -857,11 +875,13 @@ export class CafeListComponent implements OnInit {
   editComentario = '';
   editUsuarioAsignado = '';
   editEtapa = '';
+  editReunionId: number | null = null;
   isSaving = false;
 
   constructor(
     private cafeService: CafeConJesusService,
     private authService: AuthService,
+    private reunionService: ReunionService,
     private router: Router,
     private notificationService: NotificationService
   ) {}
@@ -869,6 +889,7 @@ export class CafeListComponent implements OnInit {
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     this.cargarRegistros();
+    this.cargarReuniones();
     if (this.isAdmin) {
       this.authService.getAllUsers().subscribe({
         next: (users) => { this.usuarios = users; },
@@ -892,6 +913,13 @@ export class CafeListComponent implements OnInit {
         console.error('Error al cargar registros:', error);
         this.isLoading = false;
       },
+    });
+  }
+
+  cargarReuniones(): void {
+    this.reunionService.listar().subscribe({
+      next: (data) => { this.reuniones = data; },
+      error: () => { this.notificationService.error('Error al cargar cultos/reuniones'); }
     });
   }
 
@@ -959,6 +987,7 @@ export class CafeListComponent implements OnInit {
     this.editComentario = r.comentario || '';
     this.editUsuarioAsignado = r.usuarioAsignado || '';
     this.editEtapa = r.etapa || '';
+    this.editReunionId = r.reunionId || null;
   }
 
   getEtapaLabel(value: string): string {
@@ -993,6 +1022,7 @@ export class CafeListComponent implements OnInit {
       edad: this.registroEditando.edad,
       invitadoPor: this.registroEditando.invitadoPor,
       telefonoInvitadoPor: this.registroEditando.telefonoInvitadoPor,
+      reunionId: this.editReunionId || undefined,
       comentario: this.editComentario,
       asistio: this.editAsistio,
       fechaAsistencia: this.editAsistio ? this.editFechaAsistencia : undefined,
@@ -1033,6 +1063,11 @@ export class CafeListComponent implements OnInit {
   }
 
   convertirAConsolidado(r: CafeConJesusResponse): void {
+    if (!r.reunionId) {
+      this.notificationService.warning('Debe editar el registro y seleccionar el culto/reunión antes de pasarlo a consolidación');
+      return;
+    }
+
     if (!confirm(`¿Confirmas que ${r.nombre} ${r.apellido} acepto al Senor? Se creara un registro en Consolidacion.`)) {
       return;
     }

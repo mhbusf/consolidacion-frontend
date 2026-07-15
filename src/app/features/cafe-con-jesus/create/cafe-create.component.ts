@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 
 import {
   FormBuilder,
@@ -9,7 +9,8 @@ import {
 import { Router } from '@angular/router';
 import { CafeConJesusService } from '../../../core/services/cafe-con-jesus.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { DuplicateValidationResponse } from '../../../core/models/consolidado.model';
+import { DuplicateValidationResponse, Reunion } from '../../../core/models/consolidado.model';
+import { ReunionService } from '../../../core/services/reunion.service';
 
 @Component({
   selector: 'app-cafe-create',
@@ -110,6 +111,21 @@ import { DuplicateValidationResponse } from '../../../core/models/consolidado.mo
               class="form-control"
               placeholder="+56912345678"
               />
+          </div>
+
+          <div class="form-group">
+            <label for="reunionId">¿En qué culto/reunión llegó? *</label>
+            <select id="reunionId" formControlName="reunionId" class="form-control" [disabled]="isLoadingReuniones">
+              <option [ngValue]="null">
+                {{ isLoadingReuniones ? 'Cargando cultos...' : 'Seleccione un culto/reunión' }}
+              </option>
+              @for (reunion of reuniones; track reunion.id) {
+                <option [ngValue]="reunion.id">{{ reunion.nombre }}</option>
+              }
+            </select>
+            @if (form.get('reunionId')?.invalid && form.get('reunionId')?.touched) {
+              <div class="error">Debe seleccionar el culto/reunión donde llegó</div>
+            }
           </div>
 
           @if (duplicateWarning) {
@@ -291,14 +307,17 @@ import { DuplicateValidationResponse } from '../../../core/models/consolidado.mo
     `,
   ],
 })
-export class CafeCreateComponent {
+export class CafeCreateComponent implements OnInit {
   form: FormGroup;
   isLoading = false;
+  isLoadingReuniones = true;
+  reuniones: Reunion[] = [];
   duplicateWarning: DuplicateValidationResponse | null = null;
 
   constructor(
     private fb: FormBuilder,
     private cafeService: CafeConJesusService,
+    private reunionService: ReunionService,
     private router: Router,
     private notificationService: NotificationService
   ) {
@@ -309,6 +328,20 @@ export class CafeCreateComponent {
       edad: [''],
       invitadoPor: [''],
       telefonoInvitadoPor: [''],
+      reunionId: [null, [Validators.required]],
+    });
+  }
+
+  ngOnInit(): void {
+    this.reunionService.listar().subscribe({
+      next: (data) => {
+        this.reuniones = data;
+        this.isLoadingReuniones = false;
+      },
+      error: () => {
+        this.notificationService.error('Error al cargar cultos/reuniones');
+        this.isLoadingReuniones = false;
+      }
     });
   }
 
@@ -321,7 +354,12 @@ export class CafeCreateComponent {
     this.isLoading = true;
     this.duplicateWarning = null;
 
-    this.cafeService.crear(this.form.value).subscribe({
+    const payload = {
+      ...this.form.value,
+      reunionId: Number(this.form.value.reunionId),
+    };
+
+    this.cafeService.crear(payload).subscribe({
       next: () => {
         this.notificationService.success('Registro creado correctamente');
         this.router.navigate(['/cafe-con-jesus']);

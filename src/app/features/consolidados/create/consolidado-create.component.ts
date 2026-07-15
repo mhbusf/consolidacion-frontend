@@ -147,9 +147,8 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
             }
           </div>
     
-          <!-- ← NUEVO: Selector de Reunión -->
           <div class="form-group">
-            <label for="reunionId">¿En qué reunión llegó?</label>
+            <label for="reunionId">¿En qué culto/reunión llegó? *</label>
             <select
               id="reunionId"
               formControlName="reunionId"
@@ -160,7 +159,7 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
                 {{
                 isLoadingReuniones
                 ? 'Cargando reuniones...'
-                : 'Seleccione una reunión (opcional)'
+                : 'Seleccione un culto/reunión'
                 }}
               </option>
               @for (reunion of reuniones; track reunion) {
@@ -169,7 +168,9 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
                 </option>
               }
             </select>
-            <small class="form-text">Este campo es opcional</small>
+            @if (consolidadoForm.get('reunionId')?.invalid && consolidadoForm.get('reunionId')?.touched) {
+              <div class="error">Debe seleccionar el culto/reunión donde llegó</div>
+            }
           </div>
     
           <div class="form-group">
@@ -456,7 +457,7 @@ export class ConsolidadoCreateComponent implements OnInit {
       telefono: ['', [Validators.required, TelefonoChilenoValidator.validar()]],
       edad: ['', [Validators.required, Validators.min(1), Validators.max(120)]],
       comunaId: [0, [Validators.required, Validators.min(1)]],
-      reunionId: [null], // ← NUEVO (opcional, sin validadores)
+      reunionId: [null, [Validators.required]],
       quienInvito: ['', [Validators.required, Validators.maxLength(100)]],
       motivoOracion: [
         '',
@@ -529,7 +530,7 @@ export class ConsolidadoCreateComponent implements OnInit {
       ...formValue,
       edad: Number(formValue.edad),
       comunaId: Number(formValue.comunaId),
-      reunionId: formValue.reunionId ? Number(formValue.reunionId) : undefined, // ← NUEVO
+      reunionId: Number(formValue.reunionId),
     };
 
     console.log('Enviando Payload:', requestPayload);
