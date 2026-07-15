@@ -461,24 +461,24 @@ import { JwtResponse } from '../../../core/models/auth.model';
           margin-top: 6px;
           box-shadow: none;
           border-radius: 12px;
-          max-height: 0;
+          display: none;
+          max-height: none;
           opacity: 1;
           visibility: visible;
           transform: none;
           overflow: hidden;
-          border-width: 0;
-          transition: max-height 0.2s ease;
+          border-width: 1px;
+          transition: none;
         }
 
         .nav-group:hover .nav-submenu,
         .nav-group:focus-within .nav-submenu {
-          max-height: 0;
+          display: none;
           transform: none;
         }
 
-        .nav-group.open .nav-submenu {
-          max-height: 260px;
-          border-width: 1px;
+        .nav-group.open > .nav-submenu {
+          display: block !important;
         }
 
         .nav-submenu a {
