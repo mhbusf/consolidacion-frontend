@@ -19,75 +19,80 @@ import { JwtResponse } from '../../../core/models/auth.model';
               <span class="brand-text">Sistema de Consolidación</span>
             </a>
           </div>
-          <ul class="nav-menu">
+          <button class="mobile-menu-toggle" type="button" (click)="toggleMobileMenu($event)" aria-label="Abrir menú">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
             @if (isAdmin) {
               <li>
-                <a routerLink="/dashboard" routerLinkActive="active">
+                <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">📊</span>
                   Dashboard
                 </a>
               </li>
             }
-            <li class="nav-group" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc'])">
-              <button class="nav-group-toggle" type="button">
+            <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc'])">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('consolidacion', $event)">
                 <span class="menu-icon">👥</span>
                 Consolidación
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="nav-submenu">
-                <a routerLink="/consolidados" routerLinkActive="active">
+                <a routerLink="/consolidados" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">👥</span>
                   Consolidados
                 </a>
                 @if (isAdmin) {
-                  <a routerLink="/consolidados-atrasos" routerLinkActive="active">
+                  <a routerLink="/consolidados-atrasos" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">⚠️</span>
                     Atrasos
                   </a>
-                  <a routerLink="/estadisticas-gdc" routerLinkActive="active">
+                  <a routerLink="/estadisticas-gdc" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📈</span>
                     Estadísticas GDC
                   </a>
                 }
               </div>
             </li>
-            <li class="nav-group" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin'])">
-              <button class="nav-group-toggle" type="button">
+            <li class="nav-group" [class.open]="openGroup === 'cafe'" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin'])">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('cafe', $event)">
                 <span class="menu-icon">☕</span>
                 Cafe con Jesus
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="nav-submenu">
-                <a routerLink="/cafe-con-jesus" routerLinkActive="active">
+                <a routerLink="/cafe-con-jesus" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">☕</span>
                   Invitados
                 </a>
                 @if (isAdmin) {
-                  <a routerLink="/cafe-admin" routerLinkActive="active">
+                  <a routerLink="/cafe-admin" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📋</span>
                     Admin Café
                   </a>
                 }
               </div>
             </li>
-            <li class="nav-group" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
-              <button class="nav-group-toggle" type="button">
+            <li class="nav-group" [class.open]="openGroup === 'usuario'" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('usuario', $event)">
                 <span class="menu-icon">🔐</span>
                 Usuario
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="nav-submenu">
                 @if (isAdmin) {
-                  <a routerLink="/usuarios" routerLinkActive="active">
+                  <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">🔐</span>
                     Usuarios
                   </a>
-                  <a routerLink="/usuarios/crear" routerLinkActive="active">
+                  <a routerLink="/usuarios/crear" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">➕</span>
                     Crear Usuario
                   </a>
                 }
-                <a routerLink="/change-password" routerLinkActive="active">
+                <a routerLink="/change-password" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">🔑</span>
                   Cambiar Contraseña
                 </a>
@@ -179,6 +184,28 @@ import { JwtResponse } from '../../../core/models/auth.model';
         justify-content: center;
       }
 
+      .mobile-menu-toggle {
+        display: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        background: rgba(96, 165, 250, 0.12);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .mobile-menu-toggle span {
+        display: block;
+        width: 18px;
+        height: 2px;
+        border-radius: 999px;
+        background: #e2e8f0;
+      }
+
       .nav-menu li {
         margin: 0;
       }
@@ -243,10 +270,15 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-group:hover .nav-submenu,
+      .nav-group.open .nav-submenu,
       .nav-group:focus-within .nav-submenu {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
+      }
+
+      .nav-group.open .dropdown-arrow {
+        transform: rotate(180deg);
       }
 
       .nav-submenu a {
@@ -375,10 +407,16 @@ import { JwtResponse } from '../../../core/models/auth.model';
         .nav-container {
           flex-wrap: wrap;
           padding: 12px 16px;
+          min-height: 64px;
         }
 
         .brand-text {
           display: none;
+        }
+
+        .mobile-menu-toggle {
+          display: flex;
+          margin-left: auto;
         }
 
         .nav-menu {
@@ -386,21 +424,65 @@ import { JwtResponse } from '../../../core/models/auth.model';
           width: 100%;
           margin-top: 12px;
           justify-content: flex-start;
-          overflow-x: auto;
+          overflow: visible;
           gap: 8px;
+          display: none;
+          flex-direction: column;
+          background: rgba(17, 24, 39, 0.96);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 16px;
+          padding: 10px;
+        }
+
+        .nav-menu.mobile-open {
+          display: flex;
         }
 
         .nav-menu a {
           flex-shrink: 0;
+          width: 100%;
+          justify-content: flex-start;
         }
 
         .nav-group {
           flex-shrink: 0;
+          width: 100%;
+        }
+
+        .nav-group-toggle {
+          width: 100%;
+          justify-content: space-between;
         }
 
         .nav-submenu {
-          left: 0;
-          right: auto;
+          position: static;
+          min-width: 0;
+          width: 100%;
+          margin-top: 6px;
+          box-shadow: none;
+          border-radius: 12px;
+          max-height: 0;
+          opacity: 1;
+          visibility: visible;
+          transform: none;
+          overflow: hidden;
+          border-width: 0;
+          transition: max-height 0.2s ease;
+        }
+
+        .nav-group:hover .nav-submenu,
+        .nav-group:focus-within .nav-submenu {
+          max-height: 0;
+          transform: none;
+        }
+
+        .nav-group.open .nav-submenu {
+          max-height: 260px;
+          border-width: 1px;
+        }
+
+        .nav-submenu a {
+          padding: 12px 14px;
         }
 
         .user-name {
@@ -414,6 +496,8 @@ export class NavbarComponent implements OnInit {
   currentUser$: Observable<JwtResponse | null>;
   isAdmin = false;
   dropdownOpen = false;
+  openGroup: 'consolidacion' | 'cafe' | 'usuario' | null = null;
+  mobileMenuOpen = false;
 
   constructor(public authService: AuthService, private router: Router, private el: ElementRef) {
     this.currentUser$ = this.authService.currentUser$;
@@ -427,18 +511,39 @@ export class NavbarComponent implements OnInit {
 
   toggleDropdown(event: Event): void {
     event.stopPropagation();
+    this.openGroup = null;
+    this.mobileMenuOpen = false;
     this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  toggleMobileMenu(event: Event): void {
+    event.stopPropagation();
+    this.dropdownOpen = false;
+    this.openGroup = null;
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  toggleGroup(group: 'consolidacion' | 'cafe' | 'usuario', event: Event): void {
+    event.stopPropagation();
+    this.dropdownOpen = false;
+    this.openGroup = this.openGroup === group ? null : group;
+  }
+
+  closeMenus(): void {
+    this.openGroup = null;
+    this.dropdownOpen = false;
+    this.mobileMenuOpen = false;
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     if (!this.el.nativeElement.contains(event.target)) {
-      this.dropdownOpen = false;
+      this.closeMenus();
     }
   }
 
   logout(): void {
-    this.dropdownOpen = false;
+    this.closeMenus();
     this.authService.logout();
     this.router.navigate(['/login']);
   }
