@@ -226,7 +226,7 @@ export class LoginComponent implements OnInit {
       next: (response) => {
         console.log('Login exitoso:', response);
         this.notificationService.success('Bienvenido');
-        this.redirectUser();
+        this.redirectUser(response.mustChangePassword);
       },
       error: (error) => {
         console.error('Error en login:', error);
@@ -251,7 +251,12 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  private redirectUser(): void {
+  private redirectUser(mustChangePassword = false): void {
+    if (mustChangePassword || this.authService.mustChangePassword()) {
+      this.router.navigate(['/change-password']);
+      return;
+    }
+
     // Redirigir según el rol del usuario
     if (this.authService.isAdmin()) {
       this.router.navigate(['/dashboard']);

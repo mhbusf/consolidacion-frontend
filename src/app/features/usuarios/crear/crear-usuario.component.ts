@@ -84,10 +84,11 @@ import { NotificationService } from '../../../core/services/notification.service
               id="password"
               formControlName="password"
               class="form-control"
-              placeholder="Mínimo 6 caracteres">
+              placeholder="Mínimo 8 caracteres">
+            <small class="form-text">{{ passwordHelp }}</small>
             @if (userForm.get('password')?.invalid && userForm.get('password')?.touched) {
               <div class="error">
-                Contraseña requerida (mínimo 6 caracteres)
+                {{ passwordHelp }}
               </div>
             }
           </div>
@@ -198,6 +199,13 @@ import { NotificationService } from '../../../core/services/notification.service
       margin-top: 5px;
     }
 
+    .form-text {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
     .success {
       color: var(--success);
       padding: 10px;
@@ -255,6 +263,8 @@ import { NotificationService } from '../../../core/services/notification.service
 })
 export class CrearUsuarioComponent {
   userForm: FormGroup;
+  readonly passwordHelp = 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.';
+  private readonly passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!*()_\-{}\[\]:;"'<>,.?/|\\]).{8,}$/;
   errorMessage = '';
   successMessage = '';
   isLoading = false;
@@ -270,7 +280,7 @@ export class CrearUsuarioComponent {
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
       apellido: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
       role: ['', [Validators.required]]
     });
   }

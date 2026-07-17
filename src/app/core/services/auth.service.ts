@@ -85,6 +85,19 @@ export class AuthService {
     return this.hasRole('ROLE_ADMIN');
   }
 
+  mustChangePassword(): boolean {
+    return this.currentUserSubject.value?.mustChangePassword === true;
+  }
+
+  markPasswordChanged(): void {
+    const user = this.currentUserSubject.value;
+    if (!user) return;
+
+    const updatedUser = { ...user, mustChangePassword: false };
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    this.currentUserSubject.next(updatedUser);
+  }
+
   getAllUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/users`);
   }

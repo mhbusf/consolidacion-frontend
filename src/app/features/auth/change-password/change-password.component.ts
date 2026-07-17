@@ -12,6 +12,11 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="container">
       <div class="card">
         <h2>Cambiar Contraseña</h2>
+        @if (mustChangePassword) {
+          <div class="warning">
+            Debes cambiar tu contraseña antes de continuar usando la aplicación.
+          </div>
+        }
     
         <form [formGroup]="passwordForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
@@ -35,10 +40,11 @@ import { AuthService } from '../../../core/services/auth.service';
               id="newPassword"
               formControlName="newPassword"
               class="form-control"
-              placeholder="Mínimo 6 caracteres">
+              placeholder="Mínimo 8 caracteres">
+            <small class="form-text">{{ passwordHelp }}</small>
             @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
               <div class="error">
-                Nueva contraseña requerida (mínimo 6 caracteres)
+                {{ passwordHelp }}
               </div>
             }
           </div>
@@ -70,9 +76,11 @@ import { AuthService } from '../../../core/services/auth.service';
           }
     
           <div class="actions">
-            <button type="button" class="btn-secondary" (click)="cancelar()">
+            @if (!mustChangePassword) {
+              <button type="button" class="btn-secondary" (click)="cancelar()">
               Cancelar
-            </button>
+              </button>
+            }
             <button
               type="submit"
               class="btn-primary"
@@ -143,6 +151,23 @@ import { AuthService } from '../../../core/services/auth.service';
       margin-top: 5px;
     }
 
+    .form-text {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .warning {
+      color: var(--warning);
+      padding: 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
     .success {
       color: var(--success);
       padding: 10px;
@@ -184,18 +209,22 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class ChangePasswordComponent {
   passwordForm: FormGroup;
+  readonly passwordHelp = 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.';
+  private readonly passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!*()_\-{}\[\]:;"'<>,.?/|\\]).{8,}$/;
   errorMessage = '';
   successMessage = '';
   isLoading = false;
+  mustChangePassword = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {
+    this.mustChangePassword = this.authService.mustChangePassword();
     this.passwordForm = this.fb.group({
       oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      newPassword: ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
@@ -220,11 +249,12 @@ export class ChangePasswordComponent {
 
     this.authService.changePassword({ oldPassword, newPassword }).subscribe({
       next: () => {
+        this.authService.markPasswordChanged();
         this.successMessage = 'Contraseña actualizada correctamente';
         this.passwordForm.reset();
         this.isLoading = false;
         setTimeout(() => {
-          this.router.navigate(['/consolidados']);
+          this.router.navigate([this.authService.isAdmin() ? '/dashboard' : '/consolidados']);
         }, 2000);
       },
       error: (error) => {

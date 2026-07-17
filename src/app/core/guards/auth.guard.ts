@@ -11,6 +11,11 @@ export const authGuard = (route: ActivatedRouteSnapshot) => {
     return false;
   }
 
+  if (authService.mustChangePassword() && route.routeConfig?.path !== 'change-password') {
+    router.navigate(['/change-password']);
+    return false;
+  }
+
   const requiredRoles = route.data['roles'] as string[];
   if (requiredRoles) {
     const hasRole = requiredRoles.some(role => authService.hasRole(role));

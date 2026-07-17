@@ -16,6 +16,7 @@ export interface JwtResponse {
   username: string;
   email: string; // ← AGREGADO: El backend sí envía el email
   roles: Role[];
+  mustChangePassword: boolean;
 }
 
 export interface Role {
