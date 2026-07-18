@@ -24,7 +24,9 @@ export class AuthService {
       if (this.isTokenExpired()) {
         this.logout();
       } else {
-        this.currentUserSubject.next(JSON.parse(storedUser));
+        const user = this.withTokenFlags(JSON.parse(storedUser));
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.currentUserSubject.next(user);
       }
     }
   }
@@ -38,9 +40,10 @@ export class AuthService {
   login(request: LoginRequest): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${this.apiUrl}/login`, request).pipe(
       tap((response) => {
-        localStorage.setItem('currentUser', JSON.stringify(response));
+        const user = this.withTokenFlags(response);
+        localStorage.setItem('currentUser', JSON.stringify(user));
         localStorage.setItem('token', response.token);
-        this.currentUserSubject.next(response);
+        this.currentUserSubject.next(user);
       })
     );
   }
@@ -86,7 +89,7 @@ export class AuthService {
   }
 
   mustChangePassword(): boolean {
-    return this.currentUserSubject.value?.mustChangePassword === true;
+    return this.currentUserSubject.value?.mustChangePassword === true || this.getTokenFlag('mustChangePassword') === true;
   }
 
   markPasswordChanged(): void {
@@ -94,6 +97,15 @@ export class AuthService {
     if (!user) return;
 
     const updatedUser = { ...user, mustChangePassword: false };
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    this.currentUserSubject.next(updatedUser);
+  }
+
+  markPasswordChangeRequired(): void {
+    const user = this.currentUserSubject.value;
+    if (!user) return;
+
+    const updatedUser = { ...user, mustChangePassword: true };
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     this.currentUserSubject.next(updatedUser);
   }
@@ -146,5 +158,27 @@ export class AuthService {
       token,
       newPassword,
     });
+  }
+
+  private withTokenFlags(user: JwtResponse): JwtResponse {
+    return {
+      ...user,
+      mustChangePassword: user.mustChangePassword === true || this.readTokenFlag(user.token, 'mustChangePassword') === true,
+    };
+  }
+
+  private getTokenFlag(flagName: string): boolean | null {
+    const token = this.getToken();
+    if (!token) return null;
+    return this.readTokenFlag(token, flagName);
+  }
+
+  private readTokenFlag(token: string, flagName: string): boolean | null {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return typeof payload[flagName] === 'boolean' ? payload[flagName] : null;
+    } catch {
+      return null;
+    }
   }
 }

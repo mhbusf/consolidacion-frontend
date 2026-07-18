@@ -45,6 +45,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/login']);
       }
 
+      if (error.status === 403 && error.error?.mustChangePassword === true && router.url !== '/change-password') {
+        authService.markPasswordChangeRequired();
+        router.navigate(['/change-password']);
+      }
+
       // Log para debugging
       console.error('HTTP Error:', {
         status: error.status,
