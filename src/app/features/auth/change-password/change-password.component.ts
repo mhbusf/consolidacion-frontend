@@ -252,10 +252,19 @@ export class ChangePasswordComponent {
         this.authService.markPasswordChanged();
         this.successMessage = 'Contraseña actualizada correctamente';
         this.passwordForm.reset();
-        this.isLoading = false;
-        setTimeout(() => {
-          this.router.navigate([this.authService.isAdmin() ? '/dashboard' : '/consolidados']);
-        }, 2000);
+        this.mustChangePassword = false;
+
+        this.authService.refreshSessionWithNewPassword(newPassword).subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.router.navigate([this.authService.isAdmin() ? '/dashboard' : '/consolidados']);
+          },
+          error: () => {
+            this.isLoading = false;
+            this.authService.logout();
+            this.router.navigate(['/login']);
+          }
+        });
       },
       error: (error) => {
         this.errorMessage = 'Error al cambiar contraseña';

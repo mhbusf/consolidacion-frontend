@@ -106,6 +106,15 @@ export class AuthService {
     this.currentUserSubject.next(updatedUser);
   }
 
+  refreshSessionWithNewPassword(newPassword: string): Observable<JwtResponse> {
+    const username = this.currentUserSubject.value?.username;
+    if (!username) {
+      throw new Error('No hay usuario autenticado');
+    }
+
+    return this.login({ username, password: newPassword });
+  }
+
   markPasswordChangeRequired(): void {
     const user = this.currentUserSubject.value;
     if (!user) return;
@@ -166,9 +175,13 @@ export class AuthService {
   }
 
   private withTokenFlags(user: JwtResponse): JwtResponse {
+    if (typeof user.mustChangePassword === 'boolean') {
+      return user;
+    }
+
     return {
       ...user,
-      mustChangePassword: user.mustChangePassword === true || this.readTokenFlag(user.token, 'mustChangePassword') === true,
+      mustChangePassword: this.readTokenFlag(user.token, 'mustChangePassword') === true,
     };
   }
 
