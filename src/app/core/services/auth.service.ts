@@ -89,7 +89,12 @@ export class AuthService {
   }
 
   mustChangePassword(): boolean {
-    return this.currentUserSubject.value?.mustChangePassword === true || this.getTokenFlag('mustChangePassword') === true;
+    const user = this.currentUserSubject.value;
+    if (typeof user?.mustChangePassword === 'boolean') {
+      return user.mustChangePassword;
+    }
+
+    return this.getTokenFlag('mustChangePassword') === true;
   }
 
   markPasswordChanged(): void {
