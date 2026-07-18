@@ -35,6 +35,13 @@ export class ConsolidadoService {
     );
   }
 
+  actualizarHitoTresSemanas(id: number, cumplido: boolean): Observable<ConsolidadoResponse> {
+    return this.http.put<ConsolidadoResponse>(
+      `${this.apiUrl}/${id}/hito-tres-semanas?cumplido=${cumplido}`,
+      {}
+    );
+  }
+
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

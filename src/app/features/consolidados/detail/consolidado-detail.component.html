@@ -68,6 +68,34 @@
                 <span class="text-muted">No especificado</span>
               }
             </div>
+            <div class="info-item">
+              <strong>Asignado por:</strong>
+              @if (consolidado.usuarioAsigno) {
+                <span>{{ consolidado.usuarioAsigno }}</span>
+              }
+              @if (!consolidado.usuarioAsigno) {
+                <span class="text-muted">No especificado</span>
+              }
+            </div>
+            <div class="info-item">
+              <strong>Hito 3 semanas:</strong>
+              <span [class.text-success]="consolidado.hitoTresSemanasCumplido">
+                {{ consolidado.hitoTresSemanasCumplido ? 'Cumplido' : 'Pendiente' }}
+              </span>
+            </div>
+          </div>
+          <div class="hito-section">
+            <div>
+              <strong>Reunión semanal por 3 semanas</strong>
+              <p>Marca este hito cuando se haya cumplido el seguimiento semanal durante tres semanas.</p>
+            </div>
+            <button
+              class="btn-hito"
+              [class.btn-hito-completed]="consolidado.hitoTresSemanasCumplido"
+              (click)="actualizarHitoTresSemanas(!consolidado.hitoTresSemanasCumplido)"
+              [disabled]="isUpdatingHito">
+              {{ isUpdatingHito ? 'Guardando...' : (consolidado.hitoTresSemanasCumplido ? 'Desmarcar hito' : 'Marcar hito cumplido') }}
+            </button>
           </div>
           <div class="info-section">
             <strong>Motivo de Oración:</strong>

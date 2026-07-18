@@ -23,6 +23,7 @@ export class ConsolidadoDetailComponent implements OnInit {
   nuevoComentario = '';
   isLoading = true;
   isLoadingComentario = false;
+  isUpdatingHito = false;
   isAdmin = false;
 
   // Modal de cierre con GDC
@@ -135,6 +136,24 @@ export class ConsolidadoDetailComponent implements OnInit {
       error: (error) => {
         this.notificationService.error('Error al cerrar con GDC');
         this.isClosing = false;
+        console.error(error);
+      }
+    });
+  }
+
+  actualizarHitoTresSemanas(cumplido: boolean): void {
+    if (!this.consolidado || this.isUpdatingHito) return;
+
+    this.isUpdatingHito = true;
+    this.consolidadoService.actualizarHitoTresSemanas(this.consolidado.id, cumplido).subscribe({
+      next: (data) => {
+        this.consolidado = data;
+        this.isUpdatingHito = false;
+        this.notificationService.success(cumplido ? 'Hito de 3 semanas marcado' : 'Hito de 3 semanas desmarcado');
+      },
+      error: (error) => {
+        this.isUpdatingHito = false;
+        this.notificationService.error('Error al actualizar el hito de 3 semanas');
         console.error(error);
       }
     });

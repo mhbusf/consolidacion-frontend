@@ -34,12 +34,13 @@ import { User } from '../../../core/models/auth.model';
               <option value="todos">Todos los consolidados</option>
               <option value="sin-asignar">Sin asignar</option>
               <option value="por-usuario">Por usuario específico</option>
+              <option value="por-quien-asigno">Por quien asignó</option>
               <option value="mis-consolidados">Mis consolidados creados</option>
             </select>
           </div>
-          @if (filtroSeleccionado === 'por-usuario') {
+          @if (filtroSeleccionado === 'por-usuario' || filtroSeleccionado === 'por-quien-asigno') {
             <div class="filter-group">
-              <label>Usuario:</label>
+              <label>{{ filtroSeleccionado === 'por-quien-asigno' ? 'Asignado por:' : 'Usuario:' }}</label>
               <select [(ngModel)]="usuarioFiltro" (change)="filtrarPorUsuario()" class="form-control">
                 <option value="">Seleccione un usuario</option>
                 @for (user of usuarios; track user) {
@@ -92,7 +93,7 @@ import { User } from '../../../core/models/auth.model';
               type="search"
               [(ngModel)]="busqueda"
               class="form-control"
-              placeholder="Nombre, telefono, invitado, asignado, motivo..."
+              placeholder="Nombre, telefono, invitado, asignado, asignó, motivo..."
             />
           </div>
 
@@ -166,7 +167,9 @@ import { User } from '../../../core/models/auth.model';
                   <th>Motivo</th>
                   <th>Fecha ingreso</th>
                   <th>Reportado por</th>
+                  <th>Asignado por</th>
                   <th>{{ vistaGDC ? 'GDC' : 'Asignado a' }}</th>
+                  <th>3 semanas</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -181,6 +184,7 @@ import { User } from '../../../core/models/auth.model';
                     <td class="comentario-cell">{{ c.motivoOracion || '—' }}</td>
                     <td>{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td>{{ c.usuarioReporta || '—' }}</td>
+                    <td>{{ c.usuarioAsigno || '—' }}</td>
                     <td>
                       @if (vistaGDC) {
                         <span class="badge badge-gdc">{{ c.gdc || '—' }}</span>
@@ -191,6 +195,11 @@ import { User } from '../../../core/models/auth.model';
                       @if (!vistaGDC && !c.usuarioAsignado) {
                         <span class="badge badge-warning">Sin asignar</span>
                       }
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="c.hitoTresSemanasCumplido ? 'badge-success' : 'badge-secondary'">
+                        {{ c.hitoTresSemanasCumplido ? 'Cumplido' : 'Pendiente' }}
+                      </span>
                     </td>
                     <td>
                       @if (vistaGDC && c.comentarioCierre) {
@@ -652,15 +661,24 @@ export class ConsolidadosListComponent implements OnInit {
           this.consolidados = [];
         }
         break;
+      case 'por-quien-asigno':
+        if (!this.usuarioFiltro) {
+          this.consolidados = [];
+        }
+        break;
     }
   }
 
   filtrarPorUsuario(): void {
     if (this.usuarioFiltro) {
+      if (this.filtroSeleccionado === 'por-quien-asigno') {
+        this.consolidados = this.consolidadosTodos.filter(c => c.usuarioAsigno === this.usuarioFiltro);
+        return;
+      }
+
       this.consolidados = this.consolidadosTodos.filter(
-        c => c.usuarioAsignado === this.usuarioFiltro || 
-     c.usuarioReporta === this.usuarioFiltro
-    );
+        c => c.usuarioAsignado === this.usuarioFiltro || c.usuarioReporta === this.usuarioFiltro
+      );
     }
   }
 
@@ -683,6 +701,7 @@ export class ConsolidadosListComponent implements OnInit {
         c.motivoOracion,
         c.usuarioReporta,
         c.usuarioAsignado,
+        c.usuarioAsigno,
         c.estado,
         c.gdc,
         c.comentarioCierre,
@@ -693,7 +712,8 @@ export class ConsolidadosListComponent implements OnInit {
       const matchesAsignacion = this.matchesAsignacion(c);
       const matchesUsuario = this.usuarioAvanzadoFiltro === 'todos' ||
         c.usuarioAsignado === this.usuarioAvanzadoFiltro ||
-        c.usuarioReporta === this.usuarioAvanzadoFiltro;
+        c.usuarioReporta === this.usuarioAvanzadoFiltro ||
+        c.usuarioAsigno === this.usuarioAvanzadoFiltro;
       const matchesFecha = this.matchesFecha(c.fechaIngreso);
 
       return matchesText && matchesEstado && matchesAsignacion && matchesUsuario && matchesFecha;
@@ -769,6 +789,7 @@ export class ConsolidadosListComponent implements OnInit {
       case 'sin-asignar': return 'sin asignar';
       case 'mis-consolidados': return 'creados por ti';
       case 'por-usuario': return `para el usuario ${this.usuarioFiltro || 'seleccionado'}`;
+      case 'por-quien-asigno': return `asignados por ${this.usuarioFiltro || 'el usuario seleccionado'}`;
       default: return '';
     }
   }

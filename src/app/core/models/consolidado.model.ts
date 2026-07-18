@@ -70,8 +70,10 @@ export interface ConsolidadoResponse {
   comuna: Comuna | null;
   usuarioReporta: string | null;
   usuarioAsignado: string | null;
+  usuarioAsigno: string | null;
   fechaIngreso: string;
   estado?: string;
+  hitoTresSemanasCumplido: boolean;
   gdc?: string;
   fechaCierre?: string;
   comentarioCierre?: string;

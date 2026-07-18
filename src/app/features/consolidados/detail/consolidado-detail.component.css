@@ -107,6 +107,54 @@
   border-top: 1px solid var(--border-color);
 }
 
+.hito-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.hito-section strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hito-section p {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.btn-hito {
+  background: var(--primary-light);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-hito-completed {
+  background: var(--secondary);
+}
+
+.btn-hito:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.text-success {
+  color: var(--success) !important;
+}
+
 .info-section strong {
   display: block;
   font-size: 12px;
