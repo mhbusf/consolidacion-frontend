@@ -265,16 +265,16 @@ import { User } from '../core/models/auth.model';
   styles: [
     `
       .dashboard-container {
-        padding: 36px 32px;
-        max-width: 1400px;
+        padding: 34px;
+        max-width: 1600px;
         margin: 0 auto;
         min-height: calc(100vh - 64px);
       }
 
       .dashboard-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--text-primary);
+        font-size: 34px;
+        font-weight: 950;
+        color: #132033;
         margin-bottom: 32px;
         display: flex;
         align-items: center;
@@ -290,19 +290,20 @@ import { User } from '../core/models/auth.model';
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
+        gap: 18px;
         margin-bottom: 40px;
       }
 
       .stat-card {
-        background: linear-gradient(180deg, rgba(24, 34, 53, 0.96), rgba(17, 24, 39, 0.92));
-        border-radius: 16px;
+        background: #ffffff;
+        border-radius: 24px;
         padding: 24px;
         display: flex;
         align-items: center;
         gap: 20px;
-        border: 1px solid var(--border-color);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #dce5ef;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         position: relative;
         overflow: hidden;
         cursor: pointer;
@@ -313,19 +314,32 @@ import { User } from '../core/models/auth.model';
         position: absolute;
         top: 0;
         left: 0;
-        width: 4px;
-        height: 100%;
+        width: 100%;
+        height: 4px;
         background: currentColor;
+        opacity: 0.9;
       }
 
       .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+        border-color: #93c5fd;
+        box-shadow: 0 22px 48px rgba(37, 99, 235, 0.12);
       }
 
       .stat-icon {
-        font-size: 40px;
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: currentColor;
+        font-size: 32px;
         flex-shrink: 0;
+        filter: none;
+      }
+
+      .stat-icon::first-letter {
+        color: white;
       }
 
       .stat-content {
@@ -333,22 +347,23 @@ import { User } from '../core/models/auth.model';
       }
 
       .stat-value {
-        font-size: 36px;
-        font-weight: 700;
-        color: var(--text-primary);
+        font-size: 38px;
+        font-weight: 950;
+        color: #132033;
         line-height: 1;
         margin-bottom: 8px;
+        letter-spacing: -1.4px;
       }
 
       .stat-label {
-        font-size: 14px;
-        color: var(--text-secondary);
-        font-weight: 500;
+        font-size: 15px;
+        color: #64748b;
+        font-weight: 850;
       }
 
       /* Colores de tarjetas - SOBRIOS */
       .stat-total {
-        color: #64748b;
+        color: #2563eb;
       }
       .stat-process {
         color: #3b82f6;
@@ -375,12 +390,17 @@ import { User } from '../core/models/auth.model';
       /* Secciones */
       .section {
         margin-top: 40px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid #dae3ed;
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.07);
       }
 
       .section-title {
         font-size: 24px;
-        font-weight: 700;
-        color: var(--text-primary);
+        font-weight: 950;
+        color: #132033;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -397,11 +417,11 @@ import { User } from '../core/models/auth.model';
 
       /* Tabla de Estadísticas */
       .table-container {
-        background: rgba(24, 34, 53, 0.94);
-        border-radius: 14px;
+        background: #ffffff;
+        border-radius: 20px;
         overflow: hidden;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-md);
+        border: 1px solid #dbe4ee;
+        box-shadow: none;
       }
 
       .stats-table {
@@ -410,18 +430,18 @@ import { User } from '../core/models/auth.model';
       }
 
       .stats-table thead {
-        background: rgba(17, 24, 39, 0.9);
+        background: #f8fafc;
       }
 
       .stats-table th {
         padding: 16px;
         text-align: left;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        border-bottom: 1px solid var(--border-color);
+        letter-spacing: 0.08em;
+        color: #64748b;
+        border-bottom: 1px solid #e2e8f0;
       }
 
       .stats-table th.text-center {
@@ -430,8 +450,8 @@ import { User } from '../core/models/auth.model';
 
       .stats-table td {
         padding: 16px;
-        color: var(--text-primary);
-        border-bottom: 1px solid var(--border-color);
+        color: #132033;
+        border-bottom: 1px solid #e2e8f0;
       }
 
       .stats-table tbody tr {
@@ -439,7 +459,7 @@ import { User } from '../core/models/auth.model';
       }
 
       .stats-table tbody tr:hover {
-        background: var(--bg-hover);
+        background: #eff6ff;
       }
 
       .stats-table tbody tr:last-child td {
@@ -860,24 +880,26 @@ import { User } from '../core/models/auth.model';
       }
 
       .reunion-card {
-        background: rgba(24, 34, 53, 0.94);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 22px;
         padding: 20px;
         text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         border-top: 3px solid var(--primary-light);
       }
 
       .reunion-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+        border-color: #93c5fd;
+        box-shadow: 0 18px 34px rgba(37, 99, 235, 0.10);
       }
 
       .reunion-nombre {
         font-size: 14px;
         font-weight: 600;
-        color: var(--text-secondary);
+        color: #475569;
         margin-bottom: 12px;
         white-space: nowrap;
         overflow: hidden;
@@ -905,12 +927,12 @@ import { User } from '../core/models/auth.model';
       }
 
       .selector-card {
-        background: rgba(24, 34, 53, 0.94);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 22px;
         padding: 20px 24px;
         margin-bottom: 24px;
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
       }
 
       .selector-label {
@@ -936,8 +958,8 @@ import { User } from '../core/models/auth.model';
         border: 1px solid var(--border-color);
         border-radius: 10px;
         font-size: 14px;
-        background: var(--bg-secondary);
-        color: var(--text-primary);
+        background: #ffffff;
+        color: #132033;
         cursor: pointer;
       }
 
@@ -964,9 +986,9 @@ import { User } from '../core/models/auth.model';
         align-items: center;
         justify-content: center;
         gap: 10px;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 22px;
       }
 
       .resumen-metrics {
@@ -977,10 +999,11 @@ import { User } from '../core/models/auth.model';
       }
 
       .resumen-metric {
-        background: rgba(24, 34, 53, 0.94);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 22px;
         padding: 20px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
       }
 
       .metric-blue   { border-left: 4px solid #3b82f6; }
@@ -996,18 +1019,19 @@ import { User } from '../core/models/auth.model';
       }
 
       .resumen-metric-value {
-        color: var(--text-primary);
+        color: #132033;
         font-size: 32px;
         font-weight: 700;
         margin-top: 8px;
       }
 
       .resumen-seccion {
-        background: rgba(24, 34, 53, 0.94);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 22px;
         overflow: hidden;
         margin-bottom: 16px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
       }
 
       .resumen-seccion-header {
@@ -1015,7 +1039,7 @@ import { User } from '../core/models/auth.model';
         align-items: center;
         gap: 12px;
         padding: 14px 20px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid #e2e8f0;
         font-size: 16px;
         font-weight: 700;
       }
@@ -1025,12 +1049,12 @@ import { User } from '../core/models/auth.model';
 
       .resumen-seccion-titulo {
         flex: 1;
-        color: var(--text-primary);
+        color: #132033;
       }
 
       .resumen-count {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
+        background: #edf2f7;
+        color: #334155;
         padding: 3px 12px;
         border-radius: 12px;
         font-size: 13px;

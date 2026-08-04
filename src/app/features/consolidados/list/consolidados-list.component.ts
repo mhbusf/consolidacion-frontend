@@ -230,9 +230,9 @@ import { User } from '../../../core/models/auth.model';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 28px 24px;
+      padding: 34px;
     }
 
     .header {
@@ -245,8 +245,10 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .header h2 {
-      font-size: 30px;
-      letter-spacing: -0.7px;
+      color: #132033;
+      font-size: 32px;
+      font-weight: 950;
+      letter-spacing: -1px;
     }
 
     .header-actions {
@@ -255,12 +257,12 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .filters {
-      background: rgba(24, 34, 53, 0.92);
-      padding: 20px;
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
+      background: #ffffff;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid #dce5ef;
       margin-bottom: 30px;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
     }
 
     .filter-group {
@@ -270,20 +272,21 @@ import { User } from '../../../core/models/auth.model';
     .filter-group label {
       display: block;
       margin-bottom: 5px;
-      font-weight: 500;
-      color: var(--text-secondary);
+      font-weight: 850;
+      color: #334155;
     }
 
     .form-control {
       width: 100%;
       max-width: 400px;
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
+      min-height: 46px;
+      padding: 12px 14px;
+      border: 1px solid #d7e0ea;
+      border-radius: 14px;
       font-size: 14px;
       box-sizing: border-box;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
+      background: #ffffff;
+      color: #132033;
     }
 
     .advanced-filters {
@@ -291,20 +294,20 @@ import { User } from '../../../core/models/auth.model';
       grid-template-columns: minmax(260px, 2fr) repeat(4, minmax(160px, 1fr)) auto;
       gap: 14px;
       align-items: end;
-      background: rgba(24, 34, 53, 0.92);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 16px;
+      background: #ffffff;
+      border: 1px solid #dce5ef;
+      border-radius: 24px;
+      padding: 18px;
       margin-bottom: 16px;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
     }
 
     .filter-field label {
       display: block;
       margin-bottom: 6px;
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 900;
+      color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
@@ -322,8 +325,9 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .results-count {
-      color: var(--text-secondary);
+      color: #64748b;
       font-size: 13px;
+      font-weight: 850;
       white-space: nowrap;
     }
 
@@ -335,24 +339,27 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .stat-card {
-      background: rgba(17, 24, 39, 0.72);
-      color: var(--text-primary);
+      background: #f8fafc;
+      color: #132033;
       padding: 20px;
-      border-radius: 14px;
+      border-radius: 20px;
       text-align: center;
-      border: 1px solid var(--border-color);
+      border: 1px solid #dce5ef;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.04);
     }
 
     .stat-number {
       font-size: 32px;
-      font-weight: bold;
+      font-weight: 950;
       margin-bottom: 5px;
-      color: var(--primary-light);
+      color: #1d4ed8;
+      letter-spacing: -1px;
     }
 
     .stat-label {
       font-size: 14px;
-      color: var(--text-secondary);
+      color: #64748b;
+      font-weight: 850;
     }
 
     .loading, .empty-state {
@@ -362,11 +369,11 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .table-container {
-      background: rgba(24, 34, 53, 0.92);
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid #dce5ef;
       overflow-x: auto;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
     }
 
     .data-table {
@@ -376,45 +383,45 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .data-table thead {
-      background: rgba(17, 24, 39, 0.9);
+      background: #f8fafc;
     }
 
     .data-table th {
       padding: 15px 16px;
       text-align: left;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-color);
+      letter-spacing: 0.08em;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
     }
 
     .data-table td {
       padding: 15px 16px;
-      color: var(--text-primary);
-      border-bottom: 1px solid var(--border-color);
+      color: #132033;
+      border-bottom: 1px solid #e2e8f0;
     }
 
     .data-table tbody tr:hover {
-      background: var(--bg-hover);
+      background: #eff6ff;
     }
 
     .data-table tbody tr:last-child td {
       border-bottom: none;
     }
 
-    .fw-bold { font-weight: 600; }
+    .fw-bold { font-weight: 850; }
 
     .nombre-link {
       cursor: pointer;
-      color: var(--primary-light);
+      color: #1d4ed8;
       text-decoration: none;
     }
 
     .user-badge {
       background: rgba(59, 130, 246, 0.15);
-      color: #3b82f6;
+      color: #1d4ed8;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 12px;
@@ -453,8 +460,8 @@ import { User } from '../../../core/models/auth.model';
 
     .badge-secondary {
       background: rgba(100, 116, 139, 0.1);
-      color: #94a3b8;
-      border: 1px solid #64748b;
+      color: #475569;
+      border: 1px solid #cbd5e1;
     }
 
     .badge-danger {
@@ -476,7 +483,7 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .stat-card-gdc:hover {
-      background: rgba(139, 92, 246, 0.1);
+      background: #f5f3ff;
       transform: translateY(-2px);
     }
 
@@ -498,30 +505,33 @@ import { User } from '../../../core/models/auth.model';
     }
 
     .btn-primary, .btn-secondary, .btn-success, .btn-info {
-      padding: 8px 16px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       cursor: pointer;
       font-size: 14px;
       transition: opacity 0.2s;
-      color: white;
-      font-weight: 700;
+      font-weight: 900;
     }
 
     .btn-primary {
-      background: var(--primary-light);
+      background: linear-gradient(135deg, #1d4ed8, #0f172a);
+      color: white;
     }
 
     .btn-secondary {
-      background: var(--secondary);
+      background: #edf2f7;
+      color: #334155;
     }
 
     .btn-success {
       background: var(--success);
+      color: white;
     }
 
     .btn-info {
       background: var(--info);
+      color: white;
     }
 
     button:hover {
