@@ -129,23 +129,26 @@ import { JwtResponse } from '../../../core/models/auth.model';
   styles: [
     `
       .navbar {
-        background: rgba(11, 17, 32, 0.88);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-        box-shadow: 0 18px 38px -28px rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(16px);
-        position: sticky;
+        position: fixed;
         top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        background: #08111f;
+        border-right: 1px solid rgba(148, 163, 184, 0.12);
+        box-shadow: none;
+        color: white;
         z-index: 1000;
       }
 
       .nav-container {
-        max-width: 1400px;
-        margin: 0 auto;
+        width: 100%;
+        height: 100%;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 28px;
-        min-height: 72px;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 24px;
+        min-height: 0;
       }
 
       /* Brand */
@@ -154,11 +157,12 @@ import { JwtResponse } from '../../../core/models/auth.model';
         text-decoration: none;
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 17px;
-        font-weight: 800;
+        gap: 12px;
+        font-size: 19px;
+        font-weight: 950;
         letter-spacing: -0.5px;
         transition: opacity 0.2s ease;
+        margin-bottom: 30px;
       }
 
       .nav-brand a:hover {
@@ -166,7 +170,22 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .brand-icon {
-        font-size: 24px;
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        font-size: 0;
+        border: 2px solid #ffffff;
+        border-radius: 999px 999px 12px 12px;
+        transform: scaleX(0.84);
+      }
+
+      .brand-icon::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: transparent;
       }
 
       .brand-text {
@@ -175,13 +194,14 @@ import { JwtResponse } from '../../../core/models/auth.model';
 
       /* Menu */
       .nav-menu {
-        display: flex;
+        display: grid;
         list-style: none;
         margin: 0;
         padding: 0;
-        gap: 6px;
+        gap: 8px;
         flex: 1;
-        justify-content: center;
+        justify-content: stretch;
+        align-content: start;
       }
 
       .mobile-menu-toggle {
@@ -211,17 +231,18 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-menu a {
-        color: rgba(226, 232, 240, 0.82);
+        color: #c8d4e3;
         text-decoration: none;
-        padding: 10px 14px;
-        border-radius: 10px;
+        padding: 13px 14px;
+        border-radius: 14px;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 14px;
-        font-weight: 700;
+        gap: 11px;
+        font-size: 16px;
+        font-weight: 850;
         white-space: nowrap;
+        border: 1px solid transparent;
       }
 
       .nav-group {
@@ -229,18 +250,20 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-group-toggle {
-        color: rgba(226, 232, 240, 0.82);
+        width: 100%;
+        color: #c8d4e3;
         background: transparent;
-        border: 0;
+        border: 1px solid transparent;
         text-decoration: none;
-        padding: 10px 14px;
-        border-radius: 10px;
+        padding: 13px 14px;
+        border-radius: 14px;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 14px;
-        font-weight: 700;
+        justify-content: space-between;
+        gap: 11px;
+        font-size: 16px;
+        font-weight: 850;
         white-space: nowrap;
         cursor: pointer;
       }
@@ -248,24 +271,24 @@ import { JwtResponse } from '../../../core/models/auth.model';
       .nav-group-toggle:hover,
       .nav-group.active .nav-group-toggle,
       .nav-group:focus-within .nav-group-toggle {
-        background: rgba(96, 165, 250, 0.14);
+        background: rgba(96, 165, 250, 0.15);
+        border-color: rgba(96, 165, 250, 0.24);
         color: white;
       }
 
       .nav-submenu {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        min-width: 220px;
-        background: #111827;
-        border: 1px solid rgba(148, 163, 184, 0.22);
+        position: static;
+        min-width: 0;
+        margin: 7px 0 4px 16px;
+        background: rgba(15, 23, 42, 0.62);
+        border: 1px solid rgba(148, 163, 184, 0.14);
         border-radius: 14px;
-        box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.9);
         overflow: hidden;
         opacity: 0;
         visibility: hidden;
-        transform: translateY(-4px);
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+        max-height: 0;
+        transform: none;
+        transition: opacity 0.2s ease, max-height 0.2s ease, visibility 0.2s ease;
         z-index: 1000;
       }
 
@@ -274,7 +297,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
       .nav-group:focus-within .nav-submenu {
         opacity: 1;
         visibility: visible;
-        transform: translateY(0);
+        max-height: 340px;
       }
 
       .nav-group.open .dropdown-arrow {
@@ -282,9 +305,11 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-submenu a {
-        border-radius: 0;
-        padding: 12px 16px;
-        color: #e2e8f0;
+        border-radius: 10px;
+        margin: 4px;
+        padding: 11px 12px;
+        color: #cbd5e1;
+        font-size: 14px;
       }
 
       .nav-submenu a.active {
@@ -292,23 +317,28 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .nav-menu a:hover {
-        background: rgba(96, 165, 250, 0.12);
+        background: rgba(96, 165, 250, 0.15);
+        border-color: rgba(96, 165, 250, 0.24);
         color: white;
       }
 
       .nav-menu a.active {
-        background: rgba(96, 165, 250, 0.16);
+        background: rgba(96, 165, 250, 0.15);
+        border-color: rgba(96, 165, 250, 0.24);
         color: white;
-        font-weight: 600;
+        font-weight: 900;
       }
 
       .menu-icon {
-        font-size: 16px;
+        min-width: 20px;
+        font-size: 18px;
+        filter: grayscale(1);
       }
 
       /* User Dropdown */
       .nav-user {
         position: relative;
+        margin-top: 18px;
       }
 
       .dropdown {
@@ -316,17 +346,18 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .dropdown-toggle {
-        background: rgba(96, 165, 250, 0.12);
-        border: 1px solid rgba(148, 163, 184, 0.24);
+        width: 100%;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.18);
         color: white;
-        padding: 9px 14px;
-        border-radius: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 900;
         transition: all 0.2s ease;
       }
 
@@ -367,7 +398,8 @@ import { JwtResponse } from '../../../core/models/auth.model';
       .dropdown-menu {
         position: absolute;
         right: 0;
-        top: calc(100% + 8px);
+        bottom: calc(100% + 8px);
+        top: auto;
         background: #111827;
         border-radius: 14px;
         box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.9);
@@ -393,7 +425,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
       }
 
       .dropdown-menu a.logout {
-        color: #ef4444;
+        color: #fecaca;
         border-top: 1px solid rgba(148, 163, 184, 0.18);
         cursor: pointer;
       }
@@ -404,14 +436,30 @@ import { JwtResponse } from '../../../core/models/auth.model';
 
       /* Responsive */
       @media (max-width: 768px) {
+        .navbar {
+          right: 0;
+          bottom: auto;
+          width: auto;
+          min-height: 70px;
+          border-right: 0;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
         .nav-container {
-          flex-wrap: wrap;
+          height: auto;
+          flex-flow: row wrap;
+          align-items: center;
           padding: 12px 16px;
           min-height: 64px;
         }
 
+        .nav-brand a {
+          margin-bottom: 0;
+        }
+
         .brand-text {
-          display: none;
+          display: inline-block;
+          font-size: 16px;
         }
 
         .mobile-menu-toggle {
@@ -422,6 +470,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
         .nav-menu {
           order: 3;
           width: 100%;
+          flex: 0 0 100%;
           margin-top: 12px;
           justify-content: flex-start;
           overflow: visible;
@@ -435,7 +484,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
         }
 
         .nav-menu.mobile-open {
-          display: flex;
+          display: grid;
         }
 
         .nav-menu a {
@@ -486,6 +535,26 @@ import { JwtResponse } from '../../../core/models/auth.model';
         }
 
         .user-name {
+          display: none;
+        }
+
+        .nav-user {
+          margin-top: 0;
+          margin-left: 8px;
+        }
+
+        .dropdown-toggle {
+          width: auto;
+        }
+
+        .dropdown-menu {
+          top: calc(100% + 8px);
+          bottom: auto;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .brand-text {
           display: none;
         }
       }

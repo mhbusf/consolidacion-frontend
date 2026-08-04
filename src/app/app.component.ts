@@ -19,6 +19,7 @@ import { NotificationComponent } from './shared/components/notification/notifica
       min-height: 100vh;
       background: var(--bg-primary);
       color: var(--text-primary);
+      transition: padding-left 0.2s ease;
     }
   `]
 })
