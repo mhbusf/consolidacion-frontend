@@ -52,7 +52,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   formControlName="username"
                   class="form-control"
                   autocomplete="username"
-                  placeholder="admin"
+                  placeholder="Ingresa tu usuario"
                 />
                 <span class="input-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -111,8 +111,6 @@ import { NotificationService } from '../../../core/services/notification.service
               {{ isLoading ? 'Iniciando sesion...' : 'Entrar' }}
             </button>
           </form>
-
-          <p class="initial-user">Usuario inicial Docker: admin / Admin123!</p>
         </div>
       </section>
     </div>
@@ -353,14 +351,6 @@ import { NotificationService } from '../../../core/services/notification.service
         width: 100%;
       }
 
-      .initial-user {
-        margin-top: 16px;
-        color: #111827;
-        font-size: 17px;
-        line-height: 1.35;
-        letter-spacing: -0.025em;
-      }
-
       @media (max-width: 1040px) {
         .login-shell {
           grid-template-columns: 1fr;
@@ -433,9 +423,6 @@ import { NotificationService } from '../../../core/services/notification.service
           font-size: 19px;
         }
 
-        .initial-user {
-          font-size: 15px;
-        }
       }
     `,
   ],
