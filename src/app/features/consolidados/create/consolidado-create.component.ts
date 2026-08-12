@@ -533,8 +533,6 @@ export class ConsolidadoCreateComponent implements OnInit {
       reunionId: Number(formValue.reunionId),
     };
 
-    console.log('Enviando Payload:', requestPayload);
-
     this.consolidadoService.crear(requestPayload).subscribe({
       next: () => {
         this.notificationService.success('Consolidado creado correctamente');

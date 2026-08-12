@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -99,6 +100,7 @@ import { NotificationService } from '../../../core/services/notification.service
   `]
 })
 export class NotificationComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   message = '';
   type: 'success' | 'error' | 'info' | 'warning' = 'info';
   private timeoutId: any;
@@ -106,7 +108,15 @@ export class NotificationComponent implements OnInit {
   constructor(private notificationService: NotificationService) {}
 
   ngOnInit() {
-    this.notificationService.notification$.subscribe(notification => {
+    this.destroyRef.onDestroy(() => {
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId);
+      }
+    });
+
+    this.notificationService.notification$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(notification => {
       this.message = notification.message;
       this.type = notification.type;
 

@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -516,6 +517,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
   ],
 })
 export class NavbarComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   currentUser$: Observable<JwtResponse | null>;
   isAdmin = false;
   dropdownOpen = false;
@@ -527,7 +529,7 @@ export class NavbarComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.currentUser$.subscribe(() => {
+    this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.isAdmin = this.authService.isAdmin();
     });
   }

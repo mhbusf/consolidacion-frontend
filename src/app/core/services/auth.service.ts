@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {
   LoginRequest,
@@ -133,10 +133,11 @@ export class AuthService {
   }
 
   assignRole(username: string, roleName: string): Observable<string> {
+    const params = new HttpParams().set('roleName', roleName);
     return this.http.put(
-      `${this.apiUrl}/users/${username}/roles?roleName=${roleName}`,
+      `${this.apiUrl}/users/${username}/roles`,
       {},
-      { responseType: 'text' }
+      { params, responseType: 'text' }
     );
   }
 
@@ -156,10 +157,11 @@ export class AuthService {
     username: string,
     newPassword: string
   ): Observable<string> {
+    const params = new HttpParams().set('newPassword', newPassword);
     return this.http.put(
-      `${this.apiUrl}/users/${username}/password?newPassword=${newPassword}`,
+      `${this.apiUrl}/users/${username}/password`,
       {},
-      { responseType: 'text' }
+      { params, responseType: 'text' }
     );
   }
 

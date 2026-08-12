@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -50,13 +51,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/change-password']);
       }
 
-      // Log para debugging
-      console.error('HTTP Error:', {
-        status: error.status,
-        message: error.message,
-        url: error.url,
-        error: error.error,
-      });
+      if (!environment.production) {
+        console.error('HTTP Error:', {
+          status: error.status,
+          message: error.message,
+          url: error.url,
+          error: error.error,
+        });
+      }
 
       return throwError(() => error);
     })

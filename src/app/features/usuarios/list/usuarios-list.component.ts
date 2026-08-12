@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -317,12 +318,13 @@ export class UsuariosListComponent implements OnInit {
   cargarDatos(): void {
     this.isLoading = true;
     
-    Promise.all([
-      this.authService.getAllUsers().toPromise(),
-      this.consolidadoService.obtenerTodos().toPromise()
-    ]).then(([usuarios, consolidados]) => {
-      this.usuarios = usuarios || [];
-      this.consolidados = consolidados || [];
+    forkJoin({
+      usuarios: this.authService.getAllUsers(),
+      consolidados: this.consolidadoService.obtenerTodos()
+    }).subscribe({
+      next: ({ usuarios, consolidados }) => {
+      this.usuarios = usuarios;
+      this.consolidados = consolidados;
       
       this.usuariosConStats = this.usuarios.map(user => {
         const creados = this.consolidados.filter(c => c.usuarioReporta === user.username).length;
@@ -336,10 +338,12 @@ export class UsuariosListComponent implements OnInit {
       });
       
       this.isLoading = false;
-    }).catch(error => {
+      },
+      error: (error) => {
       console.error('Error al cargar datos', error);
       this.notificationService.error('Error al cargar usuarios');
       this.isLoading = false;
+      }
     });
   }
 

@@ -461,12 +461,10 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
-        console.log('Login exitoso:', response);
         this.notificationService.success('Bienvenido');
         this.redirectUser(response.mustChangePassword);
       },
       error: (error) => {
-        console.error('Error en login:', error);
         this.isLoading = false;
 
         // Manejo detallado de errores

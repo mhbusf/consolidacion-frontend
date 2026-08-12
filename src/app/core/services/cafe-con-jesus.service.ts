@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment.prod';
+import { environment } from '../../../environments/environment';
 
 export const ETAPAS_CAFE = [
   { value: 'PRIMERA_INVITACION', label: 'Primera Invitación' },
@@ -103,7 +103,8 @@ export class CafeConJesusService {
   }
 
   asignarUsuario(id: number, username: string): Observable<string> {
-    return this.http.put(`${this.apiUrl}/${id}/asignar?username=${username}`, null, { responseType: 'text' });
+    const params = new HttpParams().set('username', username);
+    return this.http.put(`${this.apiUrl}/${id}/asignar`, null, { params, responseType: 'text' });
   }
 
   convertirAConsolidado(id: number): Observable<CafeConJesusResponse> {

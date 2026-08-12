@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Dashboard, ConsolidadoGDCHistorico } from '../models/consolidado.model';
-import { environment } from '../../../environments/environment.prod';
+import { environment } from '../../../environments/environment';
 import { CafeConJesusResponse } from './cafe-con-jesus.service';
 
 export interface ConsolidadoResumen {
@@ -29,7 +29,7 @@ export interface ConsolidadorResumen {
 })
 export class DashboardService {
   private apiUrl = `${environment.apiUrl}/dashboard`;
-  private historicoUrl = `${environment.apiUrl}/historico`;
+  private historicoUrl = `${environment.apiUrl}/consolidados/gdc-historico`;
 
   constructor(private http: HttpClient) {}
 

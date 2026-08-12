@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   ConsolidadoResponse,
   ConsolidadoRequest,
 } from '../models/consolidado.model';
-import { environment } from '../../../environments/environment.prod';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -28,17 +28,20 @@ export class ConsolidadoService {
   }
 
   asignarUsuario(id: number, username: string): Observable<string> {
+    const params = new HttpParams().set('username', username);
     return this.http.put(
-      `${this.apiUrl}/${id}/asignar?username=${username}`,
+      `${this.apiUrl}/${id}/asignar`,
       {},
-      { responseType: 'text' }
+      { params, responseType: 'text' }
     );
   }
 
   actualizarHitoTresSemanas(id: number, cumplido: boolean): Observable<ConsolidadoResponse> {
+    const params = new HttpParams().set('cumplido', cumplido);
     return this.http.put<ConsolidadoResponse>(
-      `${this.apiUrl}/${id}/hito-tres-semanas?cumplido=${cumplido}`,
-      {}
+      `${this.apiUrl}/${id}/hito-tres-semanas`,
+      {},
+      { params }
     );
   }
 
@@ -52,8 +55,7 @@ export class ConsolidadoService {
 
   // NUEVO MÉTODO PARA EL DASHBOARD INTERACTIVO
   filtrarPorTipo(tipo: string): Observable<ConsolidadoResponse[]> {
-    return this.http.get<ConsolidadoResponse[]>(
-      `${this.apiUrl}/filtrar?tipo=${tipo}`
-    );
+    const params = new HttpParams().set('tipo', tipo);
+    return this.http.get<ConsolidadoResponse[]>(`${this.apiUrl}/filtrar`, { params });
   }
 }
