@@ -52,7 +52,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   </a>
                   <a routerLink="/estadisticas-gdc" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📈</span>
-                    Estadísticas GDC
+                    Histórico de cierres
                   </a>
                 }
               </div>

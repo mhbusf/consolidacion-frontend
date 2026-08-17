@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
+  CerrarConsolidadoRequest,
+  ConsolidadoGDCHistorico,
   ConsolidadoResponse,
   ConsolidadoRequest,
 } from '../models/consolidado.model';
@@ -47,6 +49,18 @@ export class ConsolidadoService {
 
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  cerrar(id: number, request: CerrarConsolidadoRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/cerrar`, request);
+  }
+
+  obtenerCerrados(): Observable<ConsolidadoResponse[]> {
+    return this.http.get<ConsolidadoResponse[]>(`${this.apiUrl}/cerrados`);
+  }
+
+  obtenerHistorico(): Observable<ConsolidadoGDCHistorico[]> {
+    return this.http.get<ConsolidadoGDCHistorico[]>(`${this.apiUrl}/historico`);
   }
 
   obtenerCerradosGDC(): Observable<ConsolidadoResponse[]> {

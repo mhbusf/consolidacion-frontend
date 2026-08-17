@@ -29,7 +29,7 @@ export interface ConsolidadorResumen {
 })
 export class DashboardService {
   private apiUrl = `${environment.apiUrl}/dashboard`;
-  private historicoUrl = `${environment.apiUrl}/consolidados/gdc-historico`;
+  private historicoUrl = `${environment.apiUrl}/consolidados/historico`;
 
   constructor(private http: HttpClient) {}
 

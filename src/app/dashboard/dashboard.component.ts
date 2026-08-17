@@ -73,6 +73,18 @@ import { User } from '../core/models/auth.model';
               <div class="stat-label">Con GDC Asignado</div>
             </div>
           </div>
+          <!-- Cerrados sin GDC -->
+          <button
+            type="button"
+            class="stat-card stat-closed"
+            aria-label="Ver cierres sin GDC en el histórico"
+            (click)="verHistoricoCierres()">
+            <div class="stat-icon">📁</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ dashboard.consolidadosCerrados }}</div>
+              <div class="stat-label">Cerrados sin GDC</div>
+            </div>
+          </button>
           <!-- Cafe con Jesus -->
           <div class="stat-card stat-cafe" (click)="verCafeConJesus()">
             <div class="stat-icon">☕</div>
@@ -296,6 +308,9 @@ import { User } from '../core/models/auth.model';
 
       .stat-card {
         background: #ffffff;
+        width: 100%;
+        font: inherit;
+        text-align: left;
         border-radius: 24px;
         padding: 24px;
         display: flex;
@@ -1184,6 +1199,12 @@ export class DashboardComponent implements OnInit {
 
   verCafeConJesus(): void {
     this.router.navigate(['/cafe-con-jesus']);
+  }
+
+  verHistoricoCierres(): void {
+    this.router.navigate(['/consolidados'], {
+      queryParams: { vista: 'historico', tipo: 'CERRADO' },
+    });
   }
 
   verDetalle(id: number): void {

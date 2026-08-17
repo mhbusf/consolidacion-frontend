@@ -67,6 +67,12 @@
   flex-wrap: wrap;
 }
 
+.badge-closed {
+  background: rgba(71, 85, 105, 0.12);
+  color: #334155;
+  border: 1px solid #64748b;
+}
+
 .card-body {
   padding: 24px;
 }
@@ -99,6 +105,35 @@
   font-size: 15px;
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.closure-section {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid #64748b;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.closure-section h3 {
+  margin: 0 0 16px;
+  font-size: 17px;
+  color: var(--text-primary);
+}
+
+.closure-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.closure-comment {
+  grid-column: 1 / -1;
+}
+
+.closure-comment span {
+  white-space: pre-wrap;
 }
 
 .info-section {
@@ -175,16 +210,21 @@
    ACCIONES
    ================================================ */
 .actions-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid var(--border-color);
 }
 
-.btn-gdc {
+.btn-gdc,
+.btn-close-without-gdc {
   background: var(--primary-light);
   color: white;
   border: none;
   padding: 12px 30px;
+  min-height: 44px;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
@@ -196,6 +236,16 @@
   background: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-close-without-gdc {
+  background: #475569;
+}
+
+.btn-close-without-gdc:hover {
+  background: #334155;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.25);
 }
 
 /* ================================================
@@ -377,8 +427,8 @@
   cursor: pointer;
   color: var(--text-muted);
   padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -389,6 +439,11 @@
 .btn-close:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.btn-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .modal-body {
@@ -407,6 +462,60 @@
   font-size: 14px;
 }
 
+.modal-description {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.closure-reasons {
+  padding: 0;
+  margin: 0 0 20px;
+  border: 0;
+}
+
+.closure-reasons legend {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reason-options {
+  display: grid;
+  gap: 10px;
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.reason-option:hover,
+.reason-option-selected {
+  border-color: var(--primary-light);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.reason-option input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary-light);
+  flex: 0 0 auto;
+}
+
+.observations-group {
+  margin-bottom: 0;
+}
+
 .modal-footer {
   padding: 20px 30px;
   border-top: 1px solid var(--border-color);
@@ -414,6 +523,10 @@
   justify-content: flex-end;
   gap: 10px;
   background: var(--bg-secondary);
+}
+
+.modal-footer button {
+  min-height: 44px;
 }
 
 .btn-secondary {
@@ -454,6 +567,27 @@
   cursor: not-allowed;
 }
 
+.btn-close-record {
+  background: #475569;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-close-record:hover:not(:disabled) {
+  background: #334155;
+}
+
+.btn-close-record:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ================================================
    RESPONSIVE
    ================================================ */
@@ -466,9 +600,47 @@
     flex-direction: column;
   }
 
+  .closure-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .closure-comment {
+    grid-column: auto;
+  }
+
+  .hito-section {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn-hito {
+    min-height: 44px;
+  }
+
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-content {
+    width: 100%;
+  }
+
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions-section,
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .actions-section button,
+  .modal-footer button {
+    width: 100%;
+    min-height: 44px;
   }
 }

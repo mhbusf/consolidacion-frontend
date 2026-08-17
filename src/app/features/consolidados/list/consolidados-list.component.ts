@@ -1,7 +1,8 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
@@ -14,19 +15,19 @@ import { User } from '../../../core/models/auth.model';
   template: `
     <div class="container">
       <div class="header">
-        <h2>{{ vistaGDC ? 'Consolidados Cerrados con GDC' : 'Consolidados' }}</h2>
+        <h2>{{ vistaHistorico ? 'Histórico de cierres' : 'Consolidados' }}</h2>
         <div class="header-actions">
-          @if (isAdmin && vistaGDC) {
+          @if (isAdmin && vistaHistorico) {
             <button class="btn-secondary" (click)="volverActivos()">← Volver a Activos</button>
           }
-          @if (!vistaGDC) {
+          @if (!vistaHistorico) {
             <button class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
           }
         </div>
       </div>
     
       <!-- Filtros solo para Admin (vista activos) -->
-      @if (isAdmin && !vistaGDC) {
+      @if (isAdmin && !vistaHistorico) {
         <div class="filters">
           <div class="filter-group">
             <label>Filtrar por:</label>
@@ -58,34 +59,47 @@ import { User } from '../../../core/models/auth.model';
             </div>
             <div class="stat-card">
               <div class="stat-number">{{ totalConsolidados }}</div>
-              <div class="stat-label">Total General</div>
+              <div class="stat-label">Total activos</div>
             </div>
             <div class="stat-card">
               <div class="stat-number">{{ sinAsignar }}</div>
               <div class="stat-label">Sin Asignar</div>
             </div>
-            <div class="stat-card stat-card-gdc" (click)="verCerradosGDC()">
-              <div class="stat-number">{{ totalCerradosGDC }}</div>
-              <div class="stat-label">Cerrados con GDC</div>
+            <button
+              type="button"
+              class="stat-card stat-card-history"
+              aria-label="Ver histórico de cierres"
+              (click)="verHistorico()">
+              <div class="stat-number">{{ totalCerrados }}</div>
+              <div class="stat-label">Histórico de cierres</div>
               <div class="stat-hint">Click para ver</div>
-            </div>
+            </button>
           </div>
         </div>
       }
     
       @if (isLoading) {
         <div class="loading">
-          Cargando consolidados...
+          {{ vistaHistorico ? 'Cargando histórico de cierres...' : 'Cargando consolidados...' }}
+        </div>
+      }
+
+      @if (!isLoading && errorCarga) {
+        <div class="error-state">
+          <p>{{ errorCarga }}</p>
+          <button type="button" class="btn-secondary" (click)="vistaHistorico ? cargarHistorico() : cargarDatos()">
+            Reintentar
+          </button>
         </div>
       }
     
-      @if (!isLoading && consolidados.length === 0) {
+      @if (!isLoading && !errorCarga && consolidados.length === 0) {
         <div class="empty-state">
           <p>No hay consolidados {{ filtroTexto }}</p>
         </div>
       }
      
-      @if (!isLoading && consolidados.length > 0) {
+      @if (!isLoading && !errorCarga && consolidados.length > 0) {
         <div class="advanced-filters">
           <div class="filter-field filter-field-search">
             <label>Buscar</label>
@@ -98,7 +112,7 @@ import { User } from '../../../core/models/auth.model';
           </div>
 
           <div class="filter-field">
-            <label>Estado</label>
+            <label>{{ vistaHistorico ? 'Tipo de cierre' : 'Estado' }}</label>
             <select [(ngModel)]="estadoFiltro" class="form-control">
               <option value="todos">Todos</option>
               @for (estado of estadosDisponibles; track estado) {
@@ -107,7 +121,7 @@ import { User } from '../../../core/models/auth.model';
             </select>
           </div>
 
-          @if (!vistaGDC) {
+          @if (!vistaHistorico) {
             <div class="filter-field">
               <label>Asignación</label>
               <select [(ngModel)]="asignacionFiltro" class="form-control">
@@ -120,7 +134,7 @@ import { User } from '../../../core/models/auth.model';
             </div>
           }
 
-          @if (isAdmin && !vistaGDC) {
+          @if (isAdmin && !vistaHistorico) {
             <div class="filter-field">
               <label>Usuario</label>
               <select [(ngModel)]="usuarioAvanzadoFiltro" class="form-control">
@@ -133,7 +147,7 @@ import { User } from '../../../core/models/auth.model';
           }
 
           <div class="filter-field">
-            <label>Fecha</label>
+            <label>{{ vistaHistorico ? 'Fecha de cierre' : 'Fecha' }}</label>
             <select [(ngModel)]="fechaFiltro" class="form-control">
               <option value="todos">Todas</option>
               <option value="hoy">Hoy</option>
@@ -168,14 +182,22 @@ import { User } from '../../../core/models/auth.model';
                   <th>Fecha ingreso</th>
                   <th>Reportado por</th>
                   <th>Asignado por</th>
-                  <th>{{ vistaGDC ? 'GDC' : 'Asignado a' }}</th>
+                  @if (vistaHistorico) {
+                    <th>Tipo de cierre</th>
+                    <th>GDC</th>
+                    <th>Fecha cierre</th>
+                    <th>Comentario cierre</th>
+                  }
+                  @if (!vistaHistorico) {
+                    <th>Asignado a</th>
+                    <th>Estado</th>
+                  }
                   <th>3 semanas</th>
-                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                @for (c of consolidadosFiltrados; track c) {
+                @for (c of consolidadosFiltrados; track c.id) {
                   <tr>
                     <td data-label="Nombre" class="fw-bold nombre-link" (click)="verDetalle(c.id)">{{ c.nombre }}</td>
                     <td data-label="Teléfono">{{ c.telefono }}</td>
@@ -185,37 +207,50 @@ import { User } from '../../../core/models/auth.model';
                     <td data-label="Fecha ingreso">{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td data-label="Reportado por">{{ c.usuarioReporta || '—' }}</td>
                     <td data-label="Asignado por">{{ c.usuarioAsigno || '—' }}</td>
-                    <td [attr.data-label]="vistaGDC ? 'GDC' : 'Asignado a'">
-                      @if (vistaGDC) {
-                        <span class="badge badge-gdc">{{ c.gdc || '—' }}</span>
-                      }
-                      @if (!vistaGDC && c.usuarioAsignado) {
-                        <span class="user-badge">{{ c.usuarioAsignado }}</span>
-                      }
-                      @if (!vistaGDC && !c.usuarioAsignado) {
-                        <span class="badge badge-warning">Sin asignar</span>
-                      }
-                    </td>
+                    @if (vistaHistorico) {
+                      <td data-label="Tipo de cierre">
+                        <span class="badge" [ngClass]="getTipoCierreClass(c.estado)">
+                          {{ getTipoCierreLabel(c.estado) }}
+                        </span>
+                      </td>
+                      <td data-label="GDC">
+                        @if (c.estado === 'GDC') {
+                          <span class="badge badge-gdc">{{ c.gdc || 'No registrado' }}</span>
+                        } @else {
+                          <span class="text-muted">No aplica</span>
+                        }
+                      </td>
+                      <td data-label="Fecha de cierre">
+                        {{ c.fechaCierre ? (c.fechaCierre | date:'dd/MM/yyyy HH:mm') : '—' }}
+                      </td>
+                      <td data-label="Comentario de cierre" class="comentario-cell">
+                        {{ c.comentarioCierre || '—' }}
+                      </td>
+                    }
+                    @if (!vistaHistorico) {
+                      <td data-label="Asignado a">
+                        @if (c.usuarioAsignado) {
+                          <span class="user-badge">{{ c.usuarioAsignado }}</span>
+                        } @else {
+                          <span class="badge badge-warning">Sin asignar</span>
+                        }
+                      </td>
+                      <td data-label="Estado">
+                        <span class="badge" [ngClass]="getEstadoClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
+                      </td>
+                    }
                     <td data-label="3 semanas">
                       <span class="badge" [ngClass]="c.hitoTresSemanasCumplido ? 'badge-success' : 'badge-secondary'">
                         {{ c.hitoTresSemanasCumplido ? 'Cumplido' : 'Pendiente' }}
                       </span>
                     </td>
-                    <td data-label="Estado">
-                      @if (vistaGDC && c.comentarioCierre) {
-                        <span class="comentario-cell">{{ c.comentarioCierre }}</span>
-                      }
-                      @if (!vistaGDC) {
-                        <span class="badge" [ngClass]="getEstadoClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
-                      }
-                    </td>
                     <td data-label="Acciones" class="actions-cell">
                       <div class="row-actions">
                         <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
-                        @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
+                        @if (isAdmin && !vistaHistorico && !c.usuarioAsignado) {
                           <button class="btn-success" (click)="asignar(c.id)">Asignar</button>
                         }
-                        @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
+                        @if (isAdmin && !vistaHistorico && c.usuarioAsignado) {
                           <button class="btn-info" (click)="reasignar(c.id)">Reasignar</button>
                         }
                       </div>
@@ -343,6 +378,8 @@ import { User } from '../../../core/models/auth.model';
     .stat-card {
       background: #f8fafc;
       color: #132033;
+      font: inherit;
+      width: 100%;
       padding: 20px;
       border-radius: 20px;
       text-align: center;
@@ -364,10 +401,15 @@ import { User } from '../../../core/models/auth.model';
       font-weight: 850;
     }
 
-    .loading, .empty-state {
+    .loading, .empty-state, .error-state {
       text-align: center;
       padding: 40px;
       color: var(--text-muted);
+    }
+
+    .error-state p {
+      margin-bottom: 12px;
+      color: var(--danger);
     }
 
     .table-container {
@@ -478,18 +520,24 @@ import { User } from '../../../core/models/auth.model';
       border: 1px solid #8b5cf6;
     }
 
-    .stat-card-gdc {
+    .badge-closed {
+      background: rgba(71, 85, 105, 0.1);
+      color: #334155;
+      border: 1px solid #64748b;
+    }
+
+    .stat-card-history {
       cursor: pointer;
       border-color: #8b5cf6;
       transition: background 0.2s, transform 0.2s;
     }
 
-    .stat-card-gdc:hover {
+    .stat-card-history:hover {
       background: #f5f3ff;
       transform: translateY(-2px);
     }
 
-    .stat-card-gdc .stat-number {
+    .stat-card-history .stat-number {
       color: #8b5cf6;
     }
 
@@ -671,7 +719,11 @@ import { User } from '../../../core/models/auth.model';
         border-bottom: 1px solid #e2e8f0;
       }
 
-      .data-table td[data-label="Estado"] {
+      .data-table td[data-label="3 semanas"] {
+        border-bottom: none;
+      }
+
+      .data-table td[data-label="Comentario de cierre"] {
         border-bottom: none;
       }
 
@@ -708,13 +760,14 @@ import { User } from '../../../core/models/auth.model';
   `]
 })
 export class ConsolidadosListComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   consolidados: ConsolidadoResponse[] = [];
   consolidadosTodos: ConsolidadoResponse[] = [];
   usuarios: User[] = [];
   isLoading = true;
   isAdmin = false;
   currentUsername = '';
-  vistaGDC = false;
+  vistaHistorico = false;
 
   filtroSeleccionado = 'todos';
   usuarioFiltro = '';
@@ -726,26 +779,44 @@ export class ConsolidadosListComponent implements OnInit {
 
   totalConsolidados = 0;
   sinAsignar = 0;
-  totalCerradosGDC = 0;
+  totalCerrados = 0;
+  errorCarga = '';
 
   constructor(
     private consolidadoService: ConsolidadoService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
-    this.authService.currentUser$.subscribe(user => {
-      this.isAdmin = user?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false;
-      this.currentUsername = user?.username ?? '';
-    });
+    this.authService.currentUser$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(user => {
+        this.isAdmin = user?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false;
+        this.currentUsername = user?.username ?? '';
+      });
   }
 
   ngOnInit(): void {
-    this.cargarDatos();
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        if (this.isAdmin && params.get('vista') === 'historico') {
+          const tipo = params.get('tipo');
+          this.estadoFiltro = tipo === 'GDC' || tipo === 'CERRADO' ? tipo : 'todos';
+          this.busqueda = params.get('busqueda') || '';
+          this.fechaFiltro = params.get('fecha') || 'todos';
+          this.cargarHistorico();
+          return;
+        }
+
+        this.cargarDatos();
+      });
   }
 
   cargarDatos(): void {
     this.isLoading = true;
-    this.vistaGDC = false;
+    this.vistaHistorico = false;
+    this.errorCarga = '';
 
     this.consolidadoService.obtenerTodos().subscribe({
       next: (data) => {
@@ -757,6 +828,7 @@ export class ConsolidadosListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar consolidados', error);
+        this.errorCarga = error?.error?.message || 'No fue posible cargar los consolidados.';
         this.isLoading = false;
       }
     });
@@ -767,32 +839,49 @@ export class ConsolidadosListComponent implements OnInit {
         error: (error) => { console.error('Error al cargar usuarios', error); }
       });
 
-      this.consolidadoService.obtenerCerradosGDC().subscribe({
-        next: (data) => { this.totalCerradosGDC = data.length; },
-        error: () => { this.totalCerradosGDC = 0; }
+      this.consolidadoService.obtenerCerrados().subscribe({
+        next: (data) => { this.totalCerrados = data.length; },
+        error: () => { this.totalCerrados = 0; }
       });
     }
   }
 
-  verCerradosGDC(): void {
+  verHistorico(): void {
+    this.limpiarFiltrosAvanzados();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { vista: 'historico', tipo: null, busqueda: null, fecha: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  cargarHistorico(): void {
     this.isLoading = true;
-    this.vistaGDC = true;
-    this.consolidadoService.obtenerCerradosGDC().subscribe({
+    this.vistaHistorico = true;
+    this.errorCarga = '';
+    this.consolidadoService.obtenerCerrados().subscribe({
       next: (data) => {
         this.consolidados = data;
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar cerrados GDC', error);
+        this.consolidados = [];
+        console.error('Error al cargar el histórico de cierres', error);
+        this.errorCarga = error?.error?.message || 'No fue posible cargar el histórico de cierres.';
         this.isLoading = false;
       }
     });
   }
 
   volverActivos(): void {
-    this.vistaGDC = false;
     this.filtroSeleccionado = 'todos';
-    this.consolidados = this.consolidadosTodos;
+    this.usuarioFiltro = '';
+    this.limpiarFiltrosAvanzados();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { vista: null, tipo: null, busqueda: null, fecha: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   aplicarFiltro(): void {
@@ -856,6 +945,7 @@ export class ConsolidadosListComponent implements OnInit {
         c.gdc,
         c.comentarioCierre,
         c.fechaIngreso,
+        c.fechaCierre,
       ].some(value => (value || '').toLowerCase().includes(term));
 
       const matchesEstado = this.estadoFiltro === 'todos' || c.estado === this.estadoFiltro;
@@ -864,7 +954,7 @@ export class ConsolidadosListComponent implements OnInit {
         c.usuarioAsignado === this.usuarioAvanzadoFiltro ||
         c.usuarioReporta === this.usuarioAvanzadoFiltro ||
         c.usuarioAsigno === this.usuarioAvanzadoFiltro;
-      const matchesFecha = this.matchesFecha(c.fechaIngreso);
+      const matchesFecha = this.matchesFecha(this.vistaHistorico ? c.fechaCierre : c.fechaIngreso);
 
       return matchesText && matchesEstado && matchesAsignacion && matchesUsuario && matchesFecha;
     });
@@ -883,8 +973,8 @@ export class ConsolidadosListComponent implements OnInit {
       PENDIENTE: 'Pendiente',
       ASIGNADO: 'Asignado',
       EN_PROCESO: 'En proceso',
-      GDC: 'En GDC',
-      CERRADO: 'Cerrado',
+      GDC: 'Cerrado con GDC',
+      CERRADO: 'Cerrado sin GDC',
     };
     return estado ? labels[estado] || estado : '—';
   }
@@ -898,6 +988,16 @@ export class ConsolidadosListComponent implements OnInit {
       CERRADO: 'badge-success',
     };
     return estado ? classes[estado] || 'badge-secondary' : 'badge-secondary';
+  }
+
+  getTipoCierreLabel(estado?: string): string {
+    if (estado === 'GDC') return 'GDC';
+    if (estado === 'CERRADO') return 'Cierre sin GDC';
+    return '—';
+  }
+
+  getTipoCierreClass(estado?: string): string {
+    return estado === 'GDC' ? 'badge-gdc' : 'badge-closed';
   }
 
   private matchesAsignacion(c: ConsolidadoResponse): boolean {
@@ -915,26 +1015,31 @@ export class ConsolidadosListComponent implements OnInit {
     }
   }
 
-  private matchesFecha(fechaIngreso?: string): boolean {
-    if (this.fechaFiltro === 'todos' || !fechaIngreso) return true;
+  private matchesFecha(fechaValor?: string | null): boolean {
+    if (this.fechaFiltro === 'todos') return true;
+    if (!fechaValor) return false;
 
-    const fecha = new Date(fechaIngreso);
+    const fecha = new Date(fechaValor);
     if (Number.isNaN(fecha.getTime())) return false;
 
     const hoy = new Date();
     const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const inicioManana = new Date(inicioHoy);
+    inicioManana.setDate(inicioManana.getDate() + 1);
 
     if (this.fechaFiltro === 'hoy') {
-      return fecha >= inicioHoy;
+      return fecha >= inicioHoy && fecha < inicioManana;
     }
 
     const dias = this.fechaFiltro === '7-dias' ? 7 : this.fechaFiltro === '30-dias' ? 30 : 90;
     const limite = new Date(inicioHoy);
-    limite.setDate(limite.getDate() - dias);
-    return fecha >= limite;
+    limite.setDate(limite.getDate() - (dias - 1));
+    return fecha >= limite && fecha < inicioManana;
   }
 
   get filtroTexto(): string {
+    if (this.vistaHistorico) return 'en el histórico de cierres';
+
     switch (this.filtroSeleccionado) {
       case 'sin-asignar': return 'sin asignar';
       case 'mis-consolidados': return 'creados por ti';
@@ -945,7 +1050,14 @@ export class ConsolidadosListComponent implements OnInit {
   }
 
   verDetalle(id: number): void {
-    this.router.navigate(['/consolidados', id]);
+    this.router.navigate(['/consolidados', id], {
+      queryParams: this.vistaHistorico ? {
+        origen: 'historico',
+        tipo: this.estadoFiltro !== 'todos' ? this.estadoFiltro : undefined,
+        busqueda: this.busqueda || undefined,
+        fecha: this.fechaFiltro !== 'todos' ? this.fechaFiltro : undefined,
+      } : undefined,
+    });
   }
 
   crearNuevo(): void {

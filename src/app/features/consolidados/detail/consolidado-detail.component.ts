@@ -1,11 +1,15 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ComentarioService } from '../../../core/services/comentario.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
+import {
+  CerrarConsolidadoRequest,
+  ConsolidadoResponse,
+  MotivoCierre,
+} from '../../../core/models/consolidado.model';
 import { ComentarioResponse } from '../../../core/models/comentario.model';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -18,6 +22,8 @@ import { NotificationService } from '../../../core/services/notification.service
   styleUrl: './consolidado-detail.component.css'
 })
 export class ConsolidadoDetailComponent implements OnInit {
+  @ViewChild('modalDialog') modalDialog?: ElementRef<HTMLElement>;
+
   consolidado: ConsolidadoResponse | null = null;
   comentarios: ComentarioResponse[] = [];
   nuevoComentario = '';
@@ -25,12 +31,22 @@ export class ConsolidadoDetailComponent implements OnInit {
   isLoadingComentario = false;
   isUpdatingHito = false;
   isAdmin = false;
+  origenHistorico = false;
+  tipoHistorico = '';
+  busquedaHistorico = '';
+  fechaHistorico = '';
 
   // Modal de cierre con GDC
   mostrarModalGDC = false;
   gdcNumero = '';
   comentarioCierre = '';
   isClosing = false;
+
+  // Modal de cierre sin GDC
+  mostrarModalCierre = false;
+  motivoCierre: MotivoCierre | null = null;
+  observacionCierre = '';
+  private modalTrigger: HTMLElement | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -45,6 +61,10 @@ export class ConsolidadoDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.origenHistorico = this.route.snapshot.queryParamMap.get('origen') === 'historico';
+    this.tipoHistorico = this.route.snapshot.queryParamMap.get('tipo') || '';
+    this.busquedaHistorico = this.route.snapshot.queryParamMap.get('busqueda') || '';
+    this.fechaHistorico = this.route.snapshot.queryParamMap.get('fecha') || '';
     this.cargarDatos(id);
   }
 
@@ -58,7 +78,9 @@ export class ConsolidadoDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar consolidado', error);
+        this.notificationService.error(error?.error?.message || 'No fue posible cargar el consolidado');
         this.isLoading = false;
+        this.volver();
       }
     });
   }
@@ -77,7 +99,7 @@ export class ConsolidadoDetailComponent implements OnInit {
   }
 
   agregarComentario(): void {
-    if (!this.consolidado || !this.nuevoComentario.trim()) {
+    if (!this.consolidado || this.esTerminal() || !this.nuevoComentario.trim()) {
       return;
     }
 
@@ -93,22 +115,44 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.notificationService.success('Comentario agregado');
       },
       error: (error) => {
-        this.notificationService.error('Error al agregar comentario');
+        this.notificationService.error(error?.error?.message || 'Error al agregar comentario');
         this.isLoadingComentario = false;
       }
     });
   }
 
-  abrirModalGDC(): void {
+  abrirModalGDC(event: Event): void {
+    this.guardarTrigger(event);
     this.mostrarModalGDC = true;
     this.gdcNumero = '';
     this.comentarioCierre = '';
+    this.enfocarModal();
   }
 
   cerrarModalGDC(): void {
+    if (this.isClosing) return;
+
     this.mostrarModalGDC = false;
     this.gdcNumero = '';
     this.comentarioCierre = '';
+    this.restaurarFoco();
+  }
+
+  abrirModalCierre(event: Event): void {
+    this.guardarTrigger(event);
+    this.mostrarModalCierre = true;
+    this.motivoCierre = null;
+    this.observacionCierre = '';
+    this.enfocarModal();
+  }
+
+  cerrarModalCierre(): void {
+    if (this.isClosing) return;
+
+    this.mostrarModalCierre = false;
+    this.motivoCierre = null;
+    this.observacionCierre = '';
+    this.restaurarFoco();
   }
 
   cerrarConGDC(): void {
@@ -134,15 +178,43 @@ export class ConsolidadoDetailComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.notificationService.error('Error al cerrar con GDC');
+        this.notificationService.error(error?.error?.message || 'Error al cerrar con GDC');
         this.isClosing = false;
         console.error(error);
       }
     });
   }
 
+  cerrarSinGDC(): void {
+    if (!this.consolidado || !this.motivoCierre) {
+      this.notificationService.error('Debes seleccionar un motivo de cierre');
+      return;
+    }
+
+    const comentario = this.observacionCierre.trim();
+    const request: CerrarConsolidadoRequest = {
+      motivo: this.motivoCierre,
+      ...(comentario ? { comentario } : {}),
+    };
+
+    this.isClosing = true;
+    this.consolidadoService.cerrar(this.consolidado.id, request).subscribe({
+      next: () => {
+        this.isClosing = false;
+        this.cerrarModalCierre();
+        this.notificationService.success('Consolidado cerrado sin GDC exitosamente');
+        this.router.navigate(['/consolidados']);
+      },
+      error: (error) => {
+        this.isClosing = false;
+        this.notificationService.error(error?.error?.message || 'Error al cerrar el consolidado');
+        console.error(error);
+      }
+    });
+  }
+
   actualizarHitoTresSemanas(cumplido: boolean): void {
-    if (!this.consolidado || this.isUpdatingHito) return;
+    if (!this.consolidado || this.esTerminal() || this.isUpdatingHito) return;
 
     this.isUpdatingHito = true;
     this.consolidadoService.actualizarHitoTresSemanas(this.consolidado.id, cumplido).subscribe({
@@ -153,19 +225,78 @@ export class ConsolidadoDetailComponent implements OnInit {
       },
       error: (error) => {
         this.isUpdatingHito = false;
-        this.notificationService.error('Error al actualizar el hito de 3 semanas');
+        this.notificationService.error(error?.error?.message || 'Error al actualizar el hito de 3 semanas');
         console.error(error);
       }
     });
   }
 
   volver(): void {
-    this.router.navigate(['/consolidados']);
+    this.router.navigate(['/consolidados'], {
+      queryParams: this.origenHistorico ? {
+        vista: 'historico',
+        tipo: this.tipoHistorico || undefined,
+        busqueda: this.busquedaHistorico || undefined,
+        fecha: this.fechaHistorico || undefined,
+      } : undefined,
+    });
   }
 
   puedeSerCerrado(): boolean {
-    return this.isAdmin && 
-           this.consolidado?.estado !== 'GDC' && 
-           this.consolidado?.estado !== 'CERRADO';
+    return this.isAdmin && !this.esTerminal();
+  }
+
+  esTerminal(): boolean {
+    return this.consolidado?.estado === 'GDC' || this.consolidado?.estado === 'CERRADO';
+  }
+
+  manejarTecladoModal(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.mostrarModalGDC ? this.cerrarModalGDC() : this.cerrarModalCierre();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const dialog = this.modalDialog?.nativeElement;
+    if (!dialog) return;
+
+    const focusables = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ));
+    if (focusables.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !dialog.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  private guardarTrigger(event: Event): void {
+    this.modalTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  }
+
+  private enfocarModal(): void {
+    setTimeout(() => {
+      const dialog = this.modalDialog?.nativeElement;
+      const autofocus = dialog?.querySelector<HTMLElement>('[autofocus]');
+      (autofocus || dialog)?.focus();
+    });
+  }
+
+  private restaurarFoco(): void {
+    const trigger = this.modalTrigger;
+    this.modalTrigger = null;
+    setTimeout(() => trigger?.focus());
   }
 }

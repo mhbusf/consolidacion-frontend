@@ -48,6 +48,15 @@ export enum EstadoConsolidado {
   CERRADO = 'CERRADO',
 }
 
+export type MotivoCierre = 'NO_QUIERE_CONTACTO' | 'NO_CONTESTA';
+
+export interface CerrarConsolidadoRequest {
+  motivo: MotivoCierre;
+  comentario?: string;
+}
+
+export type TipoCierre = 'GDC' | 'CERRADO';
+
 // Request para crear consolidado
 export interface ConsolidadoRequest {
   nombre: string;
@@ -74,9 +83,9 @@ export interface ConsolidadoResponse {
   fechaIngreso: string;
   estado?: string;
   hitoTresSemanasCumplido: boolean;
-  gdc?: string;
-  fechaCierre?: string;
-  comentarioCierre?: string;
+  gdc: string | null;
+  fechaCierre: string | null;
+  comentarioCierre: string | null;
   fechaActualizacion?: string;
 }
 
@@ -113,22 +122,23 @@ export interface ReunionEstadistica {
 export interface ConsolidadoGDCHistorico {
   id: number;
   consolidadoId: number;
-  nombre: string;
-  telefono: string;
-  edad: number;
-  quienInvito: string;
-  motivoOracion: string;
-  gdc: string;
-  comentarioCierre: string;
-  fechaCierre: string;
-  fechaIngresoDate: string;
-  usuarioAsignado: string;
-  usuarioReporta: string;
-  comunaNombre: string;
-  region: string;
-  provincia: string;
-  reunionNombre: string;
-  fechaRegistro: string;
+  nombre: string | null;
+  telefono: string | null;
+  edad: number | null;
+  quienInvito: string | null;
+  motivoOracion: string | null;
+  gdc: string | null;
+  tipoCierre: TipoCierre;
+  comentarioCierre: string | null;
+  fechaCierre: string | null;
+  fechaIngresoDate: string | null;
+  usuarioAsignado: string | null;
+  usuarioReporta: string | null;
+  comunaNombre: string | null;
+  region: string | null;
+  provincia: string | null;
+  reunionNombre: string | null;
+  fechaRegistro: string | null;
 }
 
 export interface Dashboard {

@@ -27,7 +27,12 @@
             }
             @if (consolidado.estado === 'GDC') {
               <span class="badge badge-success">
-                ✅ Con GDC: {{ consolidado.gdc }}
+                Cerrado con GDC: {{ consolidado.gdc || 'Sin número' }}
+              </span>
+            }
+            @if (consolidado.estado === 'CERRADO') {
+              <span class="badge badge-closed">
+                CERRADO
               </span>
             }
           </div>
@@ -84,28 +89,58 @@
               </span>
             </div>
           </div>
-          <div class="hito-section">
-            <div>
-              <strong>Reunión semanal por 3 semanas</strong>
-              <p>Marca este hito cuando se haya cumplido el seguimiento semanal durante tres semanas.</p>
+          @if (esTerminal()) {
+            <section class="closure-section" aria-label="Información de cierre">
+              <h3>Información de cierre</h3>
+              <div class="closure-grid">
+                <div class="info-item">
+                  <strong>Tipo de cierre:</strong>
+                  <span>{{ consolidado.estado === 'GDC' ? 'GDC' : 'Cierre sin GDC' }}</span>
+                </div>
+                @if (consolidado.estado === 'GDC') {
+                  <div class="info-item">
+                    <strong>GDC:</strong>
+                    <span>{{ consolidado.gdc || 'No registrado' }}</span>
+                  </div>
+                }
+                <div class="info-item">
+                  <strong>Fecha de cierre:</strong>
+                  <span>{{ consolidado.fechaCierre ? (consolidado.fechaCierre | date:'dd/MM/yyyy HH:mm') : 'No registrada' }}</span>
+                </div>
+                <div class="info-item closure-comment">
+                  <strong>Motivo / comentario de cierre:</strong>
+                  <span>{{ consolidado.comentarioCierre || 'Sin comentario' }}</span>
+                </div>
+              </div>
+            </section>
+          }
+          @if (!esTerminal()) {
+            <div class="hito-section">
+              <div>
+                <strong>Reunión semanal por 3 semanas</strong>
+                <p>Marca este hito cuando se haya cumplido el seguimiento semanal durante tres semanas.</p>
+              </div>
+              <button
+                class="btn-hito"
+                [class.btn-hito-completed]="consolidado.hitoTresSemanasCumplido"
+                (click)="actualizarHitoTresSemanas(!consolidado.hitoTresSemanasCumplido)"
+                [disabled]="isUpdatingHito">
+                {{ isUpdatingHito ? 'Guardando...' : (consolidado.hitoTresSemanasCumplido ? 'Desmarcar hito' : 'Marcar hito cumplido') }}
+              </button>
             </div>
-            <button
-              class="btn-hito"
-              [class.btn-hito-completed]="consolidado.hitoTresSemanasCumplido"
-              (click)="actualizarHitoTresSemanas(!consolidado.hitoTresSemanasCumplido)"
-              [disabled]="isUpdatingHito">
-              {{ isUpdatingHito ? 'Guardando...' : (consolidado.hitoTresSemanasCumplido ? 'Desmarcar hito' : 'Marcar hito cumplido') }}
-            </button>
-          </div>
+          }
           <div class="info-section">
             <strong>Motivo de Oración:</strong>
             <p>{{ consolidado.motivoOracion }}</p>
           </div>
-          <!-- Botón para cerrar con GDC (solo ADMIN) -->
+          <!-- Acciones de cierre (solo ADMIN) -->
           @if (puedeSerCerrado()) {
             <div class="actions-section">
-              <button class="btn-gdc" (click)="abrirModalGDC()">
+              <button class="btn-gdc" (click)="abrirModalGDC($event)">
                 📝 Cerrar con GDC
+              </button>
+              <button class="btn-close-without-gdc" (click)="abrirModalCierre($event)">
+                Cerrar sin GDC
               </button>
             </div>
           }
@@ -113,23 +148,25 @@
       </div>
       <div class="comentarios-section">
         <h3>Comentarios y Seguimiento</h3>
-        <div class="comentario-form">
-          <textarea
-            [(ngModel)]="nuevoComentario"
-            placeholder="Escribe un comentario de seguimiento..."
-            rows="3"
-          class="form-control"></textarea>
-          <button
-            class="btn-primary"
-            (click)="agregarComentario()"
-            [disabled]="!nuevoComentario.trim() || isLoadingComentario">
-            {{ isLoadingComentario ? 'Guardando...' : 'Agregar Comentario' }}
-          </button>
-        </div>
+        @if (!esTerminal()) {
+          <div class="comentario-form">
+            <textarea
+              [(ngModel)]="nuevoComentario"
+              placeholder="Escribe un comentario de seguimiento..."
+              rows="3"
+              class="form-control"></textarea>
+            <button
+              class="btn-primary"
+              (click)="agregarComentario()"
+              [disabled]="!nuevoComentario.trim() || isLoadingComentario">
+              {{ isLoadingComentario ? 'Guardando...' : 'Agregar Comentario' }}
+            </button>
+          </div>
+        }
         <div class="comentarios-list">
           @if (comentarios.length === 0) {
             <div class="empty-state">
-              No hay comentarios aún. ¡Sé el primero en comentar!
+              {{ esTerminal() ? 'No hay comentarios registrados.' : 'No hay comentarios aún. ¡Sé el primero en comentar!' }}
             </div>
           }
           @for (com of comentarios; track com) {
@@ -150,10 +187,24 @@
 <!-- Modal para cerrar con GDC -->
 @if (mostrarModalGDC) {
   <div class="modal-overlay" (click)="cerrarModalGDC()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div
+      #modalDialog
+      class="modal-content"
+      tabindex="-1"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-modal-gdc"
+      [attr.aria-busy]="isClosing"
+      (click)="$event.stopPropagation()"
+      (keydown)="manejarTecladoModal($event)">
       <div class="modal-header">
-        <h3>📝 Cerrar Consolidado con GDC</h3>
-        <button class="btn-close" (click)="cerrarModalGDC()">✕</button>
+        <h3 id="titulo-modal-gdc">📝 Cerrar Consolidado con GDC</h3>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Cerrar modal"
+          (click)="cerrarModalGDC()"
+          [disabled]="isClosing">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -163,7 +214,9 @@
             id="gdcNumero"
             [(ngModel)]="gdcNumero"
             class="form-control"
-            placeholder="Ej: Juan Pérez"
+            placeholder="Ej: GDC 123"
+            maxlength="50"
+            autofocus
             [disabled]="isClosing">
         </div>
         <div class="form-group">
@@ -174,18 +227,101 @@
             class="form-control"
             rows="4"
             placeholder="Escribe el comentario final del proceso..."
-          [disabled]="isClosing"></textarea>
+            maxlength="5000"
+            [disabled]="isClosing"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secon dary" (click)="cerrarModalGDC()" [disabled]="isClosing">
+        <button type="button" class="btn-secondary" (click)="cerrarModalGDC()" [disabled]="isClosing">
           Cancelar
         </button>
         <button
+          type="button"
           class="btn-success"
           (click)="cerrarConGDC()"
           [disabled]="!gdcNumero.trim() || !comentarioCierre.trim() || isClosing">
           {{ isClosing ? 'Cerrando...' : '✅ Cerrar con GDC' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal para cerrar sin GDC -->
+@if (mostrarModalCierre) {
+  <div class="modal-overlay" (click)="cerrarModalCierre()">
+    <div
+      #modalDialog
+      class="modal-content"
+      tabindex="-1"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-modal-cierre"
+      aria-describedby="descripcion-modal-cierre"
+      [attr.aria-busy]="isClosing"
+      (click)="$event.stopPropagation()"
+      (keydown)="manejarTecladoModal($event)">
+      <div class="modal-header">
+        <h3 id="titulo-modal-cierre">Cerrar Consolidado sin GDC</h3>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Cerrar modal"
+          (click)="cerrarModalCierre()"
+          [disabled]="isClosing">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="descripcion-modal-cierre" class="modal-description">
+          Selecciona el motivo por el que finaliza el seguimiento.
+        </p>
+        <fieldset class="closure-reasons">
+          <legend>Motivo de cierre *</legend>
+          <div class="reason-options">
+            <label class="reason-option" [class.reason-option-selected]="motivoCierre === 'NO_QUIERE_CONTACTO'">
+              <input
+                type="radio"
+                name="motivoCierre"
+                value="NO_QUIERE_CONTACTO"
+                [(ngModel)]="motivoCierre"
+                required
+                autofocus
+                [disabled]="isClosing">
+              <span>No quiere que lo llamemos</span>
+            </label>
+            <label class="reason-option" [class.reason-option-selected]="motivoCierre === 'NO_CONTESTA'">
+              <input
+                type="radio"
+                name="motivoCierre"
+                value="NO_CONTESTA"
+                [(ngModel)]="motivoCierre"
+                required
+                [disabled]="isClosing">
+              <span>No contesta</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="form-group observations-group">
+          <label for="observacionCierre">Observaciones (opcional)</label>
+          <textarea
+            id="observacionCierre"
+            [(ngModel)]="observacionCierre"
+            class="form-control"
+            rows="4"
+            placeholder="Agrega información útil sobre el cierre..."
+            maxlength="5000"
+            [disabled]="isClosing"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cerrarModalCierre()" [disabled]="isClosing">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-close-record"
+          (click)="cerrarSinGDC()"
+          [disabled]="!motivoCierre || isClosing">
+          {{ isClosing ? 'Cerrando...' : 'Cerrar sin GDC' }}
         </button>
       </div>
     </div>
