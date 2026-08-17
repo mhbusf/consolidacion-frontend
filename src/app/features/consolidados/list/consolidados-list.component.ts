@@ -177,15 +177,15 @@ import { User } from '../../../core/models/auth.model';
               <tbody>
                 @for (c of consolidadosFiltrados; track c) {
                   <tr>
-                    <td class="fw-bold nombre-link" (click)="verDetalle(c.id)">{{ c.nombre }}</td>
-                    <td>{{ c.telefono }}</td>
-                    <td>{{ c.edad || '-' }}</td>
-                    <td>{{ c.quienInvito || '—' }}</td>
-                    <td class="comentario-cell">{{ c.motivoOracion || '—' }}</td>
-                    <td>{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td>{{ c.usuarioReporta || '—' }}</td>
-                    <td>{{ c.usuarioAsigno || '—' }}</td>
-                    <td>
+                    <td data-label="Nombre" class="fw-bold nombre-link" (click)="verDetalle(c.id)">{{ c.nombre }}</td>
+                    <td data-label="Teléfono">{{ c.telefono }}</td>
+                    <td data-label="Edad">{{ c.edad || '-' }}</td>
+                    <td data-label="Quién invitó">{{ c.quienInvito || '—' }}</td>
+                    <td data-label="Motivo" class="comentario-cell">{{ c.motivoOracion || '—' }}</td>
+                    <td data-label="Fecha ingreso">{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td data-label="Reportado por">{{ c.usuarioReporta || '—' }}</td>
+                    <td data-label="Asignado por">{{ c.usuarioAsigno || '—' }}</td>
+                    <td [attr.data-label]="vistaGDC ? 'GDC' : 'Asignado a'">
                       @if (vistaGDC) {
                         <span class="badge badge-gdc">{{ c.gdc || '—' }}</span>
                       }
@@ -196,12 +196,12 @@ import { User } from '../../../core/models/auth.model';
                         <span class="badge badge-warning">Sin asignar</span>
                       }
                     </td>
-                    <td>
+                    <td data-label="3 semanas">
                       <span class="badge" [ngClass]="c.hitoTresSemanasCumplido ? 'badge-success' : 'badge-secondary'">
                         {{ c.hitoTresSemanasCumplido ? 'Cumplido' : 'Pendiente' }}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       @if (vistaGDC && c.comentarioCierre) {
                         <span class="comentario-cell">{{ c.comentarioCierre }}</span>
                       }
@@ -209,14 +209,16 @@ import { User } from '../../../core/models/auth.model';
                         <span class="badge" [ngClass]="getEstadoClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
                       }
                     </td>
-                    <td class="actions-cell">
-                      <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
-                      @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
-                        <button class="btn-success" (click)="asignar(c.id)">Asignar</button>
-                      }
-                      @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
-                        <button class="btn-info" (click)="reasignar(c.id)">Reasignar</button>
-                      }
+                    <td data-label="Acciones" class="actions-cell">
+                      <div class="row-actions">
+                        <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
+                        @if (isAdmin && !vistaGDC && !c.usuarioAsignado) {
+                          <button class="btn-success" (click)="asignar(c.id)">Asignar</button>
+                        }
+                        @if (isAdmin && !vistaGDC && c.usuarioAsignado) {
+                          <button class="btn-info" (click)="reasignar(c.id)">Reasignar</button>
+                        }
+                      </div>
                     </td>
                   </tr>
                 }
@@ -498,7 +500,7 @@ import { User } from '../../../core/models/auth.model';
       opacity: 0.8;
     }
 
-    .actions-cell {
+    .row-actions {
       display: flex;
       gap: 6px;
       align-items: center;
@@ -553,6 +555,146 @@ import { User } from '../../../core/models/auth.model';
       }
     }
 
+    @media (max-width: 768px) {
+      .container {
+        padding: 18px 12px 28px;
+      }
+
+      .header {
+        align-items: stretch;
+        margin-bottom: 18px;
+      }
+
+      .header h2 {
+        font-size: 27px;
+      }
+
+      .header-actions,
+      .header-actions button {
+        width: 100%;
+      }
+
+      .filters {
+        padding: 16px;
+        margin-bottom: 18px;
+        border-radius: 18px;
+      }
+
+      .form-control {
+        max-width: none;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 14px 8px;
+        border-radius: 16px;
+      }
+
+      .stat-number {
+        font-size: 25px;
+      }
+
+      .table-container {
+        overflow: visible;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .data-table {
+        display: block;
+        min-width: 0;
+      }
+
+      .data-table thead {
+        display: none;
+      }
+
+      .data-table tbody {
+        display: grid;
+        gap: 14px;
+      }
+
+      .data-table tbody tr {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #dce5ef;
+        border-radius: 20px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+      }
+
+      .data-table tbody tr:hover {
+        background: #ffffff;
+      }
+
+      .data-table td {
+        display: grid;
+        grid-template-columns: minmax(100px, 0.45fr) minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+        padding: 10px 14px;
+        overflow-wrap: anywhere;
+      }
+
+      .data-table tbody tr:last-child td {
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .data-table td::before {
+        content: attr(data-label);
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .data-table .nombre-link {
+        order: -2;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        background: #eff6ff;
+        border-bottom: 1px solid #dbeafe;
+        font-size: 16px;
+      }
+
+      .data-table .actions-cell {
+        order: -1;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .data-table td[data-label="Estado"] {
+        border-bottom: none;
+      }
+
+      .comentario-cell {
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+      }
+
+      .row-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        width: 100%;
+        gap: 8px;
+      }
+
+      .row-actions button {
+        width: 100%;
+        min-height: 44px;
+      }
+    }
+
     @media (max-width: 640px) {
       .advanced-filters {
         grid-template-columns: 1fr;
@@ -591,11 +733,9 @@ export class ConsolidadosListComponent implements OnInit {
     private authService: AuthService,
     private router: Router
   ) {
-    this.isAdmin = this.authService.isAdmin();
     this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.currentUsername = user.username;
-      }
+      this.isAdmin = user?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false;
+      this.currentUsername = user?.username ?? '';
     });
   }
 
