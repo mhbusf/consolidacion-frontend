@@ -19,13 +19,45 @@ import { NotificationService } from '../../../core/services/notification.service
         <p><strong>ID del Consolidado:</strong> {{ consolidadoId }}</p>
     
         <div class="form-group">
+          <label for="buscar-usuario">Buscar Usuario:</label>
+          <input
+            id="buscar-usuario"
+            type="search"
+            [(ngModel)]="busquedaUsuario"
+            (ngModelChange)="usuarioSeleccionado = ''"
+            class="form-control"
+            placeholder="Nombre, usuario o correo..."
+            autocomplete="off"
+            aria-describedby="resultado-busqueda"
+          />
+          <p id="resultado-busqueda" class="search-status" aria-live="polite">
+            @if (busquedaUsuario.trim()) {
+              {{ usuariosFiltrados.length }} de {{ usuarios.length }} usuario{{ usuariosFiltrados.length === 1 ? '' : 's' }}
+            } @else {
+              Escribe para filtrar el listado de usuarios.
+            }
+          </p>
+        </div>
+
+        <div class="form-group">
           <label for="usuario">Seleccionar Usuario:</label>
-          <select id="usuario" [(ngModel)]="usuarioSeleccionado" class="form-control">
-            <option value="">-- Seleccione un usuario --</option>
-            @for (user of usuarios; track user) {
-              <option [value]="user.username">
-                {{ user.username }} ({{ user.email }})
-              </option>
+          <select
+            id="usuario"
+            [(ngModel)]="usuarioSeleccionado"
+            class="form-control"
+            [disabled]="usuariosFiltrados.length === 0">
+            @if (usuariosFiltrados.length > 0) {
+              <option value="">-- Seleccione un usuario --</option>
+              @for (user of usuariosFiltrados; track user.username) {
+                <option [value]="user.username">
+                  @if (user.nombre || user.apellido) {
+                    {{ user.nombre }} {{ user.apellido }} -
+                  }
+                  {{ user.username }} ({{ user.email }})
+                </option>
+              }
+            } @else {
+              <option value="">-- No se encontraron usuarios --</option>
             }
           </select>
         </div>
@@ -86,6 +118,18 @@ import { NotificationService } from '../../../core/services/notification.service
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
+    .form-control:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .search-status {
+      min-height: 18px;
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -119,8 +163,22 @@ import { NotificationService } from '../../../core/services/notification.service
 export class AsignarConsolidadoComponent implements OnInit {
   consolidadoId!: number;
   usuarios: User[] = [];
+  busquedaUsuario = '';
   usuarioSeleccionado = '';
   isLoading = false;
+
+  get usuariosFiltrados(): User[] {
+    const termino = this.normalizarBusqueda(this.busquedaUsuario);
+    if (!termino) return this.usuarios;
+
+    return this.usuarios.filter(user => {
+      const datosUsuario = [user.nombre, user.apellido, user.username, user.email]
+        .filter((value): value is string => !!value)
+        .join(' ');
+
+      return this.normalizarBusqueda(datosUsuario).includes(termino);
+    });
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -166,5 +224,13 @@ export class AsignarConsolidadoComponent implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/consolidados']);
+  }
+
+  private normalizarBusqueda(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }
