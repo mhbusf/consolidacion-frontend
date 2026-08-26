@@ -34,7 +34,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                 </a>
               </li>
             }
-            <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc'])">
+            <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc', '/reportes/consolidados'])">
               <button class="nav-group-toggle" type="button" (click)="toggleGroup('consolidacion', $event)">
                 <span class="menu-icon">👥</span>
                 Consolidación
@@ -53,6 +53,10 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   <a routerLink="/estadisticas-gdc" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📈</span>
                     Histórico de cierres
+                  </a>
+                  <a routerLink="/reportes/consolidados" routerLinkActive="active" (click)="closeMenus()">
+                    <span class="menu-icon">📑</span>
+                    Reportes consolidados
                   </a>
                 }
               </div>

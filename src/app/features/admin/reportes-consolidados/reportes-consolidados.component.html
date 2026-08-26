@@ -1,0 +1,435 @@
+<main class="report-page" aria-labelledby="report-title">
+  <section class="report-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Consolidación / Reportería administrativa</p>
+      <h1 id="report-title">Reporte de consolidados</h1>
+      <p class="hero-description">
+        Consulta el recorrido completo de los consolidados y exporta el resultado aplicado.
+      </p>
+      <div class="applied-period" aria-live="polite">
+        <span class="period-dot" aria-hidden="true"></span>
+        Período aplicado: {{ filtrosAplicados().desde }} al {{ filtrosAplicados().hasta }}
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <div class="total-card">
+        <span class="total-label">Resultados</span>
+        <strong>{{ totalElementos() }}</strong>
+      </div>
+      <button
+        type="button"
+        class="button button-export"
+        [disabled]="!puedeDescargar()"
+        [attr.aria-busy]="descargando()"
+        aria-describedby="download-help"
+        (click)="exportar()"
+      >
+        <span class="button-icon" aria-hidden="true">↓</span>
+        {{ descargando() ? 'Generando Excel...' : 'Descargar Excel' }}
+      </button>
+      <span id="download-help" class="sr-only">
+        Exporta todos los resultados de los filtros aplicados, no solo la página visible.
+      </span>
+    </div>
+  </section>
+
+  @if (errorDescarga(); as mensaje) {
+    <div class="inline-message inline-message-error" role="alert">
+      {{ mensaje }}
+    </div>
+  }
+
+  <section class="filter-panel" aria-labelledby="filter-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Consulta</p>
+        <h2 id="filter-title">Filtros del reporte</h2>
+      </div>
+      <button
+        type="button"
+        class="advanced-toggle"
+        [attr.aria-expanded]="filtrosAvanzadosAbiertos()"
+        aria-controls="advanced-filters"
+        (click)="alternarFiltrosAvanzados()"
+      >
+        Filtros avanzados
+        <span class="toggle-symbol" aria-hidden="true">
+          {{ filtrosAvanzadosAbiertos() ? '−' : '+' }}
+        </span>
+      </button>
+    </div>
+
+    @if (errorOpciones(); as mensaje) {
+      <div class="options-warning" role="status">
+        <span>{{ mensaje }}</span>
+        <button
+          type="button"
+          class="text-button"
+          [disabled]="cargandoOpciones()"
+          (click)="cargarOpciones()"
+        >
+          Reintentar opciones
+        </button>
+      </div>
+    }
+
+    <form [formGroup]="filtrosForm" novalidate (ngSubmit)="aplicarFiltros()">
+      <fieldset class="filter-fieldset">
+        <legend class="sr-only">Filtros principales</legend>
+        <div class="primary-grid">
+          <div class="field-group">
+            <label for="report-from">Desde <span aria-hidden="true">*</span></label>
+            <input
+              id="report-from"
+              type="date"
+              class="field-control"
+              formControlName="desde"
+              [attr.max]="filtrosForm.controls.hasta.value || null"
+              [attr.aria-invalid]="filtrosForm.controls.desde.invalid && filtrosForm.controls.desde.touched ? 'true' : null"
+              aria-describedby="date-error"
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="report-to">Hasta <span aria-hidden="true">*</span></label>
+            <input
+              id="report-to"
+              type="date"
+              class="field-control"
+              formControlName="hasta"
+              [attr.min]="filtrosForm.controls.desde.value || null"
+              [attr.aria-invalid]="filtrosForm.controls.hasta.invalid && filtrosForm.controls.hasta.touched ? 'true' : null"
+              aria-describedby="date-error"
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="report-meeting">Reunión</label>
+            <select id="report-meeting" class="field-control" formControlName="reunionId">
+              <option value="">Todas las reuniones</option>
+              @for (reunion of opciones().reuniones; track reunion.id) {
+                <option [value]="reunion.id.toString()">{{ etiquetaReunion(reunion) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="report-scope">Alcance</label>
+            <select id="report-scope" class="field-control" formControlName="alcance">
+              <option value="TODOS">Todos</option>
+              <option value="ACTIVOS">Activos</option>
+              <option value="CERRADOS">Cerrados</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="report-status">Estado</label>
+            <select id="report-status" class="field-control" formControlName="estado">
+              <option value="">Todos los estados</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="ASIGNADO">Asignado</option>
+              <option value="EN_PROCESO">En proceso</option>
+              <option value="GDC">Con GDC</option>
+              <option value="CERRADO">Cerrado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="report-assigned-user">Asignado a</label>
+            <select
+              id="report-assigned-user"
+              class="field-control"
+              formControlName="usuarioAsignadoId"
+              (change)="actualizarUsuarioAsignado()"
+            >
+              <option value="">Cualquier usuario</option>
+              @for (usuario of opciones().usuarios; track usuario.id) {
+                <option [value]="usuario.id.toString()">{{ etiquetaUsuario(usuario) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="report-assignment">Asignación</label>
+            <select
+              id="report-assignment"
+              class="field-control"
+              formControlName="sinAsignar"
+              (change)="actualizarSituacionAsignacion()"
+            >
+              <option value="">Todos</option>
+              <option value="false">Con asignación</option>
+              <option value="true">Sin asignar</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      @if (filtrosAvanzadosAbiertos()) {
+        <fieldset id="advanced-filters" class="filter-fieldset advanced-section">
+          <legend>Filtros avanzados</legend>
+          <div class="advanced-grid">
+            <div class="field-group">
+              <label for="report-reporter">Reportado por</label>
+              <select id="report-reporter" class="field-control" formControlName="usuarioReportaId">
+                <option value="">Cualquier usuario</option>
+                @for (usuario of opciones().usuarios; track usuario.id) {
+                  <option [value]="usuario.id.toString()">{{ etiquetaUsuario(usuario) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="report-district">Comuna</label>
+              <select id="report-district" class="field-control" formControlName="comunaId">
+                <option value="">Todas las comunas</option>
+                @for (comuna of opciones().comunas; track comuna.id) {
+                  <option [value]="comuna.id.toString()">{{ etiquetaComuna(comuna) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="report-cafe-origin">Origen Café con Jesús</label>
+              <select id="report-cafe-origin" class="field-control" formControlName="origenCafeConJesus">
+                <option value="">Cualquier origen</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="report-milestone">Hito de tres semanas</label>
+              <select id="report-milestone" class="field-control" formControlName="hitoTresSemanasCumplido">
+                <option value="">Cualquier estado</option>
+                <option value="true">Cumplido</option>
+                <option value="false">Pendiente</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="report-gdc">GDC</label>
+              <select id="report-gdc" class="field-control" formControlName="conGdc">
+                <option value="">Cualquier registro</option>
+                <option value="true">Con GDC</option>
+                <option value="false">Sin GDC</option>
+              </select>
+            </div>
+
+            <div class="field-group field-search">
+              <label for="report-text">Búsqueda libre</label>
+              <input
+                id="report-text"
+                type="search"
+                class="field-control"
+                formControlName="texto"
+                placeholder="Nombre, teléfono, comentario u otro dato"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </fieldset>
+      }
+
+      <div class="form-footer">
+        <div id="date-error" class="validation-message" aria-live="polite">
+          @if (errorValidacion(); as mensaje) {
+            {{ mensaje }}
+          }
+        </div>
+        <div class="form-actions">
+          <button type="button" class="button button-secondary" (click)="limpiarFiltros()">
+            Limpiar
+          </button>
+          <button type="submit" class="button button-primary" [disabled]="cargando()">
+            {{ cargando() ? 'Consultando...' : 'Aplicar filtros' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="results-panel" aria-labelledby="results-title">
+    <div class="results-heading">
+      <div>
+        <p class="section-kicker">Detalle</p>
+        <h2 id="results-title">Consolidados encontrados</h2>
+        @if (resultado(); as pagina) {
+          <p class="results-summary">
+            Mostrando {{ primerElementoVisible() }}–{{ ultimoElementoVisible() }} de
+            {{ pagina.totalElements }} resultados
+          </p>
+        }
+      </div>
+
+      @if (resultado()) {
+        <label class="page-size-control" for="report-page-size">
+          <span>Filas</span>
+          <select
+            #selectorTamano
+            id="report-page-size"
+            [value]="tamanoPagina()"
+            [disabled]="cargando()"
+            (change)="cambiarTamanoPagina(selectorTamano.value)"
+          >
+            @for (tamano of tamanosPagina; track tamano) {
+              <option [value]="tamano">{{ tamano }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+
+    @if (cargando()) {
+      <div class="state-card" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h3>Preparando el reporte</h3>
+        <p>Estamos consultando los consolidados del período aplicado.</p>
+      </div>
+    } @else if (errorCarga(); as mensaje) {
+      <div class="state-card state-error" role="alert">
+        <span class="state-symbol" aria-hidden="true">!</span>
+        <h3>No se pudo cargar el reporte</h3>
+        <p>{{ mensaje }}</p>
+        <button type="button" class="button button-primary" (click)="reintentar()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (resultado()?.totalElements === 0) {
+      <div class="state-card">
+        <span class="state-symbol state-symbol-empty" aria-hidden="true">0</span>
+        <h3>Sin resultados</h3>
+        <p>No hay consolidados que coincidan con los filtros aplicados.</p>
+      </div>
+    } @else if (filas().length > 0) {
+      <div class="table-shell">
+        <table class="report-table">
+          <caption class="sr-only">
+            Resultados del reporte administrativo de consolidados
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Fecha ingreso</th>
+              <th scope="col">Reunión</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Reportó</th>
+              <th scope="col">Asignó</th>
+              <th scope="col">Asignado</th>
+              <th scope="col">Hito 3 semanas</th>
+              <th scope="col">Último comentario</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (registro of filas(); track registro.id) {
+              <tr>
+                <td data-label="Nombre" class="name-cell">
+                  <strong>{{ registro.nombre || 'Sin nombre' }}</strong>
+                  <span class="record-id">#{{ registro.id }}</span>
+                </td>
+                <td data-label="Teléfono">
+                  @if (registro.telefono; as telefono) {
+                    <a class="phone-link" [href]="telefonoHref(telefono)">{{ telefono }}</a>
+                  } @else {
+                    <span class="empty-value">Sin registro</span>
+                  }
+                </td>
+                <td data-label="Fecha ingreso" class="date-cell">
+                  @if (registro.fechaIngreso; as fechaIngreso) {
+                    {{ fechaIngreso | date:'dd/MM/yyyy HH:mm' }}
+                  } @else {
+                    <span class="empty-value">Sin registro</span>
+                  }
+                </td>
+                <td data-label="Reunión">{{ registro.reunionNombre || 'Sin reunión' }}</td>
+                <td data-label="Estado">
+                  <span class="status-pill" [ngClass]="claseEstado(registro.estado)">
+                    {{ etiquetaEstado(registro) }}
+                  </span>
+                </td>
+                <td data-label="Reportó">{{ registro.usuarioReporta || 'Sin registro' }}</td>
+                <td data-label="Asignó">{{ registro.usuarioAsigno || 'Sin registro' }}</td>
+                <td data-label="Asignado">
+                  @if (registro.usuarioAsignado; as usuarioAsignado) {
+                    <span class="assigned-user">{{ usuarioAsignado }}</span>
+                  } @else {
+                    <span class="unassigned-pill">Sin asignar</span>
+                  }
+                </td>
+                <td data-label="Hito 3 semanas">
+                  <span
+                    class="milestone-pill"
+                    [class.milestone-complete]="registro.hitoTresSemanasCumplido === true"
+                    [class.milestone-pending]="registro.hitoTresSemanasCumplido === false"
+                  >
+                    {{ etiquetaHito(registro.hitoTresSemanasCumplido) }}
+                  </span>
+                </td>
+                <td data-label="Último comentario" class="comment-cell">
+                  @if (registro.ultimoComentario; as comentario) {
+                    <p>{{ comentario.contenido || 'Comentario sin contenido' }}</p>
+                    <span>
+                      {{ comentario.usuario || 'Autor no registrado' }}
+                      @if (comentario.fechaCreacion; as fechaComentario) {
+                        | {{ fechaComentario | date:'dd/MM/yyyy HH:mm' }}
+                      }
+                    </span>
+                  } @else {
+                    <span class="empty-value">Sin comentarios</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (resultado(); as pagina) {
+        <nav class="pagination" aria-label="Paginación del reporte">
+          <div class="pagination-copy" aria-live="polite">
+            Página <strong>{{ pagina.page + 1 }}</strong> de <strong>{{ pagina.totalPages }}</strong>
+          </div>
+          <div class="pagination-actions">
+            <button
+              type="button"
+              class="page-button"
+              [disabled]="pagina.first || cargando()"
+              aria-label="Ir a la primera página"
+              (click)="irAPagina(0)"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              class="page-button page-button-wide"
+              [disabled]="pagina.first || cargando()"
+              (click)="irAPagina(pagina.page - 1)"
+            >
+              Anterior
+            </button>
+            <span class="current-page" aria-current="page">{{ pagina.page + 1 }}</span>
+            <button
+              type="button"
+              class="page-button page-button-wide"
+              [disabled]="pagina.last || cargando()"
+              (click)="irAPagina(pagina.page + 1)"
+            >
+              Siguiente
+            </button>
+            <button
+              type="button"
+              class="page-button"
+              [disabled]="pagina.last || cargando()"
+              aria-label="Ir a la última página"
+              (click)="irAPagina(pagina.totalPages - 1)"
+            >
+              »
+            </button>
+          </div>
+        </nav>
+      }
+    }
+  </section>
+</main>

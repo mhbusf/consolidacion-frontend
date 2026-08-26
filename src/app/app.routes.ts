@@ -31,6 +31,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { roles: ['ROLE_ADMIN'] }
   },
+
+  {
+    path: 'reportes/consolidados',
+    loadComponent: () => import('./features/admin/reportes-consolidados/reportes-consolidados.component').then(m => m.ReportesConsolidadosComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
   
   {
     path: 'consolidados',
