@@ -61,7 +61,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                 }
               </div>
             </li>
-            <li class="nav-group" [class.open]="openGroup === 'cafe'" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin'])">
+            <li class="nav-group" [class.open]="openGroup === 'cafe'" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin', '/reportes/cafe-con-jesus'])">
               <button class="nav-group-toggle" type="button" (click)="toggleGroup('cafe', $event)">
                 <span class="menu-icon">☕</span>
                 Cafe con Jesus
@@ -76,6 +76,10 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   <a routerLink="/cafe-admin" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📋</span>
                     Admin Café
+                  </a>
+                  <a routerLink="/reportes/cafe-con-jesus" routerLinkActive="active" (click)="closeMenus()">
+                    <span class="menu-icon">📑</span>
+                    Reporte Café
                   </a>
                 }
               </div>

@@ -1,0 +1,45 @@
+<main class="report-page" aria-labelledby="report-title">
+  <section class="hero">
+    <div><p class="eyebrow">Café con Jesús / Administración</p><h1 id="report-title">Reporte de invitados</h1><p class="intro">Sigue cada invitado desde su ingreso y exporta los resultados filtrados.</p><span class="period">● Período: {{ filtros().desde }} al {{ filtros().hasta }}</span></div>
+    <div class="hero-actions"><div class="total"><small>Resultados</small><strong>{{ total() }}</strong></div><button class="button export" type="button" [disabled]="!total() || descargando()" (click)="exportar()">↓ {{ descargando() ? 'Generando...' : 'Descargar XLSX' }}</button></div>
+  </section>
+  @if (errorDescarga(); as message) { <div class="alert" role="alert">{{ message }}</div> }
+
+  <section class="panel filters" aria-labelledby="filters-title">
+    <header><div><p class="kicker">Consulta</p><h2 id="filters-title">Filtros del reporte</h2></div><button class="advanced" type="button" [attr.aria-expanded]="expanded()" (click)="toggleAdvanced()">{{ expanded() ? 'Ocultar filtros' : 'Más filtros' }} <b>{{ expanded() ? '−' : '+' }}</b></button></header>
+    @if (errorOpciones(); as message) { <div class="warning">{{ message }} <button type="button" (click)="cargarOpciones()">Reintentar</button></div> }
+    <form [formGroup]="form" (ngSubmit)="aplicar()" novalidate>
+      <div class="grid primary">
+        <label>Desde <input type="date" formControlName="desde" [attr.max]="form.controls.hasta.value"></label>
+        <label>Hasta <input type="date" formControlName="hasta" [attr.min]="form.controls.desde.value"></label>
+        <label>Reunión <select formControlName="reunionId"><option value="">Todas</option>@for (option of opciones().reuniones; track option.id) { <option [value]="option.id">{{ etiquetaOpcion(option) }}</option> }</select></label>
+        <label>Estado <select formControlName="estado"><option value="">Todos</option><option value="ACTIVO">Activo</option><option value="CONVERTIDO">Convertido</option><option value="ARCHIVADO">Archivado</option></select></label>
+        <label>Etapa <select formControlName="etapa"><option value="">Todas</option>@for (stage of etapas; track stage[0]) { <option [value]="stage[0]">{{ stage[1] }}</option> }</select></label>
+        <label>Asignado a <select formControlName="usuarioAsignadoId"><option value="">Cualquier usuario</option>@for (option of opciones().usuarios; track option.id) { <option [value]="option.id">{{ etiquetaOpcion(option) }}</option> }</select></label>
+      </div>
+      @if (expanded()) {
+        <div class="grid advanced-grid">
+          <label>Registrado por <select formControlName="registradoPorId"><option value="">Cualquier usuario</option>@for (option of opciones().usuarios; track option.id) { <option [value]="option.id">{{ etiquetaOpcion(option) }}</option> }</select></label>
+          <label>Asignación <select formControlName="sinAsignar"><option value="">Todas</option><option value="true">Sin asignar</option><option value="false">Asignados</option></select></label>
+          <label>Asistencia <select formControlName="asistio"><option value="">Todas</option><option value="true">Asistió</option><option value="false">No asistió</option></select></label>
+          <label>Aceptación <select formControlName="aceptoAlSenor"><option value="">Todas</option><option value="true">Aceptó</option><option value="false">No aceptó</option></select></label>
+          <label>Convertido <select formControlName="convertidoAConsolidado"><option value="">Todos</option><option value="true">Convertido</option><option value="false">No convertido</option></select></label>
+          <label>Archivado <select formControlName="archivado"><option value="">Todos</option><option value="true">Archivado</option><option value="false">No archivado</option></select></label>
+          <label class="search">Búsqueda libre <input type="search" formControlName="texto" placeholder="Nombre, teléfono o comentario"></label>
+        </div>
+      }
+      <footer><span class="validation" role="alert">{{ errorValidacion() }}</span><div><button class="button secondary" type="button" (click)="limpiar()">Limpiar</button><button class="button primary-button" type="submit" [disabled]="cargando()">{{ cargando() ? 'Consultando...' : 'Aplicar filtros' }}</button></div></footer>
+    </form>
+  </section>
+
+  <section class="panel results" aria-labelledby="results-title"><header><div><p class="kicker">Detalle</p><h2 id="results-title">Invitados encontrados</h2>@if (resultado(); as page) { <p class="summary">Mostrando {{ firstVisible() }}–{{ lastVisible() }} de {{ page.totalElements }}</p> }</div>@if (resultado()) { <label class="page-size">Filas <select [value]="pageSize()" (change)="cambiarTamano($any($event.target).value)">@for (size of sizes; track size) { <option [value]="size">{{ size }}</option> }</select></label> }</header>
+    @if (cargando()) { <div class="state"><span class="spinner"></span><h3>Cargando reporte</h3><p>Consultando los invitados del período aplicado.</p></div> }
+    @else if (error(); as message) { <div class="state"><strong class="state-icon">!</strong><h3>No se pudo cargar</h3><p>{{ message }}</p><button class="button primary-button" type="button" (click)="reintentar()">Reintentar</button></div> }
+    @else if (resultado()?.totalElements === 0) { <div class="state"><strong class="state-icon empty">0</strong><h3>Sin resultados</h3><p>No hay invitados que coincidan con los filtros aplicados.</p></div> }
+    @else { <div class="table-wrap"><table><caption class="sr-only">Reporte administrativo de Café con Jesús</caption><thead><tr><th>Nombre completo</th><th>Teléfono</th><th>Fecha ingreso</th><th>Reunión</th><th>Etapa</th><th>Estado</th><th>Reportó</th><th>Asignado</th><th>Asistencia / fecha</th><th>Aceptación</th><th>Último comentario</th></tr></thead><tbody>@for (row of filas(); track row.id) { <tr>
+      <td data-label="Nombre completo" class="name"><b>{{ nombre(row) }}</b><small>#{{ row.id }}</small></td><td data-label="Teléfono">@if (row.telefono; as phone) { <a [href]="telefonoHref(phone)">{{ phone }}</a> } @else { <i>Sin registro</i> }</td><td data-label="Fecha ingreso">{{ row.fechaIngreso ? (row.fechaIngreso | date:'dd/MM/yyyy') : 'Sin registro' }}</td><td data-label="Reunión">{{ row.reunionNombre || 'Sin reunión' }}</td><td data-label="Etapa">{{ etiquetaEtapa(row.etapa) }}</td><td data-label="Estado"><span class="pill" [ngClass]="claseEstado(row.estado)">{{ etiquetaEstado(row) }}</span></td><td data-label="Reportó">{{ row.registradoPor || 'Sin registro' }}</td><td data-label="Asignado">{{ row.usuarioAsignado || 'Sin asignar' }}</td><td data-label="Asistencia / fecha"><span [class.yes]="row.asistio">{{ booleano(row.asistio) }}</span>@if (row.fechaAsistencia) { <small>{{ row.fechaAsistencia | date:'dd/MM/yyyy' }}</small> }</td><td data-label="Aceptación">{{ booleano(row.aceptoAlSenor) }}</td><td data-label="Último comentario" class="comment">@if (row.ultimoComentario; as comment) { <span>{{ comment.contenido || 'Comentario sin contenido' }}</span><small>{{ comment.usuario || 'Autor no registrado' }} @if (comment.fechaCreacion) { · {{ comment.fechaCreacion | date:'dd/MM/yyyy HH:mm' }} }</small> } @else { <i>Sin comentarios</i> }</td>
+    </tr> }</tbody></table></div>
+    @if (resultado(); as page) { <nav class="pagination" aria-label="Paginación"><span>Página <b>{{ page.page + 1 }}</b> de <b>{{ page.totalPages }}</b></span><div><button type="button" [disabled]="page.first || cargando()" (click)="irAPagina(0)">«</button><button type="button" [disabled]="page.first || cargando()" (click)="irAPagina(page.page - 1)">Anterior</button><em>{{ page.page + 1 }}</em><button type="button" [disabled]="page.last || cargando()" (click)="irAPagina(page.page + 1)">Siguiente</button><button type="button" [disabled]="page.last || cargando()" (click)="irAPagina(page.totalPages - 1)">»</button></div></nav> }
+    }
+  </section>
+</main>

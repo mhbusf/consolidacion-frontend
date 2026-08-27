@@ -38,6 +38,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { roles: ['ROLE_ADMIN'] }
   },
+
+  {
+    path: 'reportes/cafe-con-jesus',
+    loadComponent: () => import('./features/admin/reportes-cafe-con-jesus/reportes-cafe-con-jesus.component').then(m => m.ReportesCafeConJesusComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
   
   {
     path: 'consolidados',
