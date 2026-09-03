@@ -11,6 +11,13 @@ export const ETAPAS_CAFE = [
   { value: 'MENSAJE_FINAL',      label: 'Se deja mensaje final' },
 ];
 
+export const MOTIVOS_CIERRE_CAFE = [
+  { value: 'NO_RESPONDE', label: 'No responde' },
+  { value: 'NO_DESEA_CONTACTO', label: 'No desea que lo contacten' },
+  { value: 'DATOS_INCORRECTOS', label: 'Datos incorrectos' },
+  { value: 'OTRO', label: 'Otro' },
+] as const;
+
 export function etapaLabel(value: string | null | undefined): string {
   return ETAPAS_CAFE.find(e => e.value === value)?.label ?? '—';
 }
@@ -58,6 +65,8 @@ export interface CafeConJesusResponse {
   consolidadoId: number;
   archivado: boolean;
   fechaArchivado: string;
+  motivoCierre: string;
+  comentarioCierre: string;
   etapa: string;
   comentarios: CafeComentario[];
 }
@@ -115,8 +124,8 @@ export class CafeConJesusService {
     return this.http.get<CafeAdminDashboard>(`${this.apiUrl}/admin/dashboard`);
   }
 
-  archivar(id: number): Observable<string> {
-    return this.http.put(`${this.apiUrl}/${id}/archivar`, null, { responseType: 'text' });
+  archivar(id: number, motivo: string, comentario: string): Observable<string> {
+    return this.http.put(`${this.apiUrl}/${id}/archivar`, { motivo, comentario }, { responseType: 'text' });
   }
 
   desarchivar(id: number): Observable<string> {

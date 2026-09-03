@@ -134,7 +134,9 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                               <th>Consolidado</th>
                             }
                             @if (g.key === 'archivados') {
-                              <th>Fecha archivado</th>
+                               <th>Motivo cierre</th>
+                               <th>Comentario cierre</th>
+                               <th>Fecha archivado</th>
                             }
                             <th>Acciones</th>
                           </tr>
@@ -178,6 +180,8 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
                                 </td>
                               }
                               @if (g.key === 'archivados') {
+                                <td>{{ getMotivoCierreLabel(r.motivoCierre) }}</td>
+                                <td class="td-comentario">{{ r.comentarioCierre || '-' }}</td>
                                 <td>
                                   {{ r.fechaArchivado ? (r.fechaArchivado | date: 'dd/MM/yyyy') : '-' }}
                                 </td>
@@ -920,10 +924,21 @@ export class CafeAdminDashboardComponent implements OnInit {
   }
 
   archivar(r: CafeConJesusResponse): void {
-    if (!confirm(`¿Archivar a ${r.nombre} ${r.apellido}? Quedará guardado por si se necesita revisar después.`)) {
+    const motivo = prompt('Motivo de cierre:\n1. No responde\n2. No desea que lo contacten\n3. Datos incorrectos\n4. Otro', '1');
+    const motivos: Record<string, string> = {
+      '1': 'NO_RESPONDE',
+      '2': 'NO_DESEA_CONTACTO',
+      '3': 'DATOS_INCORRECTOS',
+      '4': 'OTRO',
+    };
+    if (!motivo || !motivos[motivo]) {
       return;
     }
-    this.cafeService.archivar(r.id).subscribe({
+    const comentario = prompt('Comentario de cierre (obligatorio):', '');
+    if (!comentario?.trim()) {
+      return;
+    }
+    this.cafeService.archivar(r.id, motivos[motivo], comentario.trim()).subscribe({
       next: () => {
         this.notificationService.success('Registro archivado');
         this.cargarDashboard();
@@ -946,6 +961,16 @@ export class CafeAdminDashboardComponent implements OnInit {
         this.notificationService.error('Error al desarchivar');
       },
     });
+  }
+
+  getMotivoCierreLabel(motivo?: string | null): string {
+    const labels: Record<string, string> = {
+      NO_RESPONDE: 'No responde',
+      NO_DESEA_CONTACTO: 'No desea contacto',
+      DATOS_INCORRECTOS: 'Datos incorrectos',
+      OTRO: 'Otro',
+    };
+    return motivo ? labels[motivo] || motivo : '-';
   }
 
   verConsolidado(r: CafeConJesusResponse): void {

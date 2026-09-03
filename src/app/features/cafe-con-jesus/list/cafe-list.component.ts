@@ -6,6 +6,7 @@ import {
   CafeConJesusService,
   CafeConJesusResponse,
   ETAPAS_CAFE,
+  MOTIVOS_CIERRE_CAFE,
   etapaLabel,
 } from '../../../core/services/cafe-con-jesus.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -109,6 +110,9 @@ import { ReunionService } from '../../../core/services/reunion.service';
                       <button class="btn-convertir" (click)="convertirAConsolidado(r)">
                         Acepto al Senor
                       </button>
+                      @if (isAdmin) {
+                        <button class="btn-warning" type="button" (click)="abrirCierre(r)">Cerrar</button>
+                      }
                     }
                   </td>
                 </tr>
@@ -270,6 +274,34 @@ import { ReunionService } from '../../../core/services/reunion.service';
                   <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
                   <button class="btn-primary" (click)="guardarEdicion()" [disabled]="isSaving">
                     {{ isSaving ? 'Guardando...' : 'Guardar' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+          <!-- Modal cerrar -->
+          @if (registroCerrando) {
+            <div class="modal-overlay" (click)="cerrarCierre()">
+              <div class="modal-content" (click)="$event.stopPropagation()">
+                <h3>Cerrar seguimiento</h3>
+                <p class="modal-sub">{{ registroCerrando.nombre }} {{ registroCerrando.apellido }}</p>
+                <div class="form-group">
+                  <label>Motivo de cierre</label>
+                  <select [(ngModel)]="cierreMotivo" class="form-control">
+                    <option value="">Seleccione un motivo</option>
+                    @for (motivo of motivosCierre; track motivo.value) {
+                      <option [value]="motivo.value">{{ motivo.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Comentario de cierre</label>
+                  <textarea [(ngModel)]="cierreComentario" class="form-control" rows="4" maxlength="1000" placeholder="Ej.: Se realizaron tres llamados sin respuesta."></textarea>
+                </div>
+                <div class="modal-actions">
+                  <button class="btn-secondary" type="button" (click)="cerrarCierre()">Cancelar</button>
+                  <button class="btn-warning" type="button" (click)="confirmarCierre()" [disabled]="!cierreMotivo || !cierreComentario.trim() || isSavingCierre">
+                    {{ isSavingCierre ? 'Guardando...' : 'Confirmar cierre' }}
                   </button>
                 </div>
               </div>
@@ -849,6 +881,7 @@ export class CafeListComponent implements OnInit {
   busqueda = '';
 
   etapas = ETAPAS_CAFE;
+  motivosCierre = MOTIVOS_CIERRE_CAFE;
 
   // Detalle
   registroDetalle: CafeConJesusResponse | null = null;
@@ -864,6 +897,10 @@ export class CafeListComponent implements OnInit {
   editEtapa = '';
   editReunionId: number | null = null;
   isSaving = false;
+  registroCerrando: CafeConJesusResponse | null = null;
+  cierreMotivo = '';
+  cierreComentario = '';
+  isSavingCierre = false;
 
   constructor(
     private cafeService: CafeConJesusService,
@@ -942,6 +979,34 @@ export class CafeListComponent implements OnInit {
   cerrarDetalle(): void {
     this.registroDetalle = null;
     this.nuevoComentario = '';
+  }
+
+  abrirCierre(r: CafeConJesusResponse): void {
+    this.registroCerrando = r;
+    this.cierreMotivo = '';
+    this.cierreComentario = '';
+  }
+
+  cerrarCierre(): void {
+    if (this.isSavingCierre) return;
+    this.registroCerrando = null;
+  }
+
+  confirmarCierre(): void {
+    if (!this.registroCerrando || !this.cierreMotivo || !this.cierreComentario.trim()) return;
+    this.isSavingCierre = true;
+    this.cafeService.archivar(this.registroCerrando.id, this.cierreMotivo, this.cierreComentario.trim()).subscribe({
+      next: () => {
+        this.notificationService.success('Seguimiento cerrado correctamente');
+        this.isSavingCierre = false;
+        this.cerrarCierre();
+        this.cargarRegistros();
+      },
+      error: (error) => {
+        this.notificationService.error(error?.error?.message || 'Error al cerrar el seguimiento');
+        this.isSavingCierre = false;
+      },
+    });
   }
 
   agregarComentario(): void {
