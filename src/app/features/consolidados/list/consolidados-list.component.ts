@@ -176,17 +176,11 @@ import { User } from '../../../core/models/auth.model';
                 <tr>
                   <th>Nombre</th>
                   <th>Teléfono</th>
-                  <th>Edad</th>
-                  <th>Quién invitó</th>
-                  <th>Motivo</th>
                   <th>Fecha ingreso</th>
-                  <th>Reportado por</th>
-                  <th>Asignado por</th>
                   @if (vistaHistorico) {
                     <th>Tipo de cierre</th>
                     <th>GDC</th>
                     <th>Fecha cierre</th>
-                    <th>Comentario cierre</th>
                   }
                   @if (!vistaHistorico) {
                     <th>Asignado a</th>
@@ -201,12 +195,7 @@ import { User } from '../../../core/models/auth.model';
                   <tr>
                     <td data-label="Nombre" class="fw-bold nombre-link" (click)="verDetalle(c.id)">{{ c.nombre }}</td>
                     <td data-label="Teléfono">{{ c.telefono }}</td>
-                    <td data-label="Edad">{{ c.edad || '-' }}</td>
-                    <td data-label="Quién invitó">{{ c.quienInvito || '—' }}</td>
-                    <td data-label="Motivo" class="comentario-cell">{{ c.motivoOracion || '—' }}</td>
                     <td data-label="Fecha ingreso">{{ c.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td data-label="Reportado por">{{ c.usuarioReporta || '—' }}</td>
-                    <td data-label="Asignado por">{{ c.usuarioAsigno || '—' }}</td>
                     @if (vistaHistorico) {
                       <td data-label="Tipo de cierre">
                         <span class="badge" [ngClass]="getTipoCierreClass(c.estado)">
@@ -222,9 +211,6 @@ import { User } from '../../../core/models/auth.model';
                       </td>
                       <td data-label="Fecha de cierre">
                         {{ c.fechaCierre ? (c.fechaCierre | date:'dd/MM/yyyy HH:mm') : '—' }}
-                      </td>
-                      <td data-label="Comentario de cierre" class="comentario-cell">
-                        {{ c.comentarioCierre || '—' }}
                       </td>
                     }
                     @if (!vistaHistorico) {
@@ -422,7 +408,7 @@ import { User } from '../../../core/models/auth.model';
 
     .data-table {
       width: 100%;
-      min-width: 1200px;
+       min-width: 920px;
       border-collapse: collapse;
     }
 

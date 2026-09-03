@@ -71,14 +71,10 @@ import { ReunionService } from '../../../core/services/reunion.service';
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Apellido</th>
                 <th>Telefono</th>
-                <th>Edad</th>
                 <th>Culto/Reunión</th>
                 <th>Fecha Ingreso</th>
-                <th>Asistio</th>
                 <th>Etapa</th>
-                <th>Registrado por</th>
                 <th>Asignado a</th>
                 <th>Acciones</th>
               </tr>
@@ -87,16 +83,9 @@ import { ReunionService } from '../../../core/services/reunion.service';
               @for (r of registrosFiltrados; track r) {
                 <tr>
                   <td class="fw-bold nombre-link" (click)="verDetalle(r)">{{ r.nombre }}</td>
-                  <td>{{ r.apellido }}</td>
                   <td>{{ r.telefono }}</td>
-                  <td>{{ r.edad || '-' }}</td>
                   <td>{{ r.reunionNombre || '—' }}</td>
                   <td>{{ r.fechaIngreso | date : 'dd/MM/yyyy' }}</td>
-                  <td>
-                    <span class="badge" [class.badge-success]="r.asistio" [class.badge-pending]="!r.asistio">
-                      {{ r.asistio ? 'Si' : 'No' }}
-                    </span>
-                  </td>
                   <td>
                     @if (r.etapa) {
                       <span class="badge-etapa" [ngClass]="getEtapaClass(r.etapa)">{{ getEtapaLabel(r.etapa) }}</span>
@@ -104,9 +93,6 @@ import { ReunionService } from '../../../core/services/reunion.service';
                     @if (!r.etapa) {
                       <span class="text-muted-sm">—</span>
                     }
-                  </td>
-                  <td>
-                    <span class="user-badge">{{ r.registradoPor }}</span>
                   </td>
                   <td>
                     @if (r.usuarioAsignado) {
@@ -117,6 +103,7 @@ import { ReunionService } from '../../../core/services/reunion.service';
                     }
                   </td>
                   <td class="actions-cell">
+                    <button class="btn-secondary" type="button" (click)="verDetalle(r)">Ver ficha</button>
                     <button class="btn-edit" (click)="editarRegistro(r)">Editar</button>
                     @if (!r.convertidoAConsolidado) {
                       <button class="btn-convertir" (click)="convertirAConsolidado(r)">
@@ -375,7 +362,7 @@ import { ReunionService } from '../../../core/services/reunion.service';
 
       .data-table {
         width: 100%;
-        min-width: 1600px;
+       min-width: 900px;
         border-collapse: collapse;
       }
 
