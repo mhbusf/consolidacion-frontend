@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  // Render publica este proyecto como Static Site y no ejecuta el proxy Nginx.
+  apiUrl: 'https://consolidaci-n-production.up.railway.app/api',
 };
