@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:24.15.0-alpine AS build
 WORKDIR /app
 ENV NG_BUILD_CACHE=false
 COPY package*.json ./
@@ -9,9 +9,12 @@ RUN rm -rf dist .angular/cache && npm run build -- --configuration=production
 
 FROM nginx:alpine
 COPY --from=build /app/dist/consolidacion-frontend/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /tmp/default.conf.template
+COPY docker-entrypoint.sh /usr/local/bin/app-entrypoint.sh
+RUN chmod +x /usr/local/bin/app-entrypoint.sh
 
 ENV PORT=80
-EXPOSE ${PORT}
+ENV BACKEND_URL=http://backend:8080
+EXPOSE 80
 
-CMD ["sh", "-c", "nginx -g 'daemon off;'"]
+CMD ["/usr/local/bin/app-entrypoint.sh"]

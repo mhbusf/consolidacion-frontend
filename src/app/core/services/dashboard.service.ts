@@ -42,6 +42,6 @@ export class DashboardService {
   }
 
   getResumenConsolidador(username: string): Observable<ConsolidadorResumen> {
-    return this.http.get<ConsolidadorResumen>(`${this.apiUrl}/consolidador/${username}`);
+    return this.http.get<ConsolidadorResumen>(`${this.apiUrl}/consolidador/${encodeURIComponent(username)}`);
   }
 }

@@ -4,9 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { User } from '../../../core/models/auth.model';
+
+interface UsuarioConStats {
+  usuario: User;
+  creados: number;
+  asignados: number;
+}
 
 @Component({
   selector: 'app-usuarios-list',
@@ -287,12 +294,12 @@ import { User } from '../../../core/models/auth.model';
 })
 export class UsuariosListComponent implements OnInit {
   usuarios: User[] = [];
-  usuariosConStats: any[] = [];
-  consolidados: any[] = [];
+  usuariosConStats: UsuarioConStats[] = [];
+  consolidados: ConsolidadoResponse[] = [];
   isLoading = true;
   busqueda = '';
 
-  get usuariosFiltrados(): any[] {
+  get usuariosFiltrados(): UsuarioConStats[] {
     const q = this.busqueda.trim().toLowerCase();
     if (!q) return this.usuariosConStats;
     return this.usuariosConStats.filter(u =>

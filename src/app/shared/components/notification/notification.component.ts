@@ -12,10 +12,12 @@ import { NotificationService } from '../../../core/services/notification.service
       @if (message) {
         <div
           [class]="'notification notification-' + type"
-          [@slideIn]>
-          <span class="icon">{{ getIcon() }}</span>
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true">
+          <span class="icon" aria-hidden="true">{{ getIcon() }}</span>
           <span class="message">{{ message }}</span>
-          <button class="close" (click)="close()">×</button>
+          <button type="button" class="close" aria-label="Cerrar notificación" (click)="close()">×</button>
         </div>
       }
     </div>
@@ -103,11 +105,11 @@ export class NotificationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   message = '';
   type: 'success' | 'error' | 'info' | 'warning' = 'info';
-  private timeoutId: any;
+  private timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private notificationService: NotificationService) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.destroyRef.onDestroy(() => {
       if (this.timeoutId) {
         clearTimeout(this.timeoutId);
@@ -142,7 +144,7 @@ export class NotificationComponent implements OnInit {
     }
   }
 
-  close() {
+  close(): void {
     this.message = '';
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);

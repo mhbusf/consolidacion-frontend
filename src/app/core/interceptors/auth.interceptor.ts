@@ -8,39 +8,20 @@ import { environment } from '../../../environments/environment';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const apiUrl = environment.apiUrl.replace(/\/$/, '');
+  const isApiRequest = req.url === apiUrl || req.url.startsWith(`${apiUrl}/`)
+    || (apiUrl.startsWith('/') && new URL(req.url, window.location.origin).pathname.startsWith(`${apiUrl}/`));
+  if (!isApiRequest) {
+    return next(req);
+  }
+
   const token = authService.getToken();
-
-  // Clonar la request y agregar withCredentials SIEMPRE
-  let modifiedReq = req.clone({
-    withCredentials: true, // ← CRÍTICO para CORS
-  });
-
-  // Si hay token, agregarlo al header Authorization
-  if (token) {
-    modifiedReq = modifiedReq.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-
-  // Asegurar Content-Type para requests con body JSON
-  if (
-    req.body &&
-    typeof req.body === 'object' &&
-    !req.headers.has('Content-Type')
-  ) {
-    modifiedReq = modifiedReq.clone({
-      setHeaders: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-  }
+  const modifiedReq = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
 
   return next(modifiedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si recibimos 401 Unauthorized, limpiar sesión y redirigir
       if (error.status === 401 && router.url !== '/login') {
         authService.logout();
         router.navigate(['/login']);

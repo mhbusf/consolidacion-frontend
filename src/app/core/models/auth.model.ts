@@ -32,6 +32,7 @@ export interface User {
   apellido?: string | null;
   enabled: boolean;
   roles: Role[];
+  mustChangePassword?: boolean;
 }
 
 export interface ChangePasswordRequest {

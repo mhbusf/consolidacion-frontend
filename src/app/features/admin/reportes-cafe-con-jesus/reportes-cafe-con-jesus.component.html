@@ -32,7 +32,7 @@
     </form>
   </section>
 
-  <section class="panel results" aria-labelledby="results-title"><header><div><p class="kicker">Detalle</p><h2 id="results-title">Invitados encontrados</h2>@if (resultado(); as page) { <p class="summary">Mostrando {{ firstVisible() }}–{{ lastVisible() }} de {{ page.totalElements }}</p> }</div>@if (resultado()) { <label class="page-size">Filas <select [value]="pageSize()" (change)="cambiarTamano($any($event.target).value)">@for (size of sizes; track size) { <option [value]="size">{{ size }}</option> }</select></label> }</header>
+    <section class="panel results" aria-labelledby="results-title"><header><div><p class="kicker">Detalle</p><h2 id="results-title">Invitados encontrados</h2>@if (resultado(); as page) { <p class="summary">Mostrando {{ firstVisible() }}–{{ lastVisible() }} de {{ page.totalElements }}</p> }</div>@if (resultado()) { <label class="page-size">Filas <select [value]="pageSize()" (change)="cambiarTamanoDesdeEvento($event)">@for (size of sizes; track size) { <option [value]="size">{{ size }}</option> }</select></label> }</header>
     @if (cargando()) { <div class="state"><span class="spinner"></span><h3>Cargando reporte</h3><p>Consultando los invitados del período aplicado.</p></div> }
     @else if (error(); as message) { <div class="state"><strong class="state-icon">!</strong><h3>No se pudo cargar</h3><p>{{ message }}</p><button class="button primary-button" type="button" (click)="reintentar()">Reintentar</button></div> }
     @else if (resultado()?.totalElements === 0) { <div class="state"><strong class="state-icon empty">0</strong><h3>Sin resultados</h3><p>No hay invitados que coincidan con los filtros aplicados.</p></div> }

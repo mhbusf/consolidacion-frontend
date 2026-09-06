@@ -20,10 +20,11 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('consolidacion-frontend');
   });
 
-  it('should render title', () => {
+  it('should render the application shell', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, consolidacion-frontend');
+    expect(compiled.querySelector('app-navbar')).not.toBeNull();
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 });

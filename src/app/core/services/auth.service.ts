@@ -19,14 +19,26 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    const storedUser = localStorage.getItem('currentUser');
+    let storedUser: string | null;
+    try {
+      storedUser = localStorage.getItem('currentUser');
+    } catch {
+      storedUser = null;
+    }
+
     if (storedUser) {
-      if (this.isTokenExpired()) {
+      try {
+        const parsedUser: unknown = JSON.parse(storedUser);
+        if (!this.isJwtResponse(parsedUser) || this.isTokenExpired()) {
+          this.logout();
+        } else {
+          const user = this.withTokenFlags(parsedUser);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          this.currentUserSubject.next(user);
+        }
+      } catch {
+        // La sesión persistida no debe impedir que arranque la aplicación.
         this.logout();
-      } else {
-        const user = this.withTokenFlags(JSON.parse(storedUser));
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        this.currentUserSubject.next(user);
       }
     }
   }
@@ -49,13 +61,21 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
+    try {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+    } catch {
+      // El estado en memoria sigue siendo suficiente para cerrar la sesion.
+    }
     this.currentUserSubject.next(null);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    try {
+      return localStorage.getItem('token');
+    } catch {
+      return null;
+    }
   }
 
   isAuthenticated(): boolean {
@@ -72,8 +92,8 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return true;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
+      const payload = JSON.parse(this.decodeTokenPart(token)) as { exp?: unknown };
+      return typeof payload.exp !== 'number' || payload.exp * 1000 < Date.now();
     } catch {
       return true;
     }
@@ -129,13 +149,13 @@ export class AuthService {
   }
 
   getUserByUsername(username: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/users/${username}`);
+    return this.http.get<User>(`${this.apiUrl}/users/${encodeURIComponent(username)}`);
   }
 
   assignRole(username: string, roleName: string): Observable<string> {
     const params = new HttpParams().set('roleName', roleName);
     return this.http.put(
-      `${this.apiUrl}/users/${username}/roles`,
+      `${this.apiUrl}/users/${encodeURIComponent(username)}/roles`,
       {},
       { params, responseType: 'text' }
     );
@@ -148,7 +168,7 @@ export class AuthService {
   }
 
   deleteUser(username: string): Observable<string> {
-    return this.http.delete(`${this.apiUrl}/users/${username}`, {
+    return this.http.delete(`${this.apiUrl}/users/${encodeURIComponent(username)}`, {
       responseType: 'text',
     });
   }
@@ -157,19 +177,18 @@ export class AuthService {
     username: string,
     newPassword: string
   ): Observable<string> {
-    const params = new HttpParams().set('newPassword', newPassword);
     return this.http.put(
-      `${this.apiUrl}/users/${username}/password`,
-      {},
-      { params, responseType: 'text' }
+      `${this.apiUrl}/users/${encodeURIComponent(username)}/password`,
+      { newPassword },
+      { responseType: 'text' }
     );
   }
 
-  forgotPassword(email: string): Observable<any> {
+  forgotPassword(email: string): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/forgot-password`, { email });
   }
 
-  resetPassword(token: string, newPassword: string): Observable<any> {
+  resetPassword(token: string, newPassword: string): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/reset-password`, {
       token,
       newPassword,
@@ -187,6 +206,14 @@ export class AuthService {
     };
   }
 
+  private isJwtResponse(value: unknown): value is JwtResponse {
+    if (typeof value !== 'object' || value === null) return false;
+    const candidate = value as Partial<JwtResponse>;
+    return typeof candidate.token === 'string'
+      && typeof candidate.username === 'string'
+      && Array.isArray(candidate.roles);
+  }
+
   private getTokenFlag(flagName: string): boolean | null {
     const token = this.getToken();
     if (!token) return null;
@@ -195,10 +222,17 @@ export class AuthService {
 
   private readTokenFlag(token: string, flagName: string): boolean | null {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(this.decodeTokenPart(token)) as Record<string, unknown>;
       return typeof payload[flagName] === 'boolean' ? payload[flagName] : null;
     } catch {
       return null;
     }
+  }
+
+  private decodeTokenPart(token: string): string {
+    const part = token.split('.')[1];
+    if (!part) throw new Error('Token JWT inválido');
+    const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    return atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
   }
 }
