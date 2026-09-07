@@ -246,6 +246,16 @@ export class ConsolidadoDetailComponent implements OnInit {
     return this.isAdmin && !this.esTerminal();
   }
 
+  puedeSerAsignado(): boolean {
+    return this.isAdmin && !this.esTerminal();
+  }
+
+  asignar(): void {
+    if (!this.consolidado || !this.puedeSerAsignado()) return;
+
+    void this.router.navigate(['/consolidados', this.consolidado.id, 'asignar']);
+  }
+
   esTerminal(): boolean {
     return this.consolidado?.estado === 'GDC' || this.consolidado?.estado === 'CERRADO';
   }

@@ -129,12 +129,19 @@
               </button>
             </div>
           }
-          <div class="info-section">
-            <strong>Motivo de Oración:</strong>
-            <p>{{ consolidado.motivoOracion }}</p>
-          </div>
-          <!-- Acciones de cierre (solo ADMIN) -->
-          @if (puedeSerCerrado()) {
+           <div class="info-section">
+             <strong>Motivo de Oración:</strong>
+             <p>{{ consolidado.motivoOracion }}</p>
+           </div>
+           @if (puedeSerAsignado()) {
+             <div class="actions-section assignment-section">
+               <button class="btn-assign" (click)="asignar()">
+                 {{ consolidado.usuarioAsignado ? 'Reasignar consolidado' : 'Asignar consolidado' }}
+               </button>
+             </div>
+           }
+           <!-- Acciones de cierre (solo ADMIN) -->
+           @if (puedeSerCerrado()) {
             <div class="actions-section">
               <button class="btn-gdc" (click)="abrirModalGDC($event)">
                 📝 Cerrar con GDC

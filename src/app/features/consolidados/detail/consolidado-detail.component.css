@@ -219,7 +219,8 @@
 }
 
 .btn-gdc,
-.btn-close-without-gdc {
+.btn-close-without-gdc,
+.btn-assign {
   background: var(--primary-light);
   color: white;
   border: none;
@@ -230,6 +231,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.btn-assign {
+  background: #15803d;
+}
+
+.btn-assign:hover {
+  background: #166534;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 
 .btn-gdc:hover {
