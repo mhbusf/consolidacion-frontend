@@ -110,5 +110,23 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  {
+    path: 'inscripcion-encuentro/:token',
+    loadComponent: () => import('./features/encuentro-poder/public/encuentro-public.component').then(m => m.EncuentroPublicComponent)
+  },
+
+  {
+    path: 'encuentro-poder',
+    loadComponent: () => import('./features/encuentro-poder/dashboard/encuentro-dashboard.component').then(m => m.EncuentroDashboardComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'encuentro-poder/ciclos/nuevo',
+    loadComponent: () => import('./features/encuentro-poder/ciclos/encuentro-ciclo-create.component').then(m => m.EncuentroCicloCreateComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+
   { path: '**', redirectTo: '/login' }
 ];
