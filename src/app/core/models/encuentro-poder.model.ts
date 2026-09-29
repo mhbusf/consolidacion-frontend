@@ -56,6 +56,7 @@ export interface EncuentroDashboard {
   conAsistencia: number;
   completos: number;
   pendientes: number;
-  clases: { claseId: number; nombre: string; presentes: number; inscritos: number }[];
+  clases: { claseId: number; nombre: string; fecha: string; presentes: number; inscritos: number }[];
   participantes: EncuentroParticipante[];
+  graduados: EncuentroParticipante[];
 }
