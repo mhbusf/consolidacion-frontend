@@ -116,6 +116,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'asistencia-encuentro/:token',
+    loadComponent: () => import('./features/encuentro-poder/public/asistencia-public.component').then(m => m.AsistenciaPublicComponent)
+  },
+
+  {
     path: 'encuentro-poder',
     loadComponent: () => import('./features/encuentro-poder/dashboard/encuentro-dashboard.component').then(m => m.EncuentroDashboardComponent),
     canActivate: [authGuard]

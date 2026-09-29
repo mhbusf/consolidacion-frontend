@@ -4,6 +4,7 @@ export interface EncuentroClase {
   orden: number;
   fecha: string;
   obligatoria: boolean;
+  publicToken: string;
 }
 
 export interface EncuentroCiclo {
@@ -39,6 +40,13 @@ export interface EncuentroAsistencia {
   clase: string;
   metodo: string;
   fechaHora: string;
+}
+
+export interface EncuentroAsistenciaPublica {
+  cicloNombre: string;
+  claseNombre: string;
+  fecha: string;
+  inscripcionToken: string;
 }
 
 export interface EncuentroParticipante {

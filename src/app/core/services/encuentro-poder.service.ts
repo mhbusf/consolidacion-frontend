@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroInscripcion,
-  EncuentroParticipante, EncuentroPersona,
+  EncuentroParticipante, EncuentroPersona, EncuentroAsistenciaPublica,
 } from '../models/encuentro-poder.model';
 
 @Injectable({ providedIn: 'root' })
@@ -23,6 +23,8 @@ export class EncuentroPoderService {
   crearCiclo(request: { nombre: string; fechaInicio: string; clase0?: string; clase1: string; clase2: string; clase3: string }): Observable<EncuentroCiclo> { return this.http.post<EncuentroCiclo>(`${this.api}/ciclos`, request); }
   cerrarCiclo(id: number): Observable<void> { return this.http.put<void>(`${this.api}/ciclos/${id}/cerrar`, null); }
   inscribir(token: string, request: { nombreCompleto: string; telefono: string; comuna?: string; invitadoPor?: string; tiempoCatedral?: string }): Observable<EncuentroInscripcion> { return this.http.post<EncuentroInscripcion>(`${this.publicApi}/${token}/inscripciones`, request); }
+  infoAsistencia(token: string): Observable<EncuentroAsistenciaPublica> { return this.http.get<EncuentroAsistenciaPublica>(`${this.publicApi}/asistencia/${token}`); }
+  autoAsistencia(token: string, request: { nombreCompleto: string; telefono: string }): Observable<EncuentroAsistencia> { return this.http.post<EncuentroAsistencia>(`${this.publicApi}/asistencia/${token}`, request); }
   exportar(cicloId: number): Observable<Blob> { return this.http.get(`${this.api}/ciclos/${cicloId}/exportar`, { responseType: 'blob' }); }
   importar(cicloId: number, archivo: File): Observable<{ inscripcionesImportadas: number; asistenciasImportadas: number; sinTelefono: number; sinCoincidencia: number; ambiguas: number }> { const body = new FormData(); body.append('archivo', archivo); return this.http.post<{ inscripcionesImportadas: number; asistenciasImportadas: number; sinTelefono: number; sinCoincidencia: number; ambiguas: number }>(`${this.api}/ciclos/${cicloId}/importar`, body); }
   urlExportacion(cicloId: number): string { return `${this.api}/ciclos/${cicloId}/exportar`; }
