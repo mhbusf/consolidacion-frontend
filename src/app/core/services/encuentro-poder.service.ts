@@ -24,6 +24,6 @@ export class EncuentroPoderService {
   cerrarCiclo(id: number): Observable<void> { return this.http.put<void>(`${this.api}/ciclos/${id}/cerrar`, null); }
   inscribir(token: string, request: { nombreCompleto: string; telefono: string; comuna?: string; invitadoPor?: string; tiempoCatedral?: string }): Observable<EncuentroInscripcion> { return this.http.post<EncuentroInscripcion>(`${this.publicApi}/${token}/inscripciones`, request); }
   exportar(cicloId: number): Observable<Blob> { return this.http.get(`${this.api}/ciclos/${cicloId}/exportar`, { responseType: 'blob' }); }
-  importar(cicloId: number, archivo: File): Observable<unknown> { const body = new FormData(); body.append('archivo', archivo); return this.http.post(`${this.api}/ciclos/${cicloId}/importar`, body); }
+  importar(cicloId: number, archivo: File): Observable<{ inscripcionesImportadas: number; asistenciasImportadas: number; sinTelefono: number; sinCoincidencia: number; ambiguas: number }> { const body = new FormData(); body.append('archivo', archivo); return this.http.post<{ inscripcionesImportadas: number; asistenciasImportadas: number; sinTelefono: number; sinCoincidencia: number; ambiguas: number }>(`${this.api}/ciclos/${cicloId}/importar`, body); }
   urlExportacion(cicloId: number): string { return `${this.api}/ciclos/${cicloId}/exportar`; }
 }
