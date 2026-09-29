@@ -84,6 +84,19 @@ import { JwtResponse } from '../../../core/models/auth.model';
                 }
               </div>
             </li>
+            <li class="nav-group" [class.open]="openGroup === 'encuentro'" [class.active]="isRouteGroupActive(['/encuentro-poder'])">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)">
+                <span class="menu-icon">⚡</span>
+                Encuentro de Poder
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="nav-submenu">
+                <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
+                  <span class="menu-icon">⚡</span>
+                  Panel de Encuentro
+                </a>
+              </div>
+            </li>
             <li class="nav-group" [class.open]="openGroup === 'usuario'" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
               <button class="nav-group-toggle" type="button" (click)="toggleGroup('usuario', $event)">
                 <span class="menu-icon">🔐</span>
@@ -529,7 +542,7 @@ export class NavbarComponent implements OnInit {
   currentUser$: Observable<JwtResponse | null>;
   isAdmin = false;
   dropdownOpen = false;
-  openGroup: 'consolidacion' | 'cafe' | 'usuario' | null = null;
+  openGroup: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario' | null = null;
   mobileMenuOpen = false;
 
   constructor(public authService: AuthService, private router: Router, private el: ElementRef) {
@@ -556,7 +569,7 @@ export class NavbarComponent implements OnInit {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
 
-  toggleGroup(group: 'consolidacion' | 'cafe' | 'usuario', event: Event): void {
+  toggleGroup(group: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario', event: Event): void {
     event.stopPropagation();
     this.dropdownOpen = false;
     this.openGroup = this.openGroup === group ? null : group;
