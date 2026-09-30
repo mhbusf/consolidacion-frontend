@@ -116,23 +116,26 @@ describe('EncuentroDashboardComponent', () => {
   it('no permite que una lectura antigua borre una asistencia confirmada', () => {
     component.cicloSeleccionado.set(1);
     component.cargar();
+    const confirmacion = new Subject<EncuentroAsistencia>();
+    service.registrarAsistencia.and.returnValue(confirmacion);
+    component.marcar(component.dashboard()!.participantes[0]);
     const lecturaAntigua = new Subject<EncuentroDashboard>();
     service.dashboard.and.returnValue(lecturaAntigua);
     component.cargar();
-    service.registrarAsistencia.and.returnValue(of({
+    confirmacion.next({
       id: 32,
       personaId: 21,
       claseId: 11,
       clase: 'Clase 1',
       metodo: 'MANUAL',
       fechaHora: '2026-10-08T20:00:00',
-    }));
-
-    component.marcar(component.dashboard()!.participantes[0]);
+    });
+    confirmacion.complete();
     lecturaAntigua.next(dashboard());
     lecturaAntigua.complete();
 
     expect(component.dashboard()?.participantes[0].clasesCompletadas).toBe(1);
     expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.presentes).toBe(1);
+    expect(service.dashboard).toHaveBeenCalledTimes(3);
   });
 });

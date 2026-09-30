@@ -18,14 +18,14 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 
     <section class="toolbar">
       <label>Ciclo
-        <select [value]="cicloSeleccionado() ?? ''" (change)="seleccionarCiclo($event)" [disabled]="cargandoCiclos()">
+        <select [value]="cicloSeleccionado() ?? ''" (change)="seleccionarCiclo($event)" [disabled]="cargandoCiclos() || importando() || marcando().size > 0">
           <option value="">{{ cargandoCiclos() ? 'Cargando ciclos...' : 'Selecciona un ciclo' }}</option>
           @for (ciclo of ciclos(); track ciclo.id) {<option [value]="ciclo.id">{{ ciclo.nombre }} · {{ ciclo.estado }}</option>}
         </select>
       </label>
       @if (dashboard()) {
         <button class="button" (click)="exportar()" [disabled]="exportando()">{{ exportando() ? 'Exportando...' : 'Exportar Excel' }}</button>
-        <button class="button secondary" (click)="archivoInput.click()" [disabled]="importando()">{{ importando() ? 'Importando...' : 'Importar Excel' }}</button>
+        <button class="button secondary" (click)="archivoInput.click()" [disabled]="importando() || marcando().size > 0">{{ importando() ? 'Importando...' : 'Importar Excel' }}</button>
         <input #archivoInput type="file" accept=".xlsx" hidden (change)="importar($event)">
         <button class="button secondary" (click)="copiarEnlace()">Copiar enlace de inscripción</button>
       }
@@ -77,7 +77,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
               <div class="attendee">
                 <div><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.telefono }}</small></div>
                 @if (presentesClase().has(participante.persona.id)) {<span class="present">Presente</span>}
-                @else {<button class="mark" [disabled]="!claseSeleccionada() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : 'Marcar' }}</button>}
+                @else {<button class="mark" [disabled]="!claseSeleccionada() || cargando() || importando() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : 'Marcar' }}</button>}
               </div>
             }
           </div>
@@ -213,7 +213,8 @@ export class EncuentroDashboardComponent implements OnInit {
       finalize(() => { if (sequence === this.dashboardSequence) this.cargando.set(false); }),
     ).subscribe({
       next: data => {
-        if (sequence !== this.dashboardSequence || revision !== this.dataRevision) return;
+        if (sequence !== this.dashboardSequence) return;
+        if (revision !== this.dataRevision) { this.cargar(); return; }
         const claseActual = this.claseSeleccionada();
         const conservaClase = data.ciclo.clases.some(clase => clase.id === claseActual && clase.obligatoria);
         this.dashboard.set(data);
@@ -242,7 +243,7 @@ export class EncuentroDashboardComponent implements OnInit {
   marcar(participante: EncuentroParticipante): void {
     const data = this.dashboard();
     const claseId = this.claseSeleccionada();
-    if (!data || !claseId) return;
+    if (!data || !claseId || this.cargando() || this.importando()) return;
     const cicloId = data.ciclo.id;
     const key = `${claseId}:${participante.persona.id}`;
     if (this.marcando().has(key)) return;

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {
   LoginRequest,
@@ -19,7 +20,7 @@ export class AuthService {
   private expirationTimer?: ReturnType<typeof setTimeout>;
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private router: Router) {
     let storedUser: string | null;
     try {
       storedUser = localStorage.getItem('currentUser');
@@ -116,7 +117,10 @@ export class AuthService {
         this.logout();
         return;
       }
-      this.expirationTimer = setTimeout(() => this.logout(), delay);
+      this.expirationTimer = setTimeout(() => {
+        this.logout();
+        void this.router.navigate(['/login']);
+      }, delay);
     } catch {
       this.logout();
     }

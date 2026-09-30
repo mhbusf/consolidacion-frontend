@@ -9,14 +9,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const apiUrl = environment.apiUrl.replace(/\/$/, '');
+  const requestUrl = new URL(req.url, window.location.origin);
+  const apiBaseUrl = new URL(apiUrl, window.location.origin);
   const isApiRequest = req.url === apiUrl || req.url.startsWith(`${apiUrl}/`)
-    || (apiUrl.startsWith('/') && new URL(req.url, window.location.origin).pathname.startsWith(`${apiUrl}/`));
+    || (apiUrl.startsWith('/') && requestUrl.origin === apiBaseUrl.origin && requestUrl.pathname.startsWith(`${apiUrl}/`));
   if (!isApiRequest) {
     return next(req);
   }
 
-  const requestUrl = new URL(req.url, window.location.origin);
-  const apiBaseUrl = new URL(apiUrl, window.location.origin);
   const apiBasePath = apiBaseUrl.pathname.replace(/\/$/, '');
   const apiPath = requestUrl.pathname.startsWith(`${apiBasePath}/`)
     ? requestUrl.pathname.slice(apiBasePath.length)
