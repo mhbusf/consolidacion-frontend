@@ -93,6 +93,23 @@ describe('EncuentroDashboardComponent', () => {
     expect(fixture.nativeElement.querySelector('.absence-cell')?.textContent).toContain('Clase 1');
   });
 
+  it('muestra una estrella junto al nombre solo cuando la persona está graduada', () => {
+    expect(fixture.nativeElement.querySelector('.attendee .graduate-star')).toBeNull();
+    const data = dashboard();
+    const graduado = {
+      ...data.participantes[0],
+      clasesCompletadas: 3,
+      clasesFaltantes: [],
+      estado: 'COMPLETO' as const,
+    };
+    component.dashboard.set({ ...data, participantes: [graduado], graduados: [graduado] });
+    fixture.detectChanges();
+
+    const estrella: HTMLElement = fixture.nativeElement.querySelector('.attendee .graduate-star');
+    expect(estrella.textContent).toContain('★');
+    expect(estrella.getAttribute('title')).toBe('Graduado');
+  });
+
   it('actualiza la asistencia localmente sin volver a descargar el dashboard', () => {
     component.cicloSeleccionado.set(1);
     component.cargar();

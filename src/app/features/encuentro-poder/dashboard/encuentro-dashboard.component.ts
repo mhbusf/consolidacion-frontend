@@ -81,7 +81,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
           <div class="attendees">
             @for (participante of participantesFiltrados(); track participante.persona.id) {
               <div class="attendee">
-                <div><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.telefono }}</small></div>
+                <div><span><strong>{{ participante.persona.nombreCompleto }}</strong>@if (participante.estado === 'COMPLETO') {<span class="graduate-star" title="Graduado" aria-label="Graduado" style="display:inline-block;margin-left:7px;color:#f5b700;font-size:19px;line-height:1;vertical-align:-1px">★</span>}</span><small>{{ participante.persona.telefono }}</small></div>
                 @if (presentesClase().has(participante.persona.id)) {<span class="present">Presente</span>}
                 @else {<div class="attendee-action"><span [class.absent]="estadoClaseSeleccionada() === 'FINALIZADA'" class="attendance-state">{{ etiquetaEstadoPersona(estadoClaseSeleccionada()) }}</span><button class="mark" [disabled]="!claseSeleccionada() || estadoClaseSeleccionada() === 'PROGRAMADA' || cargando() || importando() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : estadoClaseSeleccionada() === 'FINALIZADA' ? 'Corregir a presente' : estadoClaseSeleccionada() === 'PROGRAMADA' ? 'Aún no disponible' : 'Marcar presente' }}</button></div>}
               </div>
