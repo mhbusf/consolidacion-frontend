@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroAsistenciaPublica } from '../../../core/models/encuentro-poder.model';
+import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 
 @Component({
   selector: 'app-asistencia-public',
@@ -15,12 +16,12 @@ import { EncuentroAsistenciaPublica } from '../../../core/models/encuentro-poder
     <span class="eyebrow">Encuentro de Poder</span>
     @if (info(); as clase) {<h1>{{ clase.claseNombre }}</h1><p class="muted">{{ clase.cicloNombre }} · {{ clase.fecha | date:'dd/MM/yyyy' }}</p>}
     @if (cargando()) {<p class="muted">Cargando clase...</p>}
-    @if (!registrada() && info()) {<form [formGroup]="form" (ngSubmit)="enviar()"><label>Nombre completo *<input formControlName="nombreCompleto" autocomplete="name"></label><label>Teléfono *<input type="tel" formControlName="telefono" placeholder="+56912345678" autocomplete="tel"></label><button [disabled]="form.invalid || enviando()">{{ enviando() ? 'Registrando...' : 'Registrar asistencia' }}</button></form>}
+    @if (!registrada() && info()) {<p class="muted">Usa el mismo nombre y teléfono con que te inscribiste.</p><form [formGroup]="form" (ngSubmit)="enviar()"><label>Nombre completo *<input formControlName="nombreCompleto" autocomplete="name"></label><label>Teléfono *<input type="tel" inputmode="tel" formControlName="telefono" placeholder="56912345678" autocomplete="tel">@if (form.controls.telefono.touched && form.controls.telefono.hasError('required')) {<small class="field-error">El teléfono es obligatorio.</small>} @else if (form.controls.telefono.touched && form.controls.telefono.hasError('telefonoChileno11Digitos')) {<small class="field-error">Ingresa 11 dígitos incluyendo 56. Ejemplo: 56912345678.</small>}</label><button [disabled]="form.invalid || enviando()">{{ enviando() ? 'Registrando...' : 'Registrar mi asistencia' }}</button></form>}
     @if (mensaje()) {<div class="success">{{ mensaje() }}</div>}
     @if (error()) {<div class="error">{{ error() }}</div>}
     @if (info(); as clase) {<p class="registration">¿No estás inscrito? <a [href]="'/inscripcion-encuentro/' + clase.inscripcionToken">Completa tu inscripción aquí</a>.</p>}
   </section></main>`,
-  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0}.eyebrow{color:#8fb7ff;font-weight:700}.muted{color:#aab7ca}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.error{background:#642c35}`],
+  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0}.eyebrow{color:#8fb7ff;font-weight:700}.muted{color:#aab7ca}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}.field-error{color:#fca5a5;font-weight:500}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.error{background:#642c35}`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AsistenciaPublicComponent implements OnInit {
@@ -28,7 +29,7 @@ export class AsistenciaPublicComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly service = inject(EncuentroPoderService);
   private readonly destroyRef = inject(DestroyRef);
-  readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3)]], telefono: ['', [Validators.required, Validators.minLength(8)]] });
+  readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3)]], telefono: ['', [Validators.required, TelefonoChilenoValidator.validarConCodigoPais()]] });
   readonly info = signal<EncuentroAsistenciaPublica | null>(null);
   readonly cargando = signal(true);
   readonly enviando = signal(false);

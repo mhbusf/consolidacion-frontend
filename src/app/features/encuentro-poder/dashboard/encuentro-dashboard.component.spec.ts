@@ -79,6 +79,7 @@ describe('EncuentroDashboardComponent', () => {
     expect(component.dashboard()?.ciclo.id).toBe(1);
     expect(component.claseSeleccionada()).toBe(11);
     expect(fixture.nativeElement.textContent).toContain('Persona Prueba');
+    expect(fixture.nativeElement.textContent).toContain('Copiar enlace de asistencia');
   });
 
   it('actualiza la asistencia localmente sin volver a descargar el dashboard', () => {

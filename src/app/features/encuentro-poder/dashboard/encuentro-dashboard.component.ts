@@ -31,7 +31,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
       }
     </section>
 
-    @if (enlaceCopiado()) {<p class="notice">Enlace copiado al portapapeles.</p>}
+    @if (enlaceCopiado()) {<p class="notice">{{ enlaceCopiado() }}</p>}
     @if (mensajeImportacion()) {<p class="notice">{{ mensajeImportacion() }}</p>}
     @if (errorImportacion()) {<p class="error">{{ errorImportacion() }}</p>}
     @if (errorAsistencia()) {<p class="error">{{ errorAsistencia() }}</p>}
@@ -56,7 +56,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
               <span>{{ clase.nombre }}<small>{{ clase.fecha | date:'dd/MM/yyyy' }}</small></span>
               <strong>{{ clase.presentes }} / {{ clase.inscritos }} ({{ porcentaje(clase.presentes, clase.inscritos) }}%)</strong>
               @if (esClaseObligatoria(data.ciclo.clases, clase.claseId)) {
-                <button class="link" (click)="generarQr(data.ciclo.clases, clase.claseId)" [disabled]="generandoQr() === clase.claseId">{{ generandoQr() === clase.claseId ? 'Generando...' : 'Generar QR' }}</button>
+                <span><button class="link" (click)="copiarEnlaceAsistencia(data.ciclo.clases, clase.claseId)">Copiar enlace de asistencia</button> · <button class="link" (click)="generarQr(data.ciclo.clases, clase.claseId)" [disabled]="generandoQr() === clase.claseId">{{ generandoQr() === clase.claseId ? 'Generando...' : 'Generar QR' }}</button></span>
               }
               <div class="bar"><i [style.width.%]="porcentaje(clase.presentes, clase.inscritos)"></i></div>
             </div>
@@ -128,7 +128,7 @@ export class EncuentroDashboardComponent implements OnInit {
   readonly cargandoCiclos = signal(true);
   readonly cargando = signal(false);
   readonly marcando = signal<ReadonlySet<string>>(new Set());
-  readonly enlaceCopiado = signal(false);
+  readonly enlaceCopiado = signal('');
   readonly importando = signal(false);
   readonly exportando = signal(false);
   readonly generandoQr = signal<number | null>(null);
@@ -329,15 +329,16 @@ export class EncuentroDashboardComponent implements OnInit {
   async copiarEnlace(): Promise<void> {
     const ciclo = this.ciclos().find(item => item.id === this.cicloSeleccionado());
     if (!ciclo) return;
-    this.errorAccion.set('');
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/inscripcion-encuentro/${ciclo.publicToken}`);
-      this.enlaceCopiado.set(true);
-      if (this.copyTimer) clearTimeout(this.copyTimer);
-      this.copyTimer = setTimeout(() => this.enlaceCopiado.set(false), 2200);
-    } catch {
-      this.errorAccion.set('No fue posible copiar el enlace al portapapeles.');
+    await this.copiarUrl(`${window.location.origin}/inscripcion-encuentro/${ciclo.publicToken}`, 'Enlace de inscripción copiado al portapapeles.');
+  }
+
+  async copiarEnlaceAsistencia(clases: EncuentroCiclo['clases'], claseId: number): Promise<void> {
+    const clase = clases.find(item => item.id === claseId && item.obligatoria);
+    if (!clase?.publicToken) {
+      this.errorAccion.set('Esta clase no tiene un enlace público de asistencia.');
+      return;
     }
+    await this.copiarUrl(`${window.location.origin}/asistencia-encuentro/${clase.publicToken}`, `Enlace de asistencia para ${clase.nombre} copiado al portapapeles.`);
   }
 
   importar(event: Event): void {
@@ -398,6 +399,18 @@ export class EncuentroDashboardComponent implements OnInit {
     anchor.download = nombre;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  private async copiarUrl(url: string, mensaje: string): Promise<void> {
+    this.errorAccion.set('');
+    try {
+      await navigator.clipboard.writeText(url);
+      this.enlaceCopiado.set(mensaje);
+      if (this.copyTimer) clearTimeout(this.copyTimer);
+      this.copyTimer = setTimeout(() => this.enlaceCopiado.set(''), 2200);
+    } catch {
+      this.errorAccion.set('No fue posible copiar el enlace al portapapeles.');
+    }
   }
 
   private mensajeError(error: unknown, fallback: string): string {

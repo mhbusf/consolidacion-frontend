@@ -18,4 +18,17 @@ export class TelefonoChilenoValidator {
       return regex.test(value) ? null : { telefonoInvalido: true };
     };
   }
+
+  static validarConCodigoPais(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) return null;
+
+      const original = control.value.toString().trim();
+      const digitos = original.replace(/\D/g, '');
+      const caracteresValidos = /^\+?[\d\s()-]+$/.test(original);
+      return caracteresValidos && /^56[2-9]\d{8}$/.test(digitos)
+        ? null
+        : { telefonoChileno11Digitos: true };
+    };
+  }
 }
