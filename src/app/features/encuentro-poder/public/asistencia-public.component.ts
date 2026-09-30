@@ -14,14 +14,18 @@ import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-ch
   imports: [CommonModule, ReactiveFormsModule],
   template: `<main class="public-page"><section class="card">
     <span class="eyebrow">Encuentro de Poder</span>
-    @if (info(); as clase) {<h1>{{ clase.claseNombre }}</h1><p class="muted">{{ clase.cicloNombre }} · {{ clase.fecha | date:'dd/MM/yyyy' }}</p>}
+    @if (info(); as clase) {
+      <h1>{{ clase.claseNombre }}</h1><p class="muted">{{ clase.cicloNombre }} · {{ clase.fecha | date:'dd/MM/yyyy' }}</p>
+      @if (clase.estado === 'PROGRAMADA') {<div class="availability">La autoasistencia estará disponible el día de la clase.</div>}
+      @else if (clase.estado === 'FINALIZADA') {<div class="availability closed">La autoasistencia ya finalizó. Si necesitas corregir tu asistencia, comunícate con un encargado.</div>}
+      @else if (!registrada()) {<p class="muted">Usa el mismo nombre y teléfono con que te inscribiste.</p><form [formGroup]="form" (ngSubmit)="enviar()"><label>Nombre completo *<input formControlName="nombreCompleto" autocomplete="name"></label><label>Teléfono *<input type="tel" inputmode="tel" formControlName="telefono" placeholder="56912345678" autocomplete="tel">@if (form.controls.telefono.touched && form.controls.telefono.hasError('required')) {<small class="field-error">El teléfono es obligatorio.</small>} @else if (form.controls.telefono.touched && form.controls.telefono.hasError('telefonoChileno11Digitos')) {<small class="field-error">Ingresa 11 dígitos incluyendo 56. Ejemplo: 56912345678.</small>}</label><button [disabled]="form.invalid || enviando()">{{ enviando() ? 'Registrando...' : 'Registrar mi asistencia' }}</button></form>}
+      <p class="registration">¿No estás inscrito? <a [href]="'/inscripcion-encuentro/' + clase.inscripcionToken">Completa tu inscripción aquí</a>.</p>
+    }
     @if (cargando()) {<p class="muted">Cargando clase...</p>}
-    @if (!registrada() && info()) {<p class="muted">Usa el mismo nombre y teléfono con que te inscribiste.</p><form [formGroup]="form" (ngSubmit)="enviar()"><label>Nombre completo *<input formControlName="nombreCompleto" autocomplete="name"></label><label>Teléfono *<input type="tel" inputmode="tel" formControlName="telefono" placeholder="56912345678" autocomplete="tel">@if (form.controls.telefono.touched && form.controls.telefono.hasError('required')) {<small class="field-error">El teléfono es obligatorio.</small>} @else if (form.controls.telefono.touched && form.controls.telefono.hasError('telefonoChileno11Digitos')) {<small class="field-error">Ingresa 11 dígitos incluyendo 56. Ejemplo: 56912345678.</small>}</label><button [disabled]="form.invalid || enviando()">{{ enviando() ? 'Registrando...' : 'Registrar mi asistencia' }}</button></form>}
     @if (mensaje()) {<div class="success">{{ mensaje() }}</div>}
     @if (error()) {<div class="error">{{ error() }}</div>}
-    @if (info(); as clase) {<p class="registration">¿No estás inscrito? <a [href]="'/inscripcion-encuentro/' + clase.inscripcionToken">Completa tu inscripción aquí</a>.</p>}
   </section></main>`,
-  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0}.eyebrow{color:#8fb7ff;font-weight:700}.muted{color:#aab7ca}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}.field-error{color:#fca5a5;font-weight:500}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.error{background:#642c35}`],
+  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0}.eyebrow{color:#8fb7ff;font-weight:700}.muted{color:#aab7ca}.availability{margin:22px 0;padding:15px;border:1px solid #31558c;border-radius:10px;background:#1d3557;color:#dbeafe}.availability.closed{border-color:#7f3b46;background:#4c2630;color:#fecdd3}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}.field-error{color:#fca5a5;font-weight:500}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.error{background:#642c35}`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AsistenciaPublicComponent implements OnInit {
@@ -48,7 +52,7 @@ export class AsistenciaPublicComponent implements OnInit {
   }
 
   enviar(): void {
-    if (this.form.invalid || this.enviando()) { this.form.markAllAsTouched(); return; }
+    if (this.info()?.estado !== 'EN_CURSO' || this.form.invalid || this.enviando()) { this.form.markAllAsTouched(); return; }
     this.enviando.set(true);
     this.error.set('');
     this.mensaje.set('');

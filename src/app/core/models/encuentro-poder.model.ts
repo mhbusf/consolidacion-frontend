@@ -1,3 +1,5 @@
+export type EncuentroEstadoClase = 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA';
+
 export interface EncuentroClase {
   id: number;
   nombre: string;
@@ -5,6 +7,7 @@ export interface EncuentroClase {
   fecha: string;
   obligatoria: boolean;
   publicToken: string;
+  estado: EncuentroEstadoClase;
 }
 
 export interface EncuentroCiclo {
@@ -47,6 +50,7 @@ export interface EncuentroAsistenciaPublica {
   claseNombre: string;
   fecha: string;
   inscripcionToken: string;
+  estado: EncuentroEstadoClase;
 }
 
 export interface EncuentroImportacion {
@@ -72,7 +76,7 @@ export interface EncuentroDashboard {
   conAsistencia: number;
   completos: number;
   pendientes: number;
-  clases: { claseId: number; nombre: string; fecha: string; presentes: number; inscritos: number }[];
+  clases: { claseId: number; nombre: string; fecha: string; presentes: number; inscritos: number; ausentes: number; estado: EncuentroEstadoClase }[];
   participantes: EncuentroParticipante[];
   graduados: EncuentroParticipante[];
 }

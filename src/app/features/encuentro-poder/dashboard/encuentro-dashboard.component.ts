@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
-import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
+import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroEstadoClase, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 
 @Component({
@@ -54,7 +54,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
           @for (clase of data.clases; track clase.claseId) {
             <div class="class-row">
               <span>{{ clase.nombre }}<small>{{ clase.fecha | date:'dd/MM/yyyy' }}</small></span>
-              <strong>{{ clase.presentes }} / {{ clase.inscritos }} ({{ porcentaje(clase.presentes, clase.inscritos) }}%)</strong>
+              <span class="class-count"><strong>{{ clase.presentes }} / {{ clase.inscritos }} ({{ porcentaje(clase.presentes, clase.inscritos) }}%)</strong><small class="lifecycle" [class.finalized]="clase.estado === 'FINALIZADA'" [class.current]="clase.estado === 'EN_CURSO'">{{ etiquetaEstadoClase(clase.estado) }}@if (clase.estado === 'FINALIZADA' && esClaseObligatoria(data.ciclo.clases, clase.claseId)) { · {{ clase.ausentes }} ausente{{ clase.ausentes === 1 ? '' : 's' }}}</small></span>
               @if (esClaseObligatoria(data.ciclo.clases, clase.claseId)) {
                 <span><button class="link" (click)="copiarEnlaceAsistencia(data.ciclo.clases, clase.claseId)">Copiar enlace de asistencia</button> · <button class="link" (click)="generarQr(data.ciclo.clases, clase.claseId)" [disabled]="generandoQr() === clase.claseId">{{ generandoQr() === clase.claseId ? 'Generando...' : 'Generar QR' }}</button></span>
               }
@@ -71,13 +71,19 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
               @for (clase of data.ciclo.clases; track clase.id) { @if (clase.obligatoria) {<option [ngValue]="clase.id">{{ clase.nombre }}</option>} }
             </select>
           </label>
+          @if (claseSeleccionada(); as claseId) {
+            <div class="attendance-actions">
+              <button class="button" (click)="copiarEnlaceAsistencia(data.ciclo.clases, claseId)">Copiar link de autoasistencia</button>
+              <button class="button secondary" (click)="generarQr(data.ciclo.clases, claseId)" [disabled]="generandoQr() === claseId">{{ generandoQr() === claseId ? 'Generando...' : 'Generar QR' }}</button>
+            </div>
+          }
           <input class="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Buscar por nombre o teléfono">
           <div class="attendees">
             @for (participante of participantesFiltrados(); track participante.persona.id) {
               <div class="attendee">
                 <div><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.telefono }}</small></div>
                 @if (presentesClase().has(participante.persona.id)) {<span class="present">Presente</span>}
-                @else {<button class="mark" [disabled]="!claseSeleccionada() || cargando() || importando() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : 'Marcar' }}</button>}
+                @else {<div class="attendee-action"><span [class.absent]="estadoClaseSeleccionada() === 'FINALIZADA'" class="attendance-state">{{ etiquetaEstadoPersona(estadoClaseSeleccionada()) }}</span><button class="mark" [disabled]="!claseSeleccionada() || estadoClaseSeleccionada() === 'PROGRAMADA' || cargando() || importando() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : estadoClaseSeleccionada() === 'FINALIZADA' ? 'Corregir a presente' : estadoClaseSeleccionada() === 'PROGRAMADA' ? 'Aún no disponible' : 'Marcar presente' }}</button></div>}
               </div>
             }
           </div>
@@ -95,8 +101,8 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 
       <section class="panel">
         <h2>Estado de graduación</h2>
-        <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Clases completadas</th><th>Faltantes</th><th>Estado</th><th></th></tr></thead><tbody>
-          @for (participante of participantesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td>{{ participante.clasesFaltantes.join(', ') || '—' }}</td><td><span [class.complete]="participante.estado === 'COMPLETO'" class="status">{{ participante.estado }}</span></td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
+        <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Clases completadas</th><th>Ausencias</th><th>Pendientes</th><th>Estado</th><th></th></tr></thead><tbody>
+          @for (participante of participantesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td class="absence-cell">{{ clasesAusentes(participante, data.ciclo.clases).join(', ') || '—' }}</td><td>{{ clasesPendientes(participante, data.ciclo.clases).join(', ') || '—' }}</td><td><span [class.complete]="participante.estado === 'COMPLETO'" class="status">{{ participante.estado }}</span></td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
         </tbody></table></div>
         @if (totalPaginas() > 1) {<div><button class="button secondary" [disabled]="paginaEstado() === 0" (click)="cambiarPagina(-1)">Anterior</button> Página {{ paginaEstado() + 1 }} de {{ totalPaginas() }} <button class="button secondary" [disabled]="paginaEstado() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button></div>}
       </section>
@@ -105,7 +111,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
       @if (qr(); as codigo) {<div class="modal-backdrop" (click)="cerrarQr()"><article class="modal qr-modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarQr()">×</button><h2>QR {{ codigo.nombre }}</h2><p>{{ codigo.fecha | date:'dd/MM/yyyy' }}</p><img [src]="codigo.imagen" [alt]="'QR para ' + codigo.nombre"><button class="button" (click)="descargarQr()">Descargar QR</button><small>{{ codigo.url }}</small></article></div>}
     } @else if (!cargando() && !errorDashboard()) {<div class="empty">Selecciona un ciclo para comenzar.</div>}
   </div>`,
-  styles: [`:host{display:block;color:var(--text-primary)}.page{max-width:1280px;margin:0 auto;padding:28px 22px}.heading,.toolbar,.stats,.grid{display:flex;gap:16px}.heading{justify-content:space-between;align-items:center;margin-bottom:22px}.eyebrow{color:#7da9ff;font-weight:700}h1{font-size:34px;margin:6px 0 0}h2{margin-top:0;font-size:18px}.toolbar{align-items:end;flex-wrap:wrap;padding:16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.toolbar label,.panel label{display:grid;gap:6px;font-size:13px;font-weight:600}select,.search{min-width:240px;padding:10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary)}.button,.mark{border:0;border-radius:8px;background:#3978ee;color:white;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}.secondary{background:transparent;border:1px solid var(--border-color);color:var(--text-primary)}.notice,.empty{padding:14px;background:rgba(59,130,246,.12);border-radius:10px;margin:16px 0}.stats{margin:20px 0}.stats article{flex:1;padding:18px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.stats b{display:block;font-size:28px}.stats span{color:var(--text-secondary);font-size:13px}.grid{align-items:start}.panel{flex:1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:18px}.class-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}.bar{grid-column:1/-1;height:7px;background:var(--bg-secondary);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:#4f8cff}.search{width:100%;box-sizing:border-box;margin:14px 0}.attendees{max-height:420px;overflow:auto}.attendee{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-color)}small{display:block;color:var(--text-secondary);margin-top:3px}.present{color:#4ade80;font-weight:700}.mark{padding:7px 10px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border-color);white-space:nowrap}.status{color:#fbbf24}.status.complete{color:#4ade80}.link{border:0;background:none;color:#75a6ff;cursor:pointer}.modal-backdrop{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:20px}.modal{position:relative;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:26px;min-width:min(500px,100%)}.close{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--text-primary);font-size:26px}.history-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color)}.muted{color:var(--text-secondary)}@media(max-width:800px){.grid,.stats{display:grid;grid-template-columns:1fr}.heading{align-items:start}.stats article{display:flex;justify-content:space-between;align-items:center}}`],
+  styles: [`:host{display:block;color:var(--text-primary)}.page{max-width:1280px;margin:0 auto;padding:28px 22px}.heading,.toolbar,.stats,.grid{display:flex;gap:16px}.heading{justify-content:space-between;align-items:center;margin-bottom:22px}.eyebrow{color:#7da9ff;font-weight:700}h1{font-size:34px;margin:6px 0 0}h2{margin-top:0;font-size:18px}.toolbar{align-items:end;flex-wrap:wrap;padding:16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.toolbar label,.panel label{display:grid;gap:6px;font-size:13px;font-weight:600}select,.search{min-width:240px;padding:10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary)}.button,.mark{border:0;border-radius:8px;background:#3978ee;color:white;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}.button:disabled,.mark:disabled{opacity:.55;cursor:not-allowed}.secondary{background:transparent;border:1px solid var(--border-color);color:var(--text-primary)}.notice,.empty{padding:14px;background:rgba(59,130,246,.12);border-radius:10px;margin:16px 0}.stats{margin:20px 0}.stats article{flex:1;padding:18px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.stats b{display:block;font-size:28px}.stats span{color:var(--text-secondary);font-size:13px}.grid{align-items:start}.panel{flex:1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:18px}.class-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}.class-count{text-align:right}.lifecycle{font-weight:700}.lifecycle.current,.present{color:#16a34a}.lifecycle.finalized,.absent,.absence-cell{color:#dc2626}.bar{grid-column:1/-1;height:7px;background:var(--bg-secondary);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:#4f8cff}.attendance-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}.attendance-actions .button{flex:1;min-width:190px}.search{width:100%;box-sizing:border-box;margin:14px 0}.attendees{max-height:420px;overflow:auto}.attendee{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-color)}small{display:block;color:var(--text-secondary);margin-top:3px}.present,.attendance-state{font-weight:700}.attendee-action{display:flex;align-items:center;justify-content:flex-end;gap:8px}.mark{padding:7px 10px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border-color);white-space:nowrap}.status{color:#f59e0b}.status.complete{color:#16a34a}.link{border:0;background:none;color:#2563eb;cursor:pointer}.modal-backdrop{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:20px}.modal{position:relative;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:26px;min-width:min(500px,100%)}.close{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--text-primary);font-size:26px}.history-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color)}.muted{color:var(--text-secondary)}@media(max-width:800px){.grid,.stats{display:grid;grid-template-columns:1fr}.heading{align-items:start}.stats article{display:flex;justify-content:space-between;align-items:center}.attendee{align-items:flex-start}.attendee-action{align-items:flex-end;flex-direction:column}}`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EncuentroDashboardComponent implements OnInit {
@@ -155,6 +161,10 @@ export class EncuentroDashboardComponent implements OnInit {
     return new Set((this.dashboard()?.participantes ?? [])
       .filter(participante => participante.asistencias.some(asistencia => asistencia.claseId === claseId))
       .map(participante => participante.persona.id));
+  });
+  readonly estadoClaseSeleccionada = computed(() => {
+    const claseId = this.claseSeleccionada();
+    return this.dashboard()?.clases.find(clase => clase.claseId === claseId)?.estado ?? null;
   });
   readonly totalPaginas = computed(() => Math.max(1, Math.ceil((this.dashboard()?.participantes.length ?? 0) / this.pageSize)));
   readonly participantesPagina = computed(() => {
@@ -216,9 +226,13 @@ export class EncuentroDashboardComponent implements OnInit {
         if (sequence !== this.dashboardSequence) return;
         if (revision !== this.dataRevision) { this.cargar(); return; }
         const claseActual = this.claseSeleccionada();
-        const conservaClase = data.ciclo.clases.some(clase => clase.id === claseActual && clase.obligatoria);
+        const obligatorias = data.ciclo.clases.filter(clase => clase.obligatoria);
+        const conservaClase = obligatorias.some(clase => clase.id === claseActual);
+        const clasePreferida = obligatorias.find(clase => clase.estado === 'EN_CURSO')
+          ?? [...obligatorias].reverse().find(clase => clase.estado === 'FINALIZADA')
+          ?? obligatorias[0];
         this.dashboard.set(data);
-        this.claseSeleccionada.set(conservaClase ? claseActual : data.ciclo.clases.find(clase => clase.obligatoria)?.id ?? null);
+        this.claseSeleccionada.set(conservaClase ? claseActual : clasePreferida?.id ?? null);
         this.paginaEstado.set(Math.min(this.paginaEstado(), Math.max(0, Math.ceil(data.participantes.length / this.pageSize) - 1)));
       },
       error: error => {
@@ -229,6 +243,26 @@ export class EncuentroDashboardComponent implements OnInit {
 
   porcentaje(presentes: number, inscritos: number): number {
     return inscritos ? Math.round(presentes / inscritos * 100) : 0;
+  }
+
+  etiquetaEstadoClase(estado: EncuentroEstadoClase): string {
+    if (estado === 'FINALIZADA') return 'Finalizada';
+    if (estado === 'EN_CURSO') return 'En curso';
+    return 'Programada';
+  }
+
+  etiquetaEstadoPersona(estado: EncuentroEstadoClase | null): string {
+    if (estado === 'FINALIZADA') return 'Ausente';
+    if (estado === 'PROGRAMADA') return 'Programada';
+    return estado === 'EN_CURSO' ? 'Pendiente' : '';
+  }
+
+  clasesAusentes(participante: EncuentroParticipante, clases: EncuentroCiclo['clases']): string[] {
+    return this.clasesSinAsistencia(participante, clases, clase => clase.estado === 'FINALIZADA');
+  }
+
+  clasesPendientes(participante: EncuentroParticipante, clases: EncuentroCiclo['clases']): string[] {
+    return this.clasesSinAsistencia(participante, clases, clase => clase.estado !== 'FINALIZADA');
   }
 
   esClaseObligatoria(clases: EncuentroCiclo['clases'], claseId: number): boolean {
@@ -243,7 +277,7 @@ export class EncuentroDashboardComponent implements OnInit {
   marcar(participante: EncuentroParticipante): void {
     const data = this.dashboard();
     const claseId = this.claseSeleccionada();
-    if (!data || !claseId || this.cargando() || this.importando()) return;
+    if (!data || !claseId || this.estadoClaseSeleccionada() === 'PROGRAMADA' || this.cargando() || this.importando()) return;
     const cicloId = data.ciclo.id;
     const key = `${claseId}:${participante.persona.id}`;
     if (this.marcando().has(key)) return;
@@ -386,7 +420,9 @@ export class EncuentroDashboardComponent implements OnInit {
       conAsistencia: participantes.filter(participante => participante.asistencias.length > 0).length,
       completos: graduados.length,
       pendientes: participantes.length - graduados.length,
-      clases: data.clases.map(clase => clase.claseId === asistencia.claseId ? { ...clase, presentes: clase.presentes + 1 } : clase),
+      clases: data.clases.map(clase => clase.claseId === asistencia.claseId
+        ? { ...clase, presentes: clase.presentes + 1, ausentes: clase.estado === 'FINALIZADA' ? Math.max(0, clase.ausentes - 1) : clase.ausentes }
+        : clase),
       participantes,
       graduados,
     });
@@ -399,6 +435,11 @@ export class EncuentroDashboardComponent implements OnInit {
     anchor.download = nombre;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  private clasesSinAsistencia(participante: EncuentroParticipante, clases: EncuentroCiclo['clases'], incluir: (clase: EncuentroCiclo['clases'][number]) => boolean): string[] {
+    const presentes = new Set(participante.asistencias.map(asistencia => asistencia.claseId));
+    return clases.filter(clase => clase.obligatoria && incluir(clase) && !presentes.has(clase.id)).map(clase => clase.nombre);
   }
 
   private async copiarUrl(url: string, mensaje: string): Promise<void> {

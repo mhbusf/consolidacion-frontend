@@ -6,10 +6,10 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 import { EncuentroDashboardComponent } from './encuentro-dashboard.component';
 
 const clases = [
-  { id: 10, nombre: 'Clase 0 - Informativa', orden: 0, fecha: '2026-10-01', obligatoria: false, publicToken: 'c0' },
-  { id: 11, nombre: 'Clase 1', orden: 1, fecha: '2026-10-08', obligatoria: true, publicToken: 'c1' },
-  { id: 12, nombre: 'Clase 2', orden: 2, fecha: '2026-10-15', obligatoria: true, publicToken: 'c2' },
-  { id: 13, nombre: 'Clase 3', orden: 3, fecha: '2026-10-22', obligatoria: true, publicToken: 'c3' },
+  { id: 10, nombre: 'Clase 0 - Informativa', orden: 0, fecha: '2026-10-01', obligatoria: false, publicToken: 'c0', estado: 'FINALIZADA' as const },
+  { id: 11, nombre: 'Clase 1', orden: 1, fecha: '2026-10-08', obligatoria: true, publicToken: 'c1', estado: 'FINALIZADA' as const },
+  { id: 12, nombre: 'Clase 2', orden: 2, fecha: '2026-10-15', obligatoria: true, publicToken: 'c2', estado: 'EN_CURSO' as const },
+  { id: 13, nombre: 'Clase 3', orden: 3, fecha: '2026-10-22', obligatoria: true, publicToken: 'c3', estado: 'PROGRAMADA' as const },
 ];
 
 const ciclo: EncuentroCiclo = {
@@ -28,7 +28,15 @@ function dashboard(): EncuentroDashboard {
     conAsistencia: 0,
     completos: 0,
     pendientes: 1,
-    clases: clases.map(clase => ({ claseId: clase.id, nombre: clase.nombre, fecha: clase.fecha, presentes: 0, inscritos: 1 })),
+    clases: clases.map(clase => ({
+      claseId: clase.id,
+      nombre: clase.nombre,
+      fecha: clase.fecha,
+      presentes: 0,
+      inscritos: 1,
+      ausentes: clase.id === 11 ? 1 : 0,
+      estado: clase.estado,
+    })),
     participantes: [{
       persona: { id: 21, nombreCompleto: 'Persona Prueba', telefono: '+56912345678', comuna: 'Santiago' },
       inscrito: true,
@@ -77,14 +85,18 @@ describe('EncuentroDashboardComponent', () => {
 
     expect(service.dashboard).toHaveBeenCalledOnceWith(1);
     expect(component.dashboard()?.ciclo.id).toBe(1);
-    expect(component.claseSeleccionada()).toBe(11);
+    expect(component.claseSeleccionada()).toBe(12);
     expect(fixture.nativeElement.textContent).toContain('Persona Prueba');
     expect(fixture.nativeElement.textContent).toContain('Copiar enlace de asistencia');
+    expect(fixture.nativeElement.querySelector('.attendance-actions')?.textContent).toContain('Copiar link de autoasistencia');
+    expect(fixture.nativeElement.textContent).toContain('1 ausente');
+    expect(fixture.nativeElement.querySelector('.absence-cell')?.textContent).toContain('Clase 1');
   });
 
   it('actualiza la asistencia localmente sin volver a descargar el dashboard', () => {
     component.cicloSeleccionado.set(1);
     component.cargar();
+    component.seleccionarClase(11);
     const asistencia: EncuentroAsistencia = {
       id: 31,
       personaId: 21,
@@ -101,6 +113,7 @@ describe('EncuentroDashboardComponent', () => {
     expect(service.dashboard).toHaveBeenCalledTimes(1);
     expect(component.dashboard()?.conAsistencia).toBe(1);
     expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.presentes).toBe(1);
+    expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.ausentes).toBe(0);
     expect(component.dashboard()?.participantes[0].clasesCompletadas).toBe(1);
   });
 
@@ -117,6 +130,7 @@ describe('EncuentroDashboardComponent', () => {
   it('no permite que una lectura antigua borre una asistencia confirmada', () => {
     component.cicloSeleccionado.set(1);
     component.cargar();
+    component.seleccionarClase(11);
     const confirmacion = new Subject<EncuentroAsistencia>();
     service.registrarAsistencia.and.returnValue(confirmacion);
     component.marcar(component.dashboard()!.participantes[0]);
@@ -138,5 +152,19 @@ describe('EncuentroDashboardComponent', () => {
     expect(component.dashboard()?.participantes[0].clasesCompletadas).toBe(1);
     expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.presentes).toBe(1);
     expect(service.dashboard).toHaveBeenCalledTimes(3);
+  });
+
+  it('impide marcar anticipadamente una clase programada', () => {
+    component.cicloSeleccionado.set(1);
+    component.cargar();
+    component.seleccionarClase(13);
+    fixture.detectChanges();
+
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('.attendee .mark');
+    expect(button.disabled).toBeTrue();
+    expect(button.textContent).toContain('Aún no disponible');
+
+    component.marcar(component.dashboard()!.participantes[0]);
+    expect(service.registrarAsistencia).not.toHaveBeenCalled();
   });
 });
