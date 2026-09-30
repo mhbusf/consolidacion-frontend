@@ -12,7 +12,7 @@ import { NotificationComponent } from './shared/components/notification/notifica
     <app-navbar></app-navbar>
     <router-outlet></router-outlet>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     :host {
       display: block;
