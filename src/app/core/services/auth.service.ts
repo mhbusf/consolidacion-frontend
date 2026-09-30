@@ -16,6 +16,7 @@ import { environment } from '../../../environments/environment';
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
+  private expirationTimer?: ReturnType<typeof setTimeout>;
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
@@ -35,6 +36,7 @@ export class AuthService {
           const user = this.withTokenFlags(parsedUser);
           localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
+          this.scheduleTokenExpiration(user.token);
         }
       } catch {
         // La sesión persistida no debe impedir que arranque la aplicación.
@@ -56,11 +58,16 @@ export class AuthService {
         localStorage.setItem('currentUser', JSON.stringify(user));
         localStorage.setItem('token', response.token);
         this.currentUserSubject.next(user);
+        this.scheduleTokenExpiration(response.token);
       })
     );
   }
 
   logout(): void {
+    if (this.expirationTimer) {
+      clearTimeout(this.expirationTimer);
+      this.expirationTimer = undefined;
+    }
     try {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
@@ -96,6 +103,22 @@ export class AuthService {
       return typeof payload.exp !== 'number' || payload.exp * 1000 < Date.now();
     } catch {
       return true;
+    }
+  }
+
+  private scheduleTokenExpiration(token: string): void {
+    if (this.expirationTimer) clearTimeout(this.expirationTimer);
+    try {
+      const payload = JSON.parse(this.decodeTokenPart(token)) as { exp?: unknown };
+      const expiresAt = typeof payload.exp === 'number' ? payload.exp * 1000 : 0;
+      const delay = expiresAt - Date.now();
+      if (delay <= 0) {
+        this.logout();
+        return;
+      }
+      this.expirationTimer = setTimeout(() => this.logout(), delay);
+    } catch {
+      this.logout();
     }
   }
 

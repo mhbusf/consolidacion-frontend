@@ -15,7 +15,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const token = authService.getToken();
+  const requestUrl = new URL(req.url, window.location.origin);
+  const apiBaseUrl = new URL(apiUrl, window.location.origin);
+  const apiBasePath = apiBaseUrl.pathname.replace(/\/$/, '');
+  const apiPath = requestUrl.pathname.startsWith(`${apiBasePath}/`)
+    ? requestUrl.pathname.slice(apiBasePath.length)
+    : requestUrl.pathname === apiBasePath ? '' : requestUrl.pathname;
+  const isPublicRequest = apiPath.startsWith('/public/')
+    || apiPath === '/comunas'
+    || apiPath.startsWith('/comunas/')
+    || apiPath === '/auth/login'
+    || apiPath === '/auth/forgot-password'
+    || apiPath === '/auth/reset-password';
+  const token = isPublicRequest ? null : authService.getToken();
   const modifiedReq = token
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;

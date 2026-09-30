@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { NotificationService } from '../../../core/services/notification.service';
@@ -9,20 +9,20 @@ import { NotificationService } from '../../../core/services/notification.service
   imports: [],
   template: `
     <div class="notification-container">
-      @if (message) {
+      @if (message()) {
         <div
-          [class]="'notification notification-' + type"
+          [class]="'notification notification-' + type()"
           role="alert"
           aria-live="assertive"
           aria-atomic="true">
           <span class="icon" aria-hidden="true">{{ getIcon() }}</span>
-          <span class="message">{{ message }}</span>
+          <span class="message">{{ message() }}</span>
           <button type="button" class="close" aria-label="Cerrar notificación" (click)="close()">×</button>
         </div>
       }
     </div>
     `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .notification-container {
       position: fixed;
@@ -103,8 +103,8 @@ import { NotificationService } from '../../../core/services/notification.service
 })
 export class NotificationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
-  message = '';
-  type: 'success' | 'error' | 'info' | 'warning' = 'info';
+  readonly message = signal('');
+  readonly type = signal<'success' | 'error' | 'info' | 'warning'>('info');
   private timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private notificationService: NotificationService) {}
@@ -119,8 +119,8 @@ export class NotificationComponent implements OnInit {
     this.notificationService.notification$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(notification => {
-      this.message = notification.message;
-      this.type = notification.type;
+      this.message.set(notification.message);
+      this.type.set(notification.type);
 
       // Limpiar timeout anterior si existe
       if (this.timeoutId) {
@@ -135,7 +135,7 @@ export class NotificationComponent implements OnInit {
   }
 
   getIcon(): string {
-    switch (this.type) {
+    switch (this.type()) {
       case 'success': return '✓';
       case 'error': return '✕';
       case 'warning': return '⚠';
@@ -145,7 +145,7 @@ export class NotificationComponent implements OnInit {
   }
 
   close(): void {
-    this.message = '';
+    this.message.set('');
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
     }

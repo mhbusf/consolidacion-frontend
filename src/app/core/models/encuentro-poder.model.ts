@@ -49,6 +49,14 @@ export interface EncuentroAsistenciaPublica {
   inscripcionToken: string;
 }
 
+export interface EncuentroImportacion {
+  inscripcionesImportadas: number;
+  asistenciasImportadas: number;
+  filasSinTelefono: number;
+  asistenciasSinCoincidencia: number;
+  asistenciasAmbiguas: number;
+}
+
 export interface EncuentroParticipante {
   persona: EncuentroPersona;
   inscrito: boolean;

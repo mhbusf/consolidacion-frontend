@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: consolidacion-frontend
+    runtime: static
+    buildCommand: npm ci && npm run build -- --configuration production
+    staticPublishPath: ./dist/consolidacion-frontend/browser
+    headers:
+      - path: /main-*.js
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /polyfills-*.js
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /chunk-*.js
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /styles-*.css
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /ngsw.json
+        name: Cache-Control
+        value: no-cache
+      - path: /ngsw-worker.js
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

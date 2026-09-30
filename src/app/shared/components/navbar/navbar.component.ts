@@ -1,17 +1,16 @@
-import { Component, OnInit, HostListener, ElementRef, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { Observable } from 'rxjs';
-import { JwtResponse } from '../../../core/models/auth.model';
+import { filter, map, startWith } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    @if (authService.isAuthenticated()) {
+    @if (currentUser()) {
       <nav class="navbar">
         <div class="nav-container">
           <div class="nav-brand">
@@ -26,7 +25,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
             <span></span>
           </button>
           <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
-            @if (isAdmin) {
+             @if (isAdmin()) {
               <li>
                 <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">📊</span>
@@ -45,7 +44,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   <span class="menu-icon">👥</span>
                   Consolidados
                 </a>
-                @if (isAdmin) {
+                @if (isAdmin()) {
                   <a routerLink="/consolidados-atrasos" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">⚠️</span>
                     Atrasos
@@ -72,7 +71,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                   <span class="menu-icon">☕</span>
                   Invitados
                 </a>
-                @if (isAdmin) {
+                @if (isAdmin()) {
                   <a routerLink="/cafe-admin" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">📋</span>
                     Admin Café
@@ -104,7 +103,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="nav-submenu">
-                @if (isAdmin) {
+                @if (isAdmin()) {
                   <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">🔐</span>
                     Usuarios
@@ -121,13 +120,13 @@ import { JwtResponse } from '../../../core/models/auth.model';
               </div>
             </li>
           </ul>
-          @if (currentUser$ | async; as user) {
+          @if (currentUser(); as user) {
             <div class="nav-user">
               <div class="dropdown" [class.open]="dropdownOpen">
                 <button class="dropdown-toggle" (click)="toggleDropdown($event)">
                   <span class="user-icon">👤</span>
                   <span class="user-name">{{ user.username }}</span>
-                  @if (isAdmin) {
+                  @if (isAdmin()) {
                     <span class="badge-role">ADMIN</span>
                   }
                   <span class="dropdown-arrow">▼</span>
@@ -147,7 +146,7 @@ import { JwtResponse } from '../../../core/models/auth.model';
       </nav>
     }
     `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .navbar {
@@ -537,23 +536,20 @@ import { JwtResponse } from '../../../core/models/auth.model';
     `,
   ],
 })
-export class NavbarComponent implements OnInit {
-  private readonly destroyRef = inject(DestroyRef);
-  currentUser$: Observable<JwtResponse | null>;
-  isAdmin = false;
+export class NavbarComponent {
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly el = inject(ElementRef<HTMLElement>);
+  private readonly currentUrl = toSignal(this.router.events.pipe(
+    filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+    map(event => event.urlAfterRedirects),
+    startWith(this.router.url),
+  ), { initialValue: this.router.url });
+  readonly currentUser = toSignal(this.authService.currentUser$, { initialValue: null });
+  readonly isAdmin = computed(() => this.currentUser()?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false);
   dropdownOpen = false;
   openGroup: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario' | null = null;
   mobileMenuOpen = false;
-
-  constructor(public authService: AuthService, private router: Router, private el: ElementRef) {
-    this.currentUser$ = this.authService.currentUser$;
-  }
-
-  ngOnInit(): void {
-    this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.isAdmin = this.authService.isAdmin();
-    });
-  }
 
   toggleDropdown(event: Event): void {
     event.stopPropagation();
@@ -595,6 +591,7 @@ export class NavbarComponent implements OnInit {
   }
 
   isRouteGroupActive(paths: string[]): boolean {
-    return paths.some(path => this.router.url === path || this.router.url.startsWith(`${path}/`));
+    const url = this.currentUrl();
+    return paths.some(path => url === path || url.startsWith(`${path}/`));
   }
 }
