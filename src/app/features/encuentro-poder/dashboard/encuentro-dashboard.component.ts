@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { EncuentroCiclo, EncuentroDashboard, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 
 @Component({
   selector: 'app-encuentro-dashboard', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
    template: `<div class="page"><header class="heading"><div><span class="eyebrow">Módulo operativo</span><h1>Encuentro de Poder</h1></div><a routerLink="/encuentro-poder/ciclos/nuevo" class="button secondary">Nuevo ciclo</a></header>
-    <section class="toolbar"><label>Ciclo<select [(ngModel)]="cicloSeleccionado" (ngModelChange)="cargar()"><option [ngValue]="null">Selecciona un ciclo</option>@for (c of ciclos; track c.id) {<option [ngValue]="c.id">{{ c.nombre }} · {{ c.estado }}</option>}</select></label>@if (dashboard) {<button class="button" (click)="exportar()">Exportar Excel</button><button class="button secondary" (click)="archivoInput.click()" [disabled]="importando">{{ importando ? 'Importando...' : 'Importar Excel' }}</button><input #archivoInput type="file" accept=".xlsx" hidden (change)="importar($event)"><button class="button secondary" (click)="copiarEnlace()">Copiar enlace de inscripción</button>}</section>
+    <section class="toolbar"><label>Ciclo<select [value]="cicloSeleccionado ?? ''" (input)="seleccionarCiclo($event)"><option value="">Selecciona un ciclo</option>@for (c of ciclos; track c.id) {<option [value]="c.id">{{ c.nombre }} · {{ c.estado }}</option>}</select></label>@if (dashboard) {<button class="button" (click)="exportar()">Exportar Excel</button><button class="button secondary" (click)="archivoInput.click()" [disabled]="importando">{{ importando ? 'Importando...' : 'Importar Excel' }}</button><input #archivoInput type="file" accept=".xlsx" hidden (change)="importar($event)"><button class="button secondary" (click)="copiarEnlace()">Copiar enlace de inscripción</button>}</section>
     @if (enlaceCopiado) {<p class="notice">Enlace copiado al portapapeles.</p>}
      @if (mensajeImportacion) {<p class="notice">{{ mensajeImportacion }}</p>}
      @if (errorCiclos) {<p class="error">{{ errorCiclos }}</p>}
@@ -25,9 +26,11 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 })
 export class EncuentroDashboardComponent implements OnInit {
   private service = inject(EncuentroPoderService);
+  private dashboardRequest?: Subscription;
    ciclos: EncuentroCiclo[] = []; cicloSeleccionado: number | null = null; claseSeleccionada: number | null = null; dashboard?: EncuentroDashboard; historial?: EncuentroParticipante; busqueda = ''; cargando = false; marcando: number | null = null; enlaceCopiado = false; importando = false; mensajeImportacion = ''; errorCiclos = ''; errorDashboard = ''; qr?: { nombre: string; fecha: string; url: string; imagen: string };
    ngOnInit(): void { this.service.ciclos().subscribe({ next: c => { this.ciclos = c; }, error: e => { this.errorCiclos = e.status === 504 ? 'El servidor tardó demasiado en responder. Revisa el estado del backend e inténtalo nuevamente.' : 'No fue posible cargar los ciclos.'; } }); }
-  cargar(): void { if (!this.cicloSeleccionado) return; this.dashboard = undefined; this.errorDashboard = ''; this.cargando = true; this.service.dashboard(this.cicloSeleccionado).subscribe({ next: d => { this.dashboard = d; this.cargando = false; this.claseSeleccionada = d.ciclo.clases.find(c => c.obligatoria)?.id ?? null; }, error: e => { this.cargando = false; this.errorDashboard = e.status === 504 ? 'El servidor tardó demasiado en cargar este ciclo.' : e.error?.message ?? 'No fue posible cargar los datos del ciclo.'; } }); }
+  seleccionarCiclo(event: Event): void { const value = (event.target as HTMLSelectElement).value; this.cicloSeleccionado = value ? Number(value) : null; this.cargar(); }
+  cargar(): void { this.dashboardRequest?.unsubscribe(); this.dashboard = undefined; this.errorDashboard = ''; if (!this.cicloSeleccionado) { this.cargando = false; return; } this.cargando = true; this.dashboardRequest = this.service.dashboard(this.cicloSeleccionado).subscribe({ next: d => { this.dashboard = d; this.cargando = false; this.claseSeleccionada = d.ciclo.clases.find(c => c.obligatoria)?.id ?? null; }, error: e => { this.cargando = false; this.errorDashboard = e.status === 504 ? 'El servidor tardó demasiado en cargar este ciclo. Inténtalo nuevamente.' : e.error?.message ?? 'No fue posible cargar los datos del ciclo.'; } }); }
    porcentaje(a: number, b: number): number { return b ? Math.round(a / b * 100) : 0; }
    esClaseObligatoria(clases: EncuentroCiclo['clases'], claseId: number): boolean { return clases.some(clase => clase.id === claseId && clase.obligatoria); }
   filtrados(data: EncuentroParticipante[]): EncuentroParticipante[] { const q = this.busqueda.toLowerCase().trim(); return q ? data.filter(p => `${p.persona.nombreCompleto} ${p.persona.telefono}`.toLowerCase().includes(q)) : data; }
