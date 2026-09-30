@@ -99,6 +99,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <option value="">Seleccione un rol</option>
               <option value="ROLE_USER">Usuario</option>
               <option value="ROLE_ADMIN">Administrador</option>
+              <option value="ROLE_SUPER_ADMIN">Superadministrador</option>
             </select>
             @if (userForm.get('role')?.invalid && userForm.get('role')?.touched) {
               <div class="error">

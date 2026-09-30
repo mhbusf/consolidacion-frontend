@@ -83,19 +83,21 @@ import { filter, map, startWith } from 'rxjs';
                 }
               </div>
             </li>
-            <li class="nav-group" [class.open]="openGroup === 'encuentro'" [class.active]="isRouteGroupActive(['/encuentro-poder'])">
-              <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)">
-                <span class="menu-icon">⚡</span>
-                Encuentro de Poder
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="nav-submenu">
-                <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
+            @if (isSuperAdmin()) {
+              <li class="nav-group" [class.open]="openGroup === 'encuentro'" [class.active]="isRouteGroupActive(['/encuentro-poder'])">
+                <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)">
                   <span class="menu-icon">⚡</span>
-                  Panel de Encuentro
-                </a>
-              </div>
-            </li>
+                  Encuentro de Poder
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="nav-submenu">
+                  <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
+                    <span class="menu-icon">⚡</span>
+                    Panel de Encuentro
+                  </a>
+                </div>
+              </li>
+            }
             <li class="nav-group" [class.open]="openGroup === 'usuario'" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
               <button class="nav-group-toggle" type="button" (click)="toggleGroup('usuario', $event)">
                 <span class="menu-icon">🔐</span>
@@ -546,7 +548,9 @@ export class NavbarComponent {
     startWith(this.router.url),
   ), { initialValue: this.router.url });
   readonly currentUser = toSignal(this.authService.currentUser$, { initialValue: null });
-  readonly isAdmin = computed(() => this.currentUser()?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false);
+  readonly isSuperAdmin = computed(() => this.currentUser()?.roles.some(role => role.name === 'ROLE_SUPER_ADMIN') ?? false);
+  readonly isAdmin = computed(() => this.currentUser()?.roles.some(role =>
+    role.name === 'ROLE_ADMIN' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
   dropdownOpen = false;
   openGroup: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario' | null = null;
   mobileMenuOpen = false;

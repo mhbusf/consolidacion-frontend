@@ -123,14 +123,15 @@ export const routes: Routes = [
   {
     path: 'encuentro-poder',
     loadComponent: () => import('./features/encuentro-poder/dashboard/encuentro-dashboard.component').then(m => m.EncuentroDashboardComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_SUPER_ADMIN'] }
   },
 
   {
     path: 'encuentro-poder/ciclos/nuevo',
     loadComponent: () => import('./features/encuentro-poder/ciclos/encuentro-ciclo-create.component').then(m => m.EncuentroCicloCreateComponent),
     canActivate: [authGuard],
-    data: { roles: ['ROLE_ADMIN'] }
+    data: { roles: ['ROLE_SUPER_ADMIN'] }
   },
 
   { path: '**', redirectTo: '/login' }

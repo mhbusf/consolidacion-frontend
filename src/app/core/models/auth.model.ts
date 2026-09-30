@@ -42,6 +42,7 @@ export interface ChangePasswordRequest {
 
 // Helper enum para validar roles
 export enum RoleName {
+  SUPER_ADMIN = 'ROLE_SUPER_ADMIN',
   ADMIN = 'ROLE_ADMIN',
   USER = 'ROLE_USER',
 }

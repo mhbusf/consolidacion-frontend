@@ -8,6 +8,7 @@ import {
   JwtResponse,
   User,
   ChangePasswordRequest,
+  RoleName,
 } from '../models/auth.model';
 import { environment } from '../../../environments/environment';
 
@@ -128,11 +129,20 @@ export class AuthService {
 
   hasRole(roleName: string): boolean {
     const user = this.currentUserSubject.value;
-    return user?.roles.some((role) => role.name === roleName) || false;
+    const roles = new Set(user?.roles.map(role => role.name) ?? []);
+    if (roles.has(roleName)) return true;
+    if (roles.has(RoleName.SUPER_ADMIN)) {
+      return roleName === RoleName.ADMIN || roleName === RoleName.USER;
+    }
+    return roleName === RoleName.USER && roles.has(RoleName.ADMIN);
   }
 
   isAdmin(): boolean {
-    return this.hasRole('ROLE_ADMIN');
+    return this.hasRole(RoleName.ADMIN);
+  }
+
+  isSuperAdmin(): boolean {
+    return this.hasRole(RoleName.SUPER_ADMIN);
   }
 
   mustChangePassword(): boolean {

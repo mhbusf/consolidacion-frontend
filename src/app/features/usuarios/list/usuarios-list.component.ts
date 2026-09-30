@@ -102,9 +102,17 @@ interface UsuarioConStats {
                       @if (!tieneRolAdmin(user.usuario)) {
                         <button
                           class="btn-small btn-primary"
-                          (click)="asignarRol(user.usuario.username)"
+                          (click)="asignarPerfil(user.usuario.username, 'ROLE_ADMIN', 'ADMIN')"
                           title="Hacer administrador">
                           ⭐ Admin
+                        </button>
+                      }
+                      @if (!tieneRolSuperAdmin(user.usuario)) {
+                        <button
+                          class="btn-small btn-primary"
+                          (click)="asignarPerfil(user.usuario.username, 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN')"
+                          title="Hacer superadministrador">
+                          ⭐ Super Admin
                         </button>
                       }
                       <button
@@ -358,6 +366,10 @@ export class UsuariosListComponent implements OnInit {
     return user.roles.some(r => r.name === 'ROLE_ADMIN');
   }
 
+  tieneRolSuperAdmin(user: User): boolean {
+    return user.roles.some(r => r.name === 'ROLE_SUPER_ADMIN');
+  }
+
   nombreCompleto(user: User): string {
     return [user.nombre, user.apellido]
       .filter(Boolean)
@@ -399,15 +411,15 @@ export class UsuariosListComponent implements OnInit {
     }
   }
 
-  asignarRol(username: string): void {
-    if (confirm(`¿Asignar rol ADMIN a ${username}?`)) {
-      this.authService.assignRole(username, 'ROLE_ADMIN').subscribe({
+  asignarPerfil(username: string, role: 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
+    if (confirm(`¿Asignar perfil ${label} a ${username}?`)) {
+      this.authService.assignRole(username, role).subscribe({
         next: () => {
-          this.notificationService.success('Rol asignado correctamente');
+          this.notificationService.success('Perfil asignado. El usuario debe volver a iniciar sesión.');
           this.cargarDatos();
         },
         error: (error) => {
-          this.notificationService.error('Error al asignar rol');
+          this.notificationService.error('Error al asignar perfil');
         }
       });
     }
