@@ -90,7 +90,48 @@ describe('EncuentroDashboardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Copiar enlace de asistencia');
     expect(fixture.nativeElement.querySelector('.attendance-actions')?.textContent).toContain('Copiar link de autoasistencia');
     expect(fixture.nativeElement.textContent).toContain('1 ausente');
-    expect(fixture.nativeElement.querySelector('.absence-cell')?.textContent).toContain('Clase 1');
+    expect(fixture.nativeElement.querySelector('.missing-classes')?.textContent).toContain('Clase 1');
+  });
+
+  it('muestra solo pendientes ordenados desde quien tiene menos clases faltantes', () => {
+    const data = dashboard();
+    const base = data.participantes[0];
+    const unaFaltante = {
+      ...base,
+      persona: { ...base.persona, id: 22, nombreCompleto: 'Ana Una' },
+      clasesCompletadas: 2,
+      clasesFaltantes: ['Clase 3'],
+    };
+    const dosFaltantes = {
+      ...base,
+      persona: { ...base.persona, id: 23, nombreCompleto: 'Berta Dos' },
+      clasesCompletadas: 1,
+      clasesFaltantes: ['Clase 2', 'Clase 3'],
+    };
+    const graduado = {
+      ...base,
+      persona: { ...base.persona, id: 24, nombreCompleto: 'Carlos Graduado' },
+      clasesCompletadas: 3,
+      clasesFaltantes: [],
+      estado: 'COMPLETO' as const,
+    };
+    component.dashboard.set({
+      ...data,
+      participantes: [base, dosFaltantes, graduado, unaFaltante],
+      graduados: [graduado],
+      completos: 1,
+      pendientes: 3,
+    });
+    fixture.detectChanges();
+
+    const filas = Array.from(fixture.nativeElement.querySelectorAll('.pending-graduation tbody tr')) as HTMLElement[];
+    expect(filas.map(fila => fila.querySelector('td')?.textContent?.trim())).toEqual([
+      'Ana Una',
+      'Berta Dos',
+      'Persona Prueba',
+    ]);
+    expect(filas[0].querySelector('.missing-classes')?.textContent).toContain('Clase 3');
+    expect(fixture.nativeElement.querySelector('.pending-graduation')?.textContent).not.toContain('Carlos Graduado');
   });
 
   it('muestra una estrella junto al nombre solo cuando la persona está graduada', () => {

@@ -99,12 +99,14 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
         } @else {<p class="muted">Todavía no hay personas graduadas en este ciclo.</p>}
       </section>
 
-      <section class="panel">
-        <h2>Estado de graduación</h2>
-        <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Clases completadas</th><th>Ausencias</th><th>Pendientes</th><th>Estado</th><th></th></tr></thead><tbody>
-          @for (participante of participantesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td class="absence-cell">{{ clasesAusentes(participante, data.ciclo.clases).join(', ') || '—' }}</td><td>{{ clasesPendientes(participante, data.ciclo.clases).join(', ') || '—' }}</td><td><span [class.complete]="participante.estado === 'COMPLETO'" class="status">{{ participante.estado }}</span></td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
-        </tbody></table></div>
-        @if (totalPaginas() > 1) {<div><button class="button secondary" [disabled]="paginaEstado() === 0" (click)="cambiarPagina(-1)">Anterior</button> Página {{ paginaEstado() + 1 }} de {{ totalPaginas() }} <button class="button secondary" [disabled]="paginaEstado() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button></div>}
+      <section class="panel pending-graduation">
+        <h2>Pendientes de graduación ({{ participantesPendientes().length }})</h2>
+        @if (participantesPendientes().length) {
+          <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Progreso</th><th>Clases que faltan</th><th></th></tr></thead><tbody>
+            @for (participante of pendientesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td class="missing-classes"><strong>{{ participante.clasesFaltantes.length }}</strong> · {{ participante.clasesFaltantes.join(', ') }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
+          </tbody></table></div>
+          @if (totalPaginas() > 1) {<div><button class="button secondary" [disabled]="paginaEstado() === 0" (click)="cambiarPagina(-1)">Anterior</button> Página {{ paginaEstado() + 1 }} de {{ totalPaginas() }} <button class="button secondary" [disabled]="paginaEstado() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button></div>}
+        } @else {<p class="muted">Todas las personas inscritas completaron las tres clases.</p>}
       </section>
 
       @if (historial(); as detalle) {<div class="modal-backdrop" (click)="cerrarHistorial()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarHistorial()">×</button><h2>{{ detalle.persona.nombreCompleto }}</h2><p>{{ detalle.persona.telefono }} · {{ detalle.persona.comuna || 'Sin comuna' }}</p><h3>{{ detalle.estado }}</h3>@for (asistencia of detalle.asistencias; track asistencia.id) {<div class="history-row"><span>{{ asistencia.clase }}</span><span>{{ asistencia.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span></div>} @if (!detalle.asistencias.length) {<p>No registra asistencias.</p>}</article></div>}
@@ -166,10 +168,14 @@ export class EncuentroDashboardComponent implements OnInit {
     const claseId = this.claseSeleccionada();
     return this.dashboard()?.clases.find(clase => clase.claseId === claseId)?.estado ?? null;
   });
-  readonly totalPaginas = computed(() => Math.max(1, Math.ceil((this.dashboard()?.participantes.length ?? 0) / this.pageSize)));
-  readonly participantesPagina = computed(() => {
+  readonly participantesPendientes = computed(() => (this.dashboard()?.participantes ?? [])
+    .filter(participante => participante.estado === 'PENDIENTE')
+    .sort((a, b) => a.clasesFaltantes.length - b.clasesFaltantes.length
+      || a.persona.nombreCompleto.localeCompare(b.persona.nombreCompleto, 'es', { sensitivity: 'base' })));
+  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.participantesPendientes().length / this.pageSize)));
+  readonly pendientesPagina = computed(() => {
     const inicio = this.paginaEstado() * this.pageSize;
-    return (this.dashboard()?.participantes ?? []).slice(inicio, inicio + this.pageSize);
+    return this.participantesPendientes().slice(inicio, inicio + this.pageSize);
   });
 
   ngOnInit(): void {
@@ -233,7 +239,8 @@ export class EncuentroDashboardComponent implements OnInit {
           ?? obligatorias[0];
         this.dashboard.set(data);
         this.claseSeleccionada.set(conservaClase ? claseActual : clasePreferida?.id ?? null);
-        this.paginaEstado.set(Math.min(this.paginaEstado(), Math.max(0, Math.ceil(data.participantes.length / this.pageSize) - 1)));
+        const pendientes = data.participantes.filter(participante => participante.estado === 'PENDIENTE').length;
+        this.paginaEstado.set(Math.min(this.paginaEstado(), Math.max(0, Math.ceil(pendientes / this.pageSize) - 1)));
       },
       error: error => {
         if (sequence === this.dashboardSequence) this.errorDashboard.set(this.mensajeError(error, 'No fue posible cargar los datos del ciclo.'));
@@ -255,14 +262,6 @@ export class EncuentroDashboardComponent implements OnInit {
     if (estado === 'FINALIZADA') return 'Ausente';
     if (estado === 'PROGRAMADA') return 'Programada';
     return estado === 'EN_CURSO' ? 'Pendiente' : '';
-  }
-
-  clasesAusentes(participante: EncuentroParticipante, clases: EncuentroCiclo['clases']): string[] {
-    return this.clasesSinAsistencia(participante, clases, clase => clase.estado === 'FINALIZADA');
-  }
-
-  clasesPendientes(participante: EncuentroParticipante, clases: EncuentroCiclo['clases']): string[] {
-    return this.clasesSinAsistencia(participante, clases, clase => clase.estado !== 'FINALIZADA');
   }
 
   esClaseObligatoria(clases: EncuentroCiclo['clases'], claseId: number): boolean {
@@ -414,6 +413,8 @@ export class EncuentroDashboardComponent implements OnInit {
       const faltantes = obligatorias.filter(clase => !presentes.has(clase.id)).map(clase => clase.nombre);
       return { ...participante, asistencias, clasesCompletadas: obligatorias.length - faltantes.length, clasesFaltantes: faltantes, estado: faltantes.length ? 'PENDIENTE' as const : 'COMPLETO' as const };
     });
+    const pendientes = participantes.filter(participante => participante.estado === 'PENDIENTE').length;
+    this.paginaEstado.update(actual => Math.min(actual, Math.max(0, Math.ceil(pendientes / this.pageSize) - 1)));
     const graduados = participantes.filter(participante => participante.estado === 'COMPLETO');
     this.dashboard.set({
       ...data,
@@ -435,11 +436,6 @@ export class EncuentroDashboardComponent implements OnInit {
     anchor.download = nombre;
     anchor.click();
     URL.revokeObjectURL(url);
-  }
-
-  private clasesSinAsistencia(participante: EncuentroParticipante, clases: EncuentroCiclo['clases'], incluir: (clase: EncuentroCiclo['clases'][number]) => boolean): string[] {
-    const presentes = new Set(participante.asistencias.map(asistencia => asistencia.claseId));
-    return clases.filter(clase => clase.obligatoria && incluir(clase) && !presentes.has(clase.id)).map(clase => clase.nombre);
   }
 
   private async copiarUrl(url: string, mensaje: string): Promise<void> {
