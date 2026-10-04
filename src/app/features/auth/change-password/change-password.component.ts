@@ -264,6 +264,9 @@ export class ChangePasswordComponent {
   }
 
   cancelar(): void {
-    this.router.navigate(['/consolidados']);
+    const destino = this.authService.isMentor() && !this.authService.isSuperAdmin()
+      ? '/encuentro-poder/mentor'
+      : '/consolidados';
+    this.router.navigate([destino]);
   }
 }

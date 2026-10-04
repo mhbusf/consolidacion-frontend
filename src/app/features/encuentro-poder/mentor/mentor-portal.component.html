@@ -1,0 +1,87 @@
+<main class="mentor-page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Encuentro de Poder</p>
+      <h1>Mis participantes</h1>
+      <p class="intro">Acompaña el avance y mantén un registro claro de cada conversación.</p>
+    </div>
+    @if (!cargando() && !error()) {
+      <div class="count"><strong>{{ participantes().length }}</strong><span>asignados</span></div>
+    }
+  </header>
+
+  @if (error()) {
+    <section class="state error-state" role="alert">
+      <h2>No pudimos cargar la información</h2>
+      <p>{{ error() }}</p>
+      <button type="button" (click)="cargar()">Reintentar</button>
+    </section>
+  } @else if (cargando()) {
+    <section class="state" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Cargando participantes...</p>
+    </section>
+  } @else if (!participantes().length) {
+    <section class="state empty-state">
+      <span class="empty-icon" aria-hidden="true">EP</span>
+      <h2>Aún no tienes participantes asignados</h2>
+      <p>Cuando un superadministrador realice una asignación, aparecerá aquí.</p>
+    </section>
+  } @else {
+    <section class="tools">
+      <label for="buscar">Buscar participante</label>
+      <div class="search-wrap">
+        <input
+          id="buscar"
+          type="search"
+          [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)"
+          placeholder="Nombre, teléfono o ciclo"
+        >
+        <span>{{ participantesFiltrados().length }} resultado{{ participantesFiltrados().length === 1 ? '' : 's' }}</span>
+      </div>
+    </section>
+
+    @if (!participantesFiltrados().length) {
+      <section class="state compact">
+        <h2>Sin coincidencias</h2>
+        <p>Prueba con otro nombre, teléfono o ciclo.</p>
+      </section>
+    } @else {
+      <section class="participant-grid" aria-label="Participantes asignados">
+        @for (participante of participantesFiltrados(); track participante.inscripcionId) {
+          <article class="participant-card">
+            <div class="card-top">
+              <div class="avatar" aria-hidden="true">{{ participante.nombreCompleto.charAt(0) }}</div>
+              <div>
+                <p class="cycle">{{ participante.cicloNombre }}</p>
+                <h2>{{ participante.nombreCompleto }}</h2>
+                <p class="contact">{{ participante.telefono }} · {{ participante.comuna || 'Comuna no informada' }}</p>
+              </div>
+            </div>
+
+            <div class="progress-copy">
+              <span>Progreso</span>
+              <strong>{{ participante.clasesCompletadas }} de {{ participante.totalClases }} clases</strong>
+            </div>
+            <div class="progress" role="progressbar" [attr.aria-valuenow]="progreso(participante)" aria-valuemin="0" aria-valuemax="100">
+              <span [style.width.%]="progreso(participante)"></span>
+            </div>
+
+            <div class="feedback-preview">
+              <span>Último feedback</span>
+              @if (participante.ultimoFeedback; as feedback) {
+                <p>{{ feedback.comentario }}</p>
+                <small>{{ feedback.fechaCreacion | date:'dd/MM/yyyy' }}</small>
+              } @else {
+                <p class="muted">Sin feedback registrado.</p>
+              }
+            </div>
+
+            <a [routerLink]="['/encuentro-poder/mentor', participante.inscripcionId]">Ver detalle <span aria-hidden="true">→</span></a>
+          </article>
+        }
+      </section>
+    }
+  }
+</main>

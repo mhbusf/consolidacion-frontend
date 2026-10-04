@@ -39,6 +39,20 @@ describe('NavbarComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Encuentro de Poder');
     expect(fixture.nativeElement.textContent).toContain('Dashboard');
+    expect(fixture.nativeElement.textContent).toContain('Portal de mentoría');
+  });
+
+  it('muestra al mentor solo sus participantes y cambio de contraseña', () => {
+    currentUser.next(userWithRole('ROLE_MENTOR'));
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.querySelector('.nav-menu').textContent;
+    expect(text).toContain('Mis participantes');
+    expect(text).toContain('Cambiar Contraseña');
+    expect(text).not.toContain('Consolidación');
+    expect(text).not.toContain('Cafe con Jesus');
+    expect(text).not.toContain('Dashboard');
+    expect(text).not.toContain('Usuarios');
   });
 
   function userWithRole(role: string): JwtResponse {

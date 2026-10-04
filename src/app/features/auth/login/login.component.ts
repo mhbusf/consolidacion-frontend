@@ -495,6 +495,8 @@ export class LoginComponent implements OnInit {
     // Redirigir según el rol del usuario
     if (this.authService.isAdmin()) {
       this.router.navigate(['/dashboard']);
+    } else if (this.authService.isMentor()) {
+      this.router.navigate(['/encuentro-poder/mentor']);
     } else {
       this.router.navigate(['/consolidados']);
     }

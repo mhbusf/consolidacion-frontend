@@ -7,9 +7,10 @@ import { RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroEstadoClase, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
+import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignment.component';
 
 @Component({
-  selector: 'app-encuentro-dashboard', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
+  selector: 'app-encuentro-dashboard', standalone: true, imports: [CommonModule, FormsModule, RouterLink, EncuentroMentorAssignmentComponent],
   template: `<div class="page">
     <header class="heading">
       <div><span class="eyebrow">Módulo operativo</span><h1>Encuentro de Poder</h1></div>
@@ -47,6 +48,8 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
         <article class="highlight"><b>{{ data.graduados.length }}</b><span>Graduados</span></article>
         <article><b>{{ data.pendientes }}</b><span>Pendientes</span></article>
       </section>
+
+      <app-encuentro-mentor-assignment [cicloId]="data.ciclo.id" />
 
       <section class="grid">
         <article class="panel">

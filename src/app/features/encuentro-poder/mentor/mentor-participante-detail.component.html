@@ -1,0 +1,84 @@
+<main class="detail-page">
+  <a class="back" routerLink="/encuentro-poder/mentor">← Volver a mis participantes</a>
+
+  @if (error()) {
+    <section class="state error-state" role="alert">
+      <h1>No pudimos abrir este participante</h1>
+      <p>{{ error() }}</p>
+      <button type="button" (click)="cargar()">Reintentar</button>
+    </section>
+  } @else if (cargando()) {
+    <section class="state" aria-live="polite"><span class="spinner"></span><p>Cargando detalle...</p></section>
+  } @else if (participante(); as persona) {
+    <header class="profile">
+      <div class="identity">
+        <span class="avatar">{{ persona.nombreCompleto.charAt(0) }}</span>
+        <div>
+          <p class="eyebrow">{{ persona.cicloNombre }}</p>
+          <h1>{{ persona.nombreCompleto }}</h1>
+          <p>{{ persona.telefono }} · {{ persona.comuna || 'Comuna no informada' }}</p>
+        </div>
+      </div>
+      <div class="progress-summary">
+        <strong>{{ porcentaje() }}%</strong>
+        <span>{{ persona.clasesCompletadas }} de {{ persona.totalClases }} clases</span>
+      </div>
+    </header>
+
+    <div class="content-grid">
+      <div>
+        <section class="panel facts">
+          <div><span>Fecha de inscripción</span><strong>{{ persona.fechaInscripcion | date:'dd/MM/yyyy' }}</strong></div>
+          <div><span>Invitado por</span><strong>{{ persona.invitadoPor || 'No informado' }}</strong></div>
+          <div><span>Tiempo en Catedral</span><strong>{{ persona.tiempoCatedral || 'No informado' }}</strong></div>
+        </section>
+
+        <section class="panel attendance">
+          <div class="section-title"><div><p class="eyebrow">Avance</p><h2>Asistencias</h2></div><span>{{ persona.clasesCompletadas }}/{{ persona.totalClases }}</span></div>
+          <div class="progress"><span [style.width.%]="porcentaje()"></span></div>
+          @for (clase of persona.asistencias; track clase.claseId) {
+            <div class="class-row">
+              <span class="status" [class.present]="clase.asistio">{{ clase.asistio ? '✓' : '—' }}</span>
+              <div><strong>{{ clase.claseNombre }}</strong><small>{{ clase.fecha | date:'dd/MM/yyyy' }}</small></div>
+              <b [class.present-text]="clase.asistio">{{ clase.asistio ? 'Presente' : 'Sin asistencia' }}</b>
+            </div>
+          } @empty {
+            <p class="muted">El ciclo aún no tiene clases informadas.</p>
+          }
+        </section>
+      </div>
+
+      <div>
+        <section class="panel feedback-form">
+          <p class="eyebrow">Seguimiento pastoral</p>
+          <h2>Registrar feedback</h2>
+          <p class="help" id="comentario-ayuda">Deja una nota útil para dar continuidad al acompañamiento.</p>
+          <form (ngSubmit)="guardarFeedback()">
+            <label for="comentario">Comentario</label>
+            <textarea id="comentario" [formControl]="comentario" maxlength="5000" rows="7" placeholder="Escribe acuerdos, avances o temas para la próxima conversación..." [attr.aria-invalid]="comentario.touched && comentario.invalid" [attr.aria-describedby]="comentario.touched && comentario.invalid ? 'comentario-ayuda comentario-error' : 'comentario-ayuda'"></textarea>
+            <div class="form-meta">
+              <span>{{ comentario.value.length }}/5000</span>
+              @if (comentario.touched && comentario.invalid) {
+                <span id="comentario-error" class="field-error">{{ comentario.hasError('maxlength') ? 'Máximo 5000 caracteres.' : 'El comentario es obligatorio.' }}</span>
+              }
+            </div>
+            @if (errorFeedback()) {<p class="submit-error" role="alert">{{ errorFeedback() }}</p>}
+            <button type="submit" [disabled]="comentario.invalid || enviando()">{{ enviando() ? 'Guardando...' : 'Guardar feedback' }}</button>
+          </form>
+        </section>
+
+        <section class="panel history">
+          <div class="section-title"><div><p class="eyebrow">Registro</p><h2>Historial de feedback</h2></div><span>{{ feedback().length }}</span></div>
+          @for (item of feedback(); track item.id) {
+            <article>
+              <div><strong>{{ item.mentorNombre }}</strong><time [attr.datetime]="item.fechaCreacion">{{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</time></div>
+              <p>{{ item.comentario }}</p>
+            </article>
+          } @empty {
+            <p class="muted">Todavía no hay feedback registrado.</p>
+          }
+        </section>
+      </div>
+    </div>
+  }
+</main>

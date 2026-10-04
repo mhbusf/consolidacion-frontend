@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
+import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 import { EncuentroDashboardComponent } from './encuentro-dashboard.component';
 
 const clases = [
@@ -53,6 +54,7 @@ describe('EncuentroDashboardComponent', () => {
   let fixture: ComponentFixture<EncuentroDashboardComponent>;
   let component: EncuentroDashboardComponent;
   let service: jasmine.SpyObj<EncuentroPoderService>;
+  let mentoriaService: jasmine.SpyObj<EncuentroMentoriaService>;
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
@@ -60,10 +62,19 @@ describe('EncuentroDashboardComponent', () => {
     ]);
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.callFake(() => of(dashboard()));
+    mentoriaService = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', [
+      'asignaciones', 'mentoresHabilitados', 'asignarMentor', 'desasignarMentor',
+    ]);
+    mentoriaService.asignaciones.and.returnValue(of([]));
+    mentoriaService.mentoresHabilitados.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [EncuentroDashboardComponent],
-      providers: [provideRouter([]), { provide: EncuentroPoderService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: EncuentroPoderService, useValue: service },
+        { provide: EncuentroMentoriaService, useValue: mentoriaService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EncuentroDashboardComponent);

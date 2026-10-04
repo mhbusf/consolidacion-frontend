@@ -99,7 +99,10 @@ import { NotificationService } from '../../../core/services/notification.service
               <option value="">Seleccione un rol</option>
               <option value="ROLE_USER">Usuario</option>
               <option value="ROLE_ADMIN">Administrador</option>
-              <option value="ROLE_SUPER_ADMIN">Superadministrador</option>
+              @if (esSuperAdmin) {
+                <option value="ROLE_MENTOR">Mentor</option>
+                <option value="ROLE_SUPER_ADMIN">Superadministrador</option>
+              }
             </select>
             @if (userForm.get('role')?.invalid && userForm.get('role')?.touched) {
               <div class="error">
@@ -286,17 +289,35 @@ export class CrearUsuarioComponent {
     });
   }
 
+  get esAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  get esSuperAdmin(): boolean {
+    return this.authService.isSuperAdmin();
+  }
+
   onSubmit(): void {
+    if (!this.esAdmin) {
+      this.notificationService.error('No tienes permisos para crear usuarios');
+      this.router.navigate(['/usuarios']);
+      return;
+    }
+
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
+      return;
+    }
+
+    const { username, nombre, apellido, email, password, role } = this.userForm.value;
+    if ((role === 'ROLE_MENTOR' || role === 'ROLE_SUPER_ADMIN') && !this.esSuperAdmin) {
+      this.notificationService.error('Solo un superadministrador puede asignar este perfil');
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-
-    const { username, nombre, apellido, email, password, role } = this.userForm.value;
 
     // Primero registrar el usuario
     this.authService.register({ username, nombre, apellido, email, password }).subscribe({

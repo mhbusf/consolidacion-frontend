@@ -14,8 +14,8 @@ import { filter, map, startWith } from 'rxjs';
       <nav class="navbar">
         <div class="nav-container">
           <div class="nav-brand">
-            <a routerLink="/consolidados">
-              <span class="brand-icon">📋</span>
+            <a [routerLink]="isMentorOnly() ? '/encuentro-poder/mentor' : '/consolidados'">
+              <span class="brand-icon">{{ isMentorOnly() ? '⚡' : '📋' }}</span>
               <span class="brand-text">Sistema de Consolidación</span>
             </a>
           </div>
@@ -23,9 +23,23 @@ import { filter, map, startWith } from 'rxjs';
             <span></span>
             <span></span>
             <span></span>
-          </button>
-          <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
-             @if (isAdmin()) {
+           </button>
+           <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
+             @if (isMentorOnly()) {
+               <li>
+                 <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
+                   <span class="menu-icon">👥</span>
+                   Mis participantes
+                 </a>
+               </li>
+               <li>
+                 <a routerLink="/change-password" routerLinkActive="active" (click)="closeMenus()">
+                   <span class="menu-icon">🔑</span>
+                   Cambiar Contraseña
+                 </a>
+               </li>
+             } @else {
+              @if (isAdmin()) {
               <li>
                 <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">📊</span>
@@ -91,10 +105,14 @@ import { filter, map, startWith } from 'rxjs';
                   <span class="dropdown-arrow">▼</span>
                 </button>
                 <div class="nav-submenu">
-                  <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
+                   <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">⚡</span>
-                    Panel de Encuentro
-                  </a>
+                     Panel de Encuentro
+                   </a>
+                   <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
+                     <span class="menu-icon">👥</span>
+                     Portal de mentoría
+                   </a>
                 </div>
               </li>
             }
@@ -105,12 +123,14 @@ import { filter, map, startWith } from 'rxjs';
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="nav-submenu">
-                @if (isAdmin()) {
-                  <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMenus()">
-                    <span class="menu-icon">🔐</span>
-                    Usuarios
-                  </a>
-                  <a routerLink="/usuarios/crear" routerLinkActive="active" (click)="closeMenus()">
+                 @if (isAdmin()) {
+                   <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMenus()">
+                     <span class="menu-icon">🔐</span>
+                     Usuarios
+                   </a>
+                 }
+                  @if (isAdmin()) {
+                    <a routerLink="/usuarios/crear" routerLinkActive="active" (click)="closeMenus()">
                     <span class="menu-icon">➕</span>
                     Crear Usuario
                   </a>
@@ -119,17 +139,20 @@ import { filter, map, startWith } from 'rxjs';
                   <span class="menu-icon">🔑</span>
                   Cambiar Contraseña
                 </a>
-              </div>
-            </li>
-          </ul>
+               </div>
+             </li>
+             }
+           </ul>
           @if (currentUser(); as user) {
             <div class="nav-user">
               <div class="dropdown" [class.open]="dropdownOpen">
                 <button class="dropdown-toggle" (click)="toggleDropdown($event)">
                   <span class="user-icon">👤</span>
                   <span class="user-name">{{ user.username }}</span>
-                  @if (isAdmin()) {
-                    <span class="badge-role">ADMIN</span>
+                   @if (isAdmin()) {
+                     <span class="badge-role">ADMIN</span>
+                   } @else if (isMentor()) {
+                     <span class="badge-role mentor">MENTOR</span>
                   }
                   <span class="dropdown-arrow">▼</span>
                 </button>
@@ -389,6 +412,10 @@ import { filter, map, startWith } from 'rxjs';
         letter-spacing: 0.5px;
       }
 
+      .badge-role.mentor {
+        background: linear-gradient(135deg, #0f766e, #2dd4bf);
+      }
+
       .dropdown-arrow {
         font-size: 10px;
         transition: transform 0.2s ease;
@@ -551,6 +578,9 @@ export class NavbarComponent {
   readonly isSuperAdmin = computed(() => this.currentUser()?.roles.some(role => role.name === 'ROLE_SUPER_ADMIN') ?? false);
   readonly isAdmin = computed(() => this.currentUser()?.roles.some(role =>
     role.name === 'ROLE_ADMIN' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
+  readonly isMentor = computed(() => this.currentUser()?.roles.some(role =>
+    role.name === 'ROLE_MENTOR' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
+  readonly isMentorOnly = computed(() => this.isMentor() && !this.isSuperAdmin());
   dropdownOpen = false;
   openGroup: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario' | null = null;
   mobileMenuOpen = false;

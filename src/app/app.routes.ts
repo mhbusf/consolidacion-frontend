@@ -49,19 +49,22 @@ export const routes: Routes = [
   {
     path: 'consolidados',
     loadComponent: () => import('./features/consolidados/list/consolidados-list.component').then(m => m.ConsolidadosListComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_USER'] }
   },
   
   {
     path: 'consolidados/nuevo',
     loadComponent: () => import('./features/consolidados/create/consolidado-create.component').then(m => m.ConsolidadoCreateComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_USER'] }
   },
   
   {
     path: 'consolidados/:id',
     loadComponent: () => import('./features/consolidados/detail/consolidado-detail.component').then(m => m.ConsolidadoDetailComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_USER'] }
   },
   
   {
@@ -88,13 +91,15 @@ export const routes: Routes = [
   {
     path: 'cafe-con-jesus',
     loadComponent: () => import('./features/cafe-con-jesus/list/cafe-list.component').then(m => m.CafeListComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_USER'] }
   },
 
   {
     path: 'cafe-con-jesus/nuevo',
     loadComponent: () => import('./features/cafe-con-jesus/create/cafe-create.component').then(m => m.CafeCreateComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_USER'] }
   },
 
   {
@@ -132,6 +137,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/encuentro-poder/ciclos/encuentro-ciclo-create.component').then(m => m.EncuentroCicloCreateComponent),
     canActivate: [authGuard],
     data: { roles: ['ROLE_SUPER_ADMIN'] }
+  },
+
+  {
+    path: 'encuentro-poder/mentor',
+    loadComponent: () => import('./features/encuentro-poder/mentor/mentor-portal.component').then(m => m.MentorPortalComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'] }
+  },
+
+  {
+    path: 'encuentro-poder/mentor/:inscripcionId',
+    loadComponent: () => import('./features/encuentro-poder/mentor/mentor-participante-detail.component').then(m => m.MentorParticipanteDetailComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'] }
   },
 
   { path: '**', redirectTo: '/login' }

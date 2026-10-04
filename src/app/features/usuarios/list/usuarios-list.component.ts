@@ -23,9 +23,11 @@ interface UsuarioConStats {
     <div class="container">
       <div class="header">
         <h2>Gestión de Usuarios</h2>
+        @if (esAdmin) {
         <div class="actions">
           <button class="btn-primary" (click)="crearUsuario()">+ Crear Usuario</button>
         </div>
+        }
       </div>
     
       @if (isLoading) {
@@ -86,6 +88,7 @@ interface UsuarioConStats {
                     </div>
                   </td>
                   <td>
+                    @if (esAdmin) {
                     <div class="action-buttons">
                       <button
                         class="btn-small btn-info"
@@ -93,13 +96,15 @@ interface UsuarioConStats {
                         title="Ver consolidados">
                         📊 Consolidados
                       </button>
-                      <button
-                        class="btn-small btn-warning"
-                        (click)="cambiarPassword(user.usuario.username)"
-                        title="Cambiar contraseña">
-                        🔑 Cambiar Pass
-                      </button>
-                      @if (!tieneRolAdmin(user.usuario)) {
+                      @if (esSuperAdmin || !tienePerfilProtegido(user.usuario)) {
+                        <button
+                          class="btn-small btn-warning"
+                          (click)="cambiarPassword(user.usuario.username)"
+                          title="Cambiar contraseña">
+                          🔑 Cambiar Pass
+                        </button>
+                      }
+                      @if (!tieneRolAdmin(user.usuario) && (esSuperAdmin || !tienePerfilProtegido(user.usuario))) {
                         <button
                           class="btn-small btn-primary"
                           (click)="asignarPerfil(user.usuario.username, 'ROLE_ADMIN', 'ADMIN')"
@@ -107,7 +112,15 @@ interface UsuarioConStats {
                           ⭐ Admin
                         </button>
                       }
-                      @if (!tieneRolSuperAdmin(user.usuario)) {
+                      @if (esSuperAdmin && !tieneRolMentor(user.usuario)) {
+                        <button
+                          class="btn-small btn-primary"
+                          (click)="asignarPerfil(user.usuario.username, 'ROLE_MENTOR', 'MENTOR')"
+                          title="Hacer mentor">
+                          Mentor
+                        </button>
+                      }
+                      @if (esSuperAdmin && !tieneRolSuperAdmin(user.usuario)) {
                         <button
                           class="btn-small btn-primary"
                           (click)="asignarPerfil(user.usuario.username, 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN')"
@@ -115,13 +128,18 @@ interface UsuarioConStats {
                           ⭐ Super Admin
                         </button>
                       }
-                      <button
-                        class="btn-small btn-danger"
-                        (click)="eliminarUsuario(user.usuario.username)"
-                        title="Eliminar usuario">
-                        🗑️ Eliminar
-                      </button>
+                      @if (esSuperAdmin || !tienePerfilProtegido(user.usuario)) {
+                        <button
+                          class="btn-small btn-danger"
+                          (click)="eliminarUsuario(user.usuario.username)"
+                          title="Eliminar usuario">
+                          🗑️ Eliminar
+                        </button>
+                      }
                     </div>
+                    } @else {
+                      <span class="restricted">Solo lectura</span>
+                    }
                   </td>
                 </tr>
               }
@@ -268,6 +286,11 @@ interface UsuarioConStats {
       gap: 5px;
     }
 
+    .restricted {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
     .btn-small {
       padding: 6px 12px;
       border: none;
@@ -306,6 +329,8 @@ export class UsuariosListComponent implements OnInit {
   consolidados: ConsolidadoResponse[] = [];
   isLoading = true;
   busqueda = '';
+  readonly esAdmin: boolean;
+  readonly esSuperAdmin: boolean;
 
   get usuariosFiltrados(): UsuarioConStats[] {
     const q = this.busqueda.trim().toLowerCase();
@@ -324,7 +349,10 @@ export class UsuariosListComponent implements OnInit {
     private consolidadoService: ConsolidadoService,
     private notificationService: NotificationService,
     private router: Router
-  ) {}
+  ) {
+    this.esAdmin = this.authService.isAdmin();
+    this.esSuperAdmin = this.authService.isSuperAdmin();
+  }
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -370,6 +398,14 @@ export class UsuariosListComponent implements OnInit {
     return user.roles.some(r => r.name === 'ROLE_SUPER_ADMIN');
   }
 
+  tieneRolMentor(user: User): boolean {
+    return user.roles.some(r => r.name === 'ROLE_MENTOR');
+  }
+
+  tienePerfilProtegido(user: User): boolean {
+    return this.tieneRolMentor(user) || this.tieneRolSuperAdmin(user);
+  }
+
   nombreCompleto(user: User): string {
     return [user.nombre, user.apellido]
       .filter(Boolean)
@@ -378,6 +414,7 @@ export class UsuariosListComponent implements OnInit {
   }
 
   crearUsuario(): void {
+    if (!this.esAdmin) return;
     this.router.navigate(['/usuarios/crear']);
   }
 
@@ -388,6 +425,7 @@ export class UsuariosListComponent implements OnInit {
   }
 
   cambiarPassword(username: string): void {
+    if (!this.esAdmin) return;
     const newPassword = prompt(`Ingrese la nueva contraseña para ${username}:`);
     
     if (newPassword && newPassword.trim()) {
@@ -411,7 +449,8 @@ export class UsuariosListComponent implements OnInit {
     }
   }
 
-  asignarPerfil(username: string, role: 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
+  asignarPerfil(username: string, role: 'ROLE_MENTOR' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
+    if (!this.esAdmin || ((role === 'ROLE_MENTOR' || role === 'ROLE_SUPER_ADMIN') && !this.esSuperAdmin)) return;
     if (confirm(`¿Asignar perfil ${label} a ${username}?`)) {
       this.authService.assignRole(username, role).subscribe({
         next: () => {
@@ -426,6 +465,7 @@ export class UsuariosListComponent implements OnInit {
   }
 
   eliminarUsuario(username: string): void {
+    if (!this.esAdmin) return;
     if (confirm(`¿Está seguro de eliminar al usuario ${username}?\n\nEsta acción no se puede deshacer.`)) {
       this.authService.deleteUser(username).subscribe({
         next: () => {

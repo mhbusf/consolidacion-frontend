@@ -132,7 +132,7 @@ export class AuthService {
     const roles = new Set(user?.roles.map(role => role.name) ?? []);
     if (roles.has(roleName)) return true;
     if (roles.has(RoleName.SUPER_ADMIN)) {
-      return roleName === RoleName.ADMIN || roleName === RoleName.USER;
+      return roleName === RoleName.ADMIN || roleName === RoleName.USER || roleName === RoleName.MENTOR;
     }
     return roleName === RoleName.USER && roles.has(RoleName.ADMIN);
   }
@@ -143,6 +143,10 @@ export class AuthService {
 
   isSuperAdmin(): boolean {
     return this.hasRole(RoleName.SUPER_ADMIN);
+  }
+
+  isMentor(): boolean {
+    return this.hasRole(RoleName.MENTOR);
   }
 
   mustChangePassword(): boolean {

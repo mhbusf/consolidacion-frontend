@@ -11,12 +11,28 @@ describe('AuthService roles', () => {
     localStorage.clear();
   });
 
-  it('hace que SUPER_ADMIN herede ADMIN y USER', () => {
+  it('hace que SUPER_ADMIN herede ADMIN, USER y MENTOR', () => {
     service = serviceWithRole(RoleName.SUPER_ADMIN);
 
     expect(service.isSuperAdmin()).toBeTrue();
     expect(service.isAdmin()).toBeTrue();
     expect(service.hasRole(RoleName.USER)).toBeTrue();
+    expect(service.hasRole(RoleName.MENTOR)).toBeTrue();
+  });
+
+  it('mantiene MENTOR independiente de USER y ADMIN', () => {
+    service = serviceWithRole(RoleName.MENTOR);
+
+    expect(service.isMentor()).toBeTrue();
+    expect(service.hasRole(RoleName.USER)).toBeFalse();
+    expect(service.isAdmin()).toBeFalse();
+    expect(service.isSuperAdmin()).toBeFalse();
+  });
+
+  it('no concede MENTOR a un administrador comun', () => {
+    service = serviceWithRole(RoleName.ADMIN);
+
+    expect(service.isMentor()).toBeFalse();
   });
 
   it('no concede SUPER_ADMIN a un administrador comun', () => {

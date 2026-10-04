@@ -45,4 +45,5 @@ export enum RoleName {
   SUPER_ADMIN = 'ROLE_SUPER_ADMIN',
   ADMIN = 'ROLE_ADMIN',
   USER = 'ROLE_USER',
+  MENTOR = 'ROLE_MENTOR',
 }
