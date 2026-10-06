@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, HostListener, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -19,7 +19,8 @@ import { filter, map, startWith } from 'rxjs';
               <span class="brand-text">Sistema de Consolidación</span>
             </a>
           </div>
-          <button class="mobile-menu-toggle" type="button" (click)="toggleMobileMenu($event)" aria-label="Abrir menú">
+          <button class="mobile-menu-toggle" type="button" (click)="toggleMobileMenu($event)"
+            [attr.aria-expanded]="mobileMenuOpen" [attr.aria-label]="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'">
             <span></span>
             <span></span>
             <span></span>
@@ -54,12 +55,13 @@ import { filter, map, startWith } from 'rxjs';
               </li>
             }
             <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc', '/reportes/consolidados'])">
-              <button class="nav-group-toggle" type="button" (click)="toggleGroup('consolidacion', $event)">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('consolidacion', $event)"
+                [attr.aria-expanded]="openGroup === 'consolidacion'" aria-controls="submenu-consolidacion">
                 <span class="menu-icon">👥</span>
                 Consolidación
                 <span class="dropdown-arrow">▼</span>
               </button>
-              <div class="nav-submenu">
+              <div class="nav-submenu" id="submenu-consolidacion">
                 <a routerLink="/consolidados" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">👥</span>
                   Consolidados
@@ -81,12 +83,13 @@ import { filter, map, startWith } from 'rxjs';
               </div>
             </li>
             <li class="nav-group" [class.open]="openGroup === 'cafe'" [class.active]="isRouteGroupActive(['/cafe-con-jesus', '/cafe-admin', '/reportes/cafe-con-jesus'])">
-              <button class="nav-group-toggle" type="button" (click)="toggleGroup('cafe', $event)">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('cafe', $event)"
+                [attr.aria-expanded]="openGroup === 'cafe'" aria-controls="submenu-cafe">
                 <span class="menu-icon">☕</span>
                 Cafe con Jesus
                 <span class="dropdown-arrow">▼</span>
               </button>
-              <div class="nav-submenu">
+              <div class="nav-submenu" id="submenu-cafe">
                 <a routerLink="/cafe-con-jesus" routerLinkActive="active" (click)="closeMenus()">
                   <span class="menu-icon">☕</span>
                   Invitados
@@ -105,12 +108,13 @@ import { filter, map, startWith } from 'rxjs';
             </li>
             @if (isMentor() || isSuperAdmin()) {
               <li class="nav-group" [class.open]="openGroup === 'encuentro'" [class.active]="isRouteGroupActive(['/encuentro-poder'])">
-                <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)">
+                <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)"
+                  [attr.aria-expanded]="openGroup === 'encuentro'" aria-controls="submenu-encuentro">
                   <span class="menu-icon">⚡</span>
                   Encuentro de Poder
                   <span class="dropdown-arrow">▼</span>
                 </button>
-                <div class="nav-submenu">
+                <div class="nav-submenu" id="submenu-encuentro">
                    @if (isSuperAdmin()) {
                      <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
                        <span class="menu-icon">⚡</span>
@@ -129,12 +133,13 @@ import { filter, map, startWith } from 'rxjs';
               </li>
             }
             <li class="nav-group" [class.open]="openGroup === 'usuario'" [class.active]="isRouteGroupActive(['/usuarios', '/change-password'])">
-              <button class="nav-group-toggle" type="button" (click)="toggleGroup('usuario', $event)">
+              <button class="nav-group-toggle" type="button" (click)="toggleGroup('usuario', $event)"
+                [attr.aria-expanded]="openGroup === 'usuario'" aria-controls="submenu-usuario">
                 <span class="menu-icon">🔐</span>
                 Usuario
                 <span class="dropdown-arrow">▼</span>
               </button>
-              <div class="nav-submenu">
+              <div class="nav-submenu" id="submenu-usuario">
                  @if (isAdmin()) {
                    <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMenus()">
                      <span class="menu-icon">🔐</span>
@@ -158,7 +163,8 @@ import { filter, map, startWith } from 'rxjs';
           @if (currentUser(); as user) {
             <div class="nav-user">
               <div class="dropdown" [class.open]="dropdownOpen">
-                <button class="dropdown-toggle" (click)="toggleDropdown($event)">
+                <button class="dropdown-toggle" type="button" (click)="toggleDropdown($event)"
+                  [attr.aria-expanded]="dropdownOpen" aria-controls="user-menu">
                   <span class="user-icon">👤</span>
                   <span class="user-name">{{ user.username }}</span>
                    @if (isAdmin()) {
@@ -169,7 +175,7 @@ import { filter, map, startWith } from 'rxjs';
                   <span class="dropdown-arrow">▼</span>
                 </button>
                 @if (dropdownOpen) {
-                  <div class="dropdown-menu">
+                  <div class="dropdown-menu" id="user-menu">
                     <a (click)="logout()" class="logout">
                       <span class="menu-icon">🚪</span>
                       Cerrar Sesión
@@ -309,10 +315,18 @@ import { filter, map, startWith } from 'rxjs';
 
       .nav-group-toggle:hover,
       .nav-group.active .nav-group-toggle,
-      .nav-group:focus-within .nav-group-toggle {
+      .nav-group.open .nav-group-toggle {
         background: rgba(96, 165, 250, 0.15);
         border-color: rgba(96, 165, 250, 0.24);
         color: white;
+      }
+
+      .nav-group-toggle:focus-visible,
+      .nav-menu a:focus-visible,
+      .dropdown-toggle:focus-visible,
+      .mobile-menu-toggle:focus-visible {
+        outline: 3px solid rgba(147, 197, 253, 0.9);
+        outline-offset: 2px;
       }
 
       .nav-submenu {
@@ -334,8 +348,7 @@ import { filter, map, startWith } from 'rxjs';
       }
 
       .nav-group:hover .nav-submenu,
-      .nav-group.open .nav-submenu,
-      .nav-group:focus-within .nav-submenu {
+      .nav-group.open .nav-submenu {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
@@ -354,20 +367,27 @@ import { filter, map, startWith } from 'rxjs';
       }
 
       .nav-submenu a.active {
-        background: #eff6ff;
-        color: #1d4ed8;
+        background: #dbeafe;
+        color: #1e40af;
       }
 
-      .nav-menu a:hover {
+      .nav-menu > li > a:hover {
         background: rgba(96, 165, 250, 0.14);
         border-color: rgba(96, 165, 250, 0.24);
         color: white;
       }
 
-      .nav-menu a.active {
+      .nav-menu > li > a.active {
         background: rgba(96, 165, 250, 0.16);
         border-color: rgba(96, 165, 250, 0.24);
         color: white;
+      }
+
+      .nav-submenu a:hover,
+      .nav-submenu a:focus-visible {
+        background: #eff6ff;
+        border-color: transparent;
+        color: #1d4ed8;
       }
 
       .menu-icon {
@@ -544,8 +564,7 @@ import { filter, map, startWith } from 'rxjs';
           transition: none;
         }
 
-        .nav-group:hover .nav-submenu,
-        .nav-group:focus-within .nav-submenu {
+        .nav-group:hover .nav-submenu {
           display: none;
           transform: none;
         }
@@ -580,7 +599,6 @@ import { filter, map, startWith } from 'rxjs';
 export class NavbarComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly el = inject(ElementRef<HTMLElement>);
   private readonly currentUrl = toSignal(this.router.events.pipe(
     filter((event): event is NavigationEnd => event instanceof NavigationEnd),
     map(event => event.urlAfterRedirects),
@@ -625,11 +643,14 @@ export class NavbarComponent {
     this.mobileMenuOpen = false;
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    if (!this.el.nativeElement.contains(event.target)) {
-      this.closeMenus();
-    }
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeMenus();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeMenus();
   }
 
   logout(): void {

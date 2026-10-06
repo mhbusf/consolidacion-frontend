@@ -69,6 +69,30 @@ describe('NavbarComponent', () => {
     expect(text).not.toContain('Panel de Encuentro');
   });
 
+  it('cierra el grupo desplegado con un segundo clic, clic exterior o Escape', () => {
+    currentUser.next(userWithRole('ROLE_USER'));
+    fixture.detectChanges();
+    const toggle = fixture.nativeElement.querySelector('.nav-group-toggle') as HTMLButtonElement;
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+    document.dispatchEvent(new MouseEvent('click'));
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
   function userWithRole(role: string): JwtResponse {
     return userWithRoles(role);
   }
