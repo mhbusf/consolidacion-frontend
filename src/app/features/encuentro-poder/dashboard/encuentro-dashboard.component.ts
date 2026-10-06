@@ -49,8 +49,6 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
         <article><b>{{ data.pendientes }}</b><span>Pendientes</span></article>
       </section>
 
-      <app-encuentro-mentor-assignment [cicloId]="data.ciclo.id" />
-
       <section class="grid">
         <article class="panel">
           <h2>Asistencia por día</h2>
@@ -92,6 +90,8 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
           </div>
         </article>
       </section>
+
+      <app-encuentro-mentor-assignment [cicloId]="data.ciclo.id" />
 
       <section class="panel">
         <h2>Graduados del ciclo ({{ data.graduados.length }})</h2>

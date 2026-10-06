@@ -104,6 +104,15 @@ describe('EncuentroDashboardComponent', () => {
     expect(fixture.nativeElement.querySelector('.missing-classes')?.textContent).toContain('Clase 1');
   });
 
+  it('muestra asistencia antes de la asignación de mentoría', () => {
+    component.dashboard.set(dashboard());
+    fixture.detectChanges();
+
+    const bloques = Array.from(fixture.nativeElement.querySelectorAll('.grid, app-encuentro-mentor-assignment')) as HTMLElement[];
+    expect(bloques[0].classList.contains('grid')).toBeTrue();
+    expect(bloques[1].tagName).toBe('APP-ENCUENTRO-MENTOR-ASSIGNMENT');
+  });
+
   it('muestra solo pendientes ordenados desde quien tiene menos clases faltantes', () => {
     const data = dashboard();
     const base = data.participantes[0];
