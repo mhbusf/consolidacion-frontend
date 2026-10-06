@@ -49,10 +49,19 @@
         <p class="eyebrow">{{ cicloSeleccionado()?.nombre }}</p>
         <h2>{{ claseSeleccionada()?.nombre }}</h2>
       </div>
-      <label>
-        <span>Buscar participante</span>
-        <input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Nombre o teléfono">
-      </label>
+      <div class="search-block">
+        <label for="participant-search">Buscar por nombre</label>
+        <div class="search-field">
+          <input id="participant-search" type="search" [ngModel]="busqueda()"
+            (ngModelChange)="busqueda.set($event)" placeholder="Ej. Ana Pérez" autocomplete="off">
+          @if (busqueda()) {
+            <button type="button" class="clear-search" (click)="limpiarBusqueda()" aria-label="Limpiar búsqueda">×</button>
+          }
+        </div>
+        <small class="result-count" aria-live="polite">
+          {{ participantesFiltrados().length }} de {{ participantes().length }} participantes
+        </small>
+      </div>
     </section>
 
     @if (errorAccion()) {

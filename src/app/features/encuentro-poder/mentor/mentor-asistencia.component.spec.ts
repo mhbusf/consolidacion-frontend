@@ -97,4 +97,17 @@ describe('MentorAsistenciaComponent', () => {
 
     expect(fixture.componentInstance.participantes()[0].nombreCompleto).toBe('Beatriz Soto');
   });
+
+  it('busca por nombre sin distinguir mayúsculas ni tildes y permite limpiar', () => {
+    fixture.componentInstance.seleccionarCiclo('7');
+    fixture.componentInstance.seleccionarClase('2');
+    fixture.componentInstance.busqueda.set('ana perez');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.participantesFiltrados().map(item => item.nombreCompleto)).toEqual(['Ana Pérez']);
+    expect(fixture.nativeElement.querySelector('.result-count').textContent).toContain('1 de 1 participantes');
+
+    (fixture.nativeElement.querySelector('.clear-search') as HTMLButtonElement).click();
+    expect(fixture.componentInstance.busqueda()).toBe('');
+  });
 });

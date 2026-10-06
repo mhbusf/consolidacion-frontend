@@ -35,11 +35,10 @@ export class MentorAsistenciaComponent implements OnInit {
   readonly clases = computed(() => [...(this.cicloSeleccionado()?.clases ?? [])].sort((a, b) => a.orden - b.orden));
   readonly claseSeleccionada = computed(() => this.clases().find(clase => clase.id === this.claseId()) ?? null);
   readonly participantesFiltrados = computed(() => {
-    const term = this.busqueda().trim().toLocaleLowerCase('es');
+    const term = this.normalizarBusqueda(this.busqueda());
     if (!term) return this.participantes();
     return this.participantes().filter(participante =>
-      participante.nombreCompleto.toLocaleLowerCase('es').includes(term)
-      || participante.telefono.toLocaleLowerCase('es').includes(term),
+      this.normalizarBusqueda(participante.nombreCompleto).includes(term),
     );
   });
 
@@ -135,6 +134,14 @@ export class MentorAsistenciaComponent implements OnInit {
 
   claseHabilitada(clase: EncuentroMentorClase): boolean {
     return clase.obligatoria && clase.estado !== 'PROGRAMADA';
+  }
+
+  limpiarBusqueda(): void {
+    this.busqueda.set('');
+  }
+
+  private normalizarBusqueda(value: string): string {
+    return value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
   }
 
   private quitarGuardando(personaId: number): void {
