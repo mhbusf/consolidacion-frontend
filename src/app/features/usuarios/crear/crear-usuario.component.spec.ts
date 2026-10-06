@@ -1,5 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CrearUsuarioComponent } from './crear-usuario.component';
@@ -10,9 +11,10 @@ describe('CrearUsuarioComponent roles', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['isAdmin', 'isSuperAdmin', 'register', 'assignRole']);
+    auth = jasmine.createSpyObj<AuthService>('AuthService', ['isAdmin', 'register', 'assignRole']);
     auth.isAdmin.and.returnValue(true);
-    auth.isSuperAdmin.and.returnValue(true);
+    auth.register.and.returnValue(of(''));
+    auth.assignRole.and.returnValue(of(''));
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [CrearUsuarioComponent],
@@ -26,13 +28,13 @@ describe('CrearUsuarioComponent roles', () => {
     fixture.detectChanges();
   });
 
-  it('incluye Mentor entre los perfiles disponibles', () => {
+  it('incluye Mentor y Superadministrador para un ADMIN', () => {
     const options = Array.from(fixture.nativeElement.querySelectorAll('#role option')) as HTMLOptionElement[];
     expect(options.some(option => option.value === 'ROLE_MENTOR' && option.textContent?.trim() === 'Mentor')).toBeTrue();
+    expect(options.some(option => option.value === 'ROLE_SUPER_ADMIN' && option.textContent?.trim() === 'Superadministrador')).toBeTrue();
   });
 
-  it('impide a un administrador común crear un perfil mentor', () => {
-    auth.isSuperAdmin.and.returnValue(false);
+  it('permite a un ADMIN crear un perfil mentor', fakeAsync(() => {
     fixture.componentInstance.userForm.setValue({
       username: 'mentor1', nombre: 'Mentor', apellido: 'Uno', email: 'mentor@example.com',
       password: 'Segura1!', role: 'ROLE_MENTOR',
@@ -40,7 +42,9 @@ describe('CrearUsuarioComponent roles', () => {
 
     fixture.componentInstance.onSubmit();
 
-    expect(auth.register).not.toHaveBeenCalled();
-    expect(router.navigate).not.toHaveBeenCalled();
-  });
+    expect(auth.register).toHaveBeenCalled();
+    expect(auth.assignRole).toHaveBeenCalledWith('mentor1', 'ROLE_MENTOR');
+    tick(2000);
+    expect(router.navigate).toHaveBeenCalledWith(['/usuarios']);
+  }));
 });

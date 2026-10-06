@@ -16,12 +16,13 @@ describe('UsuariosListComponent permisos', () => {
     ]);
     auth.isAdmin.and.returnValue(true);
     auth.isSuperAdmin.and.returnValue(false);
+    auth.assignRole.and.returnValue(of(''));
     auth.getAllUsers.and.returnValue(of([{
       id: 1,
       username: 'usuario',
       email: 'usuario@example.com',
       enabled: true,
-      roles: [{ id: 1, name: 'ROLE_USER' }],
+      roles: [{ id: 1, name: 'ROLE_USER' }, { id: 2, name: 'ROLE_ADMIN' }],
     }]));
     const consolidado = jasmine.createSpyObj<ConsolidadoService>('ConsolidadoService', ['obtenerTodos']);
     consolidado.obtenerTodos.and.returnValue(of([]));
@@ -39,13 +40,16 @@ describe('UsuariosListComponent permisos', () => {
     fixture.detectChanges();
   });
 
-  it('mantiene controles normales pero oculta promociones privilegiadas a un ADMIN común', () => {
+  it('permite que un ADMIN asigne cualquier perfil', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+
     expect(fixture.nativeElement.querySelector('.action-buttons')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).not.toContain('Mentor');
-    expect(fixture.nativeElement.textContent).not.toContain('Super Admin');
+    expect(fixture.nativeElement.querySelector('[title="Hacer usuario"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Mentor');
+    expect(fixture.nativeElement.textContent).toContain('Super Admin');
 
     fixture.componentInstance.asignarPerfil('usuario', 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN');
 
-    expect(auth.assignRole).not.toHaveBeenCalled();
+    expect(auth.assignRole).toHaveBeenCalledWith('usuario', 'ROLE_SUPER_ADMIN');
   });
 });

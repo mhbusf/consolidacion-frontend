@@ -104,7 +104,15 @@ interface UsuarioConStats {
                           🔑 Cambiar Pass
                         </button>
                       }
-                      @if (!tieneRolAdmin(user.usuario) && (esSuperAdmin || !tienePerfilProtegido(user.usuario))) {
+                      @if (!esPerfilUsuario(user.usuario)) {
+                        <button
+                          class="btn-small btn-primary"
+                          (click)="asignarPerfil(user.usuario.username, 'ROLE_USER', 'USUARIO')"
+                          title="Hacer usuario">
+                          Usuario
+                        </button>
+                      }
+                      @if (!tieneRolAdmin(user.usuario)) {
                         <button
                           class="btn-small btn-primary"
                           (click)="asignarPerfil(user.usuario.username, 'ROLE_ADMIN', 'ADMIN')"
@@ -112,7 +120,7 @@ interface UsuarioConStats {
                           ⭐ Admin
                         </button>
                       }
-                      @if (esSuperAdmin && !tieneRolMentor(user.usuario)) {
+                      @if (!tieneRolMentor(user.usuario)) {
                         <button
                           class="btn-small btn-primary"
                           (click)="asignarPerfil(user.usuario.username, 'ROLE_MENTOR', 'MENTOR')"
@@ -120,7 +128,7 @@ interface UsuarioConStats {
                           Mentor
                         </button>
                       }
-                      @if (esSuperAdmin && !tieneRolSuperAdmin(user.usuario)) {
+                      @if (!tieneRolSuperAdmin(user.usuario)) {
                         <button
                           class="btn-small btn-primary"
                           (click)="asignarPerfil(user.usuario.username, 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN')"
@@ -402,6 +410,10 @@ export class UsuariosListComponent implements OnInit {
     return user.roles.some(r => r.name === 'ROLE_MENTOR');
   }
 
+  esPerfilUsuario(user: User): boolean {
+    return user.roles.length === 1 && user.roles[0].name === 'ROLE_USER';
+  }
+
   tienePerfilProtegido(user: User): boolean {
     return this.tieneRolMentor(user) || this.tieneRolSuperAdmin(user);
   }
@@ -449,8 +461,8 @@ export class UsuariosListComponent implements OnInit {
     }
   }
 
-  asignarPerfil(username: string, role: 'ROLE_MENTOR' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
-    if (!this.esAdmin || ((role === 'ROLE_MENTOR' || role === 'ROLE_SUPER_ADMIN') && !this.esSuperAdmin)) return;
+  asignarPerfil(username: string, role: 'ROLE_USER' | 'ROLE_MENTOR' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
+    if (!this.esAdmin) return;
     if (confirm(`¿Asignar perfil ${label} a ${username}?`)) {
       this.authService.assignRole(username, role).subscribe({
         next: () => {
