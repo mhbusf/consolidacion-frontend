@@ -9,6 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { RoleName } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-login',
@@ -495,7 +496,7 @@ export class LoginComponent implements OnInit {
     // Redirigir según el rol del usuario
     if (this.authService.isAdmin()) {
       this.router.navigate(['/dashboard']);
-    } else if (this.authService.isMentor()) {
+    } else if (this.authService.isMentor() && !this.authService.hasRole(RoleName.USER)) {
       this.router.navigate(['/encuentro-poder/mentor']);
     } else {
       this.router.navigate(['/consolidados']);

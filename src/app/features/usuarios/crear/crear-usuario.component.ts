@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ROLE_OPTIONS, RoleName, toggleRoleName } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-crear-usuario',
@@ -93,21 +94,21 @@ import { NotificationService } from '../../../core/services/notification.service
             }
           </div>
     
-          <div class="form-group">
-            <label for="role">Rol *</label>
-            <select id="role" formControlName="role" class="form-control">
-              <option value="">Seleccione un rol</option>
-              <option value="ROLE_USER">Usuario</option>
-              <option value="ROLE_ADMIN">Administrador</option>
-              <option value="ROLE_MENTOR">Mentor</option>
-              <option value="ROLE_SUPER_ADMIN">Superadministrador</option>
-            </select>
-            @if (userForm.get('role')?.invalid && userForm.get('role')?.touched) {
-              <div class="error">
-                Debe seleccionar un rol
-              </div>
+          <fieldset class="form-group role-fieldset">
+            <legend>Roles *</legend>
+            <div class="role-options">
+              @for (role of roleOptions; track role.name) {
+                <label class="role-option">
+                  <input type="checkbox" [checked]="hasRole(role.name)" (change)="toggleRole(role.name, $event)">
+                  <span>{{ role.label }}</span>
+                </label>
+              }
+            </div>
+            <small class="form-text">Administrador incluye Usuario. Superadministrador incluye Administrador y Usuario.</small>
+            @if (rolesTouched && !selectedRoles.length) {
+              <div class="error">Debe seleccionar al menos un rol</div>
             }
-          </div>
+          </fieldset>
     
           @if (errorMessage) {
             <div class="error">
@@ -128,7 +129,7 @@ import { NotificationService } from '../../../core/services/notification.service
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="userForm.invalid || isLoading">
+              [disabled]="userForm.invalid || !selectedRoles.length || isLoading">
               {{ isLoading ? 'Creando...' : 'Crear Usuario' }}
             </button>
           </div>
@@ -159,6 +160,35 @@ import { NotificationService } from '../../../core/services/notification.service
 
     .form-group {
       margin-bottom: 20px;
+    }
+
+    .role-fieldset {
+      padding: 0;
+      border: 0;
+    }
+
+    .role-fieldset legend {
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .role-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .role-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      padding: 11px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      cursor: pointer;
     }
 
     .form-row {
@@ -270,6 +300,9 @@ export class CrearUsuarioComponent {
   errorMessage = '';
   successMessage = '';
   isLoading = false;
+  readonly roleOptions = ROLE_OPTIONS;
+  selectedRoles: RoleName[] = [];
+  rolesTouched = false;
 
   constructor(
     private fb: FormBuilder,
@@ -283,8 +316,16 @@ export class CrearUsuarioComponent {
       apellido: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
-      role: ['', [Validators.required]]
     });
+  }
+
+  hasRole(roleName: RoleName): boolean {
+    return this.selectedRoles.includes(roleName);
+  }
+
+  toggleRole(roleName: RoleName, event: Event): void {
+    this.rolesTouched = true;
+    this.selectedRoles = toggleRoleName(this.selectedRoles, roleName, (event.target as HTMLInputElement).checked);
   }
 
   get esAdmin(): boolean {
@@ -298,39 +339,33 @@ export class CrearUsuarioComponent {
       return;
     }
 
-    if (this.userForm.invalid) {
+    this.rolesTouched = true;
+    if (this.userForm.invalid || !this.selectedRoles.length) {
       this.userForm.markAllAsTouched();
       return;
     }
 
-    const { username, nombre, apellido, email, password, role } = this.userForm.value;
+    const { username, nombre, apellido, email, password } = this.userForm.value;
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Primero registrar el usuario
-    this.authService.register({ username, nombre, apellido, email, password }).subscribe({
-  next: () => {
-    this.authService.assignRole(username, role).subscribe({
+    this.authService.register({ username, nombre, apellido, email, password, roleNames: this.selectedRoles }).subscribe({
       next: () => {
-        this.notificationService.success('Usuario creado correctamente');
-        this.userForm.reset();
-        this.isLoading = false;
+         this.notificationService.success('Usuario creado correctamente');
+         this.userForm.reset();
+         this.selectedRoles = [];
+         this.rolesTouched = false;
+         this.isLoading = false;
         setTimeout(() => {
           this.router.navigate(['/usuarios']);
         }, 2000);
       },
       error: () => {
-        this.notificationService.warning('Usuario creado pero error al asignar rol');
+        this.notificationService.error('Error al crear usuario');
         this.isLoading = false;
       }
     });
-  },
-  error: (error) => {
-    this.notificationService.error('Error al crear usuario');
-    this.isLoading = false;
-  }
-});
   }
 
   cancelar(): void {

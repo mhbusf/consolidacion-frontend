@@ -777,7 +777,8 @@ export class ConsolidadosListComponent implements OnInit {
     this.authService.currentUser$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(user => {
-        this.isAdmin = user?.roles.some(role => role.name === 'ROLE_ADMIN') ?? false;
+        this.isAdmin = user?.roles.some(role =>
+          role.name === 'ROLE_ADMIN' || role.name === 'ROLE_SUPER_ADMIN') ?? false;
         this.currentUsername = user?.username ?? '';
       });
   }

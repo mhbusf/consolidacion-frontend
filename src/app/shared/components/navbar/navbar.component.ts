@@ -26,12 +26,18 @@ import { filter, map, startWith } from 'rxjs';
            </button>
            <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
              @if (isMentorOnly()) {
-               <li>
-                 <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
+                <li>
+                  <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
                    <span class="menu-icon">👥</span>
                    Mis participantes
-                 </a>
-               </li>
+                  </a>
+                </li>
+                <li>
+                  <a routerLink="/encuentro-poder/mentor/asistencia" routerLinkActive="active" (click)="closeMenus()">
+                    <span class="menu-icon">✓</span>
+                    Tomar asistencia
+                  </a>
+                </li>
                <li>
                  <a routerLink="/change-password" routerLinkActive="active" (click)="closeMenus()">
                    <span class="menu-icon">🔑</span>
@@ -97,7 +103,7 @@ import { filter, map, startWith } from 'rxjs';
                 }
               </div>
             </li>
-            @if (isSuperAdmin()) {
+            @if (isMentor() || isSuperAdmin()) {
               <li class="nav-group" [class.open]="openGroup === 'encuentro'" [class.active]="isRouteGroupActive(['/encuentro-poder'])">
                 <button class="nav-group-toggle" type="button" (click)="toggleGroup('encuentro', $event)">
                   <span class="menu-icon">⚡</span>
@@ -105,13 +111,19 @@ import { filter, map, startWith } from 'rxjs';
                   <span class="dropdown-arrow">▼</span>
                 </button>
                 <div class="nav-submenu">
-                   <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
-                    <span class="menu-icon">⚡</span>
-                     Panel de Encuentro
-                   </a>
+                   @if (isSuperAdmin()) {
+                     <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
+                       <span class="menu-icon">⚡</span>
+                       Panel de Encuentro
+                     </a>
+                   }
                    <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
                      <span class="menu-icon">👥</span>
                      Portal de mentoría
+                   </a>
+                   <a routerLink="/encuentro-poder/mentor/asistencia" routerLinkActive="active" (click)="closeMenus()">
+                     <span class="menu-icon">✓</span>
+                     Tomar asistencia
                    </a>
                 </div>
               </li>
@@ -580,7 +592,9 @@ export class NavbarComponent {
     role.name === 'ROLE_ADMIN' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
   readonly isMentor = computed(() => this.currentUser()?.roles.some(role =>
     role.name === 'ROLE_MENTOR' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
-  readonly isMentorOnly = computed(() => this.isMentor() && !this.isSuperAdmin());
+  readonly hasEffectiveUser = computed(() => this.currentUser()?.roles.some(role =>
+    role.name === 'ROLE_USER' || role.name === 'ROLE_ADMIN' || role.name === 'ROLE_SUPER_ADMIN') ?? false);
+  readonly isMentorOnly = computed(() => this.isMentor() && !this.hasEffectiveUser());
   dropdownOpen = false;
   openGroup: 'consolidacion' | 'cafe' | 'encuentro' | 'usuario' | null = null;
   mobileMenuOpen = false;

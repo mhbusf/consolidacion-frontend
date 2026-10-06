@@ -40,14 +40,16 @@ describe('NavbarComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Encuentro de Poder');
     expect(fixture.nativeElement.textContent).toContain('Dashboard');
     expect(fixture.nativeElement.textContent).toContain('Portal de mentoría');
+    expect(fixture.nativeElement.textContent).toContain('Tomar asistencia');
   });
 
-  it('muestra al mentor solo sus participantes y cambio de contraseña', () => {
+  it('muestra al mentor independiente sus opciones de mentoría y cambio de contraseña', () => {
     currentUser.next(userWithRole('ROLE_MENTOR'));
     fixture.detectChanges();
 
     const text = fixture.nativeElement.querySelector('.nav-menu').textContent;
     expect(text).toContain('Mis participantes');
+    expect(text).toContain('Tomar asistencia');
     expect(text).toContain('Cambiar Contraseña');
     expect(text).not.toContain('Consolidación');
     expect(text).not.toContain('Cafe con Jesus');
@@ -55,12 +57,28 @@ describe('NavbarComponent', () => {
     expect(text).not.toContain('Usuarios');
   });
 
+  it('muestra módulos USER y mentoría a un usuario mentor combinado', () => {
+    currentUser.next(userWithRoles('ROLE_USER', 'ROLE_MENTOR'));
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.querySelector('.nav-menu').textContent;
+    expect(text).toContain('Consolidación');
+    expect(text).toContain('Cafe con Jesus');
+    expect(text).toContain('Portal de mentoría');
+    expect(text).toContain('Tomar asistencia');
+    expect(text).not.toContain('Panel de Encuentro');
+  });
+
   function userWithRole(role: string): JwtResponse {
+    return userWithRoles(role);
+  }
+
+  function userWithRoles(...roles: string[]): JwtResponse {
     return {
       token: 'token',
       username: 'usuario',
       email: 'usuario@example.com',
-      roles: [{ id: 1, name: role }],
+      roles: roles.map((name, index) => ({ id: index + 1, name })),
       mustChangePassword: false,
     };
   }

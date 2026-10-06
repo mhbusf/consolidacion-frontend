@@ -18,12 +18,15 @@ describe('rutas de Encuentro de Poder', () => {
   it('permite las rutas lazy de mentor a MENTOR y SUPER_ADMIN', () => {
     const mentorRoutes = routes.filter(route => route.path?.startsWith('encuentro-poder/mentor'));
 
-    expect(mentorRoutes.length).toBe(2);
+    expect(mentorRoutes.length).toBe(3);
     expect(mentorRoutes.map(route => route.data?.['roles'])).toEqual([
+      ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'],
       ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'],
       ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'],
     ]);
     expect(mentorRoutes.every(route => typeof route.loadComponent === 'function')).toBeTrue();
+    expect(mentorRoutes[1].path).toBe('encuentro-poder/mentor/asistencia');
+    expect(mentorRoutes[2].path).toBe('encuentro-poder/mentor/:inscripcionId');
   });
 
   it('no abre los módulos USER a un mentor independiente', () => {

@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { User } from '../../../core/models/auth.model';
+import { ROLE_OPTIONS, RoleName, User, normalizeRoleNames, toggleRoleName } from '../../../core/models/auth.model';
 
 interface UsuarioConStats {
   usuario: User;
@@ -70,10 +70,31 @@ interface UsuarioConStats {
                   <td>{{ nombreCompleto(user.usuario) || 'Sin nombre registrado' }}</td>
                   <td>{{ user.usuario.email }}</td>
                   <td>
-                    @for (role of user.usuario.roles; track role) {
-                      <span class="badge">
-                        {{ role.name.replace('ROLE_', '') }}
-                      </span>
+                    <div class="persisted-roles">
+                      @for (role of user.usuario.roles; track role.id) {
+                        <span class="badge">{{ role.name.replace('ROLE_', '') }}</span>
+                      }
+                    </div>
+                    @if (esAdmin) {
+                      <div class="role-editor" [attr.aria-label]="'Editar roles de ' + user.usuario.username">
+                        @for (role of roleOptions; track role.name) {
+                          <label>
+                            <input
+                              type="checkbox"
+                              [checked]="draftHasRole(user.usuario, role.name)"
+                              [disabled]="savingRoleIds.has(user.usuario.id)"
+                              (change)="toggleUserRole(user.usuario, role.name, $event)"
+                            >
+                            {{ role.label }}
+                          </label>
+                        }
+                        <button
+                          type="button"
+                          class="btn-small btn-primary save-roles"
+                          [disabled]="!roleDraft(user.usuario).length || !rolesChanged(user.usuario) || savingRoleIds.has(user.usuario.id)"
+                          (click)="guardarRoles(user.usuario)"
+                        >{{ savingRoleIds.has(user.usuario.id) ? 'Guardando...' : 'Guardar roles' }}</button>
+                      </div>
                     }
                   </td>
                   <td>
@@ -102,38 +123,6 @@ interface UsuarioConStats {
                           (click)="cambiarPassword(user.usuario.username)"
                           title="Cambiar contraseña">
                           🔑 Cambiar Pass
-                        </button>
-                      }
-                      @if (!esPerfilUsuario(user.usuario)) {
-                        <button
-                          class="btn-small btn-primary"
-                          (click)="asignarPerfil(user.usuario.username, 'ROLE_USER', 'USUARIO')"
-                          title="Hacer usuario">
-                          Usuario
-                        </button>
-                      }
-                      @if (!tieneRolAdmin(user.usuario)) {
-                        <button
-                          class="btn-small btn-primary"
-                          (click)="asignarPerfil(user.usuario.username, 'ROLE_ADMIN', 'ADMIN')"
-                          title="Hacer administrador">
-                          ⭐ Admin
-                        </button>
-                      }
-                      @if (!tieneRolMentor(user.usuario)) {
-                        <button
-                          class="btn-small btn-primary"
-                          (click)="asignarPerfil(user.usuario.username, 'ROLE_MENTOR', 'MENTOR')"
-                          title="Hacer mentor">
-                          Mentor
-                        </button>
-                      }
-                      @if (!tieneRolSuperAdmin(user.usuario)) {
-                        <button
-                          class="btn-small btn-primary"
-                          (click)="asignarPerfil(user.usuario.username, 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN')"
-                          title="Hacer superadministrador">
-                          ⭐ Super Admin
                         </button>
                       }
                       @if (esSuperAdmin || !tienePerfilProtegido(user.usuario)) {
@@ -268,6 +257,41 @@ interface UsuarioConStats {
       margin-right: 5px;
     }
 
+    .persisted-roles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .role-editor {
+      display: grid;
+      gap: 6px;
+      min-width: 180px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+    }
+
+    .role-editor label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .save-roles {
+      margin-top: 4px;
+    }
+
+    .btn-small:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
     .status-active {
       color: var(--success);
       font-weight: 500;
@@ -339,6 +363,9 @@ export class UsuariosListComponent implements OnInit {
   busqueda = '';
   readonly esAdmin: boolean;
   readonly esSuperAdmin: boolean;
+  readonly roleOptions = ROLE_OPTIONS;
+  readonly savingRoleIds = new Set<number>();
+  private readonly roleDrafts = new Map<number, RoleName[]>();
 
   get usuariosFiltrados(): UsuarioConStats[] {
     const q = this.busqueda.trim().toLowerCase();
@@ -375,9 +402,11 @@ export class UsuariosListComponent implements OnInit {
     }).subscribe({
       next: ({ usuarios, consolidados }) => {
       this.usuarios = usuarios;
+      this.roleDrafts.clear();
       this.consolidados = consolidados;
       
       this.usuariosConStats = this.usuarios.map(user => {
+        this.roleDrafts.set(user.id, this.userRoleNames(user));
         const creados = this.consolidados.filter(c => c.usuarioReporta === user.username).length;
         const asignados = this.consolidados.filter(c => c.usuarioAsignado === user.username).length;
         
@@ -400,6 +429,49 @@ export class UsuariosListComponent implements OnInit {
 
   tieneRolAdmin(user: User): boolean {
     return user.roles.some(r => r.name === 'ROLE_ADMIN');
+  }
+
+  roleDraft(user: User): RoleName[] {
+    return this.roleDrafts.get(user.id) ?? this.userRoleNames(user);
+  }
+
+  draftHasRole(user: User, roleName: RoleName): boolean {
+    return this.roleDraft(user).includes(roleName);
+  }
+
+  toggleUserRole(user: User, roleName: RoleName, event: Event): void {
+    this.roleDrafts.set(user.id, toggleRoleName(
+      this.roleDraft(user),
+      roleName,
+      (event.target as HTMLInputElement).checked,
+    ));
+  }
+
+  rolesChanged(user: User): boolean {
+    return this.roleDraft(user).join('|') !== this.userRoleNames(user).join('|');
+  }
+
+  guardarRoles(user: User): void {
+    const roleNames = this.roleDraft(user);
+    if (!this.esAdmin || !roleNames.length || this.savingRoleIds.has(user.id)) return;
+
+    this.savingRoleIds.add(user.id);
+    this.authService.updateRoles(user.username, roleNames).subscribe({
+      next: updatedUser => {
+        const updated = { ...user, ...updatedUser };
+        this.usuarios = this.usuarios.map(item => item.id === user.id ? updated : item);
+        this.usuariosConStats = this.usuariosConStats.map(item =>
+          item.usuario.id === user.id ? { ...item, usuario: updated } : item,
+        );
+        this.roleDrafts.set(user.id, this.userRoleNames(updated));
+        this.savingRoleIds.delete(user.id);
+        this.notificationService.success('Roles actualizados. El usuario debe volver a iniciar sesión.');
+      },
+      error: () => {
+        this.savingRoleIds.delete(user.id);
+        this.notificationService.error('Error al actualizar roles');
+      },
+    });
   }
 
   tieneRolSuperAdmin(user: User): boolean {
@@ -461,21 +533,6 @@ export class UsuariosListComponent implements OnInit {
     }
   }
 
-  asignarPerfil(username: string, role: 'ROLE_USER' | 'ROLE_MENTOR' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN', label: string): void {
-    if (!this.esAdmin) return;
-    if (confirm(`¿Asignar perfil ${label} a ${username}?`)) {
-      this.authService.assignRole(username, role).subscribe({
-        next: () => {
-          this.notificationService.success('Perfil asignado. El usuario debe volver a iniciar sesión.');
-          this.cargarDatos();
-        },
-        error: (error) => {
-          this.notificationService.error('Error al asignar perfil');
-        }
-      });
-    }
-  }
-
   eliminarUsuario(username: string): void {
     if (!this.esAdmin) return;
     if (confirm(`¿Está seguro de eliminar al usuario ${username}?\n\nEsta acción no se puede deshacer.`)) {
@@ -489,5 +546,12 @@ export class UsuariosListComponent implements OnInit {
         }
       });
     }
+  }
+
+  private userRoleNames(user: User): RoleName[] {
+    const allowed = new Set<RoleName>(ROLE_OPTIONS.map(option => option.name));
+    return normalizeRoleNames(user.roles
+      .map(role => role.name as RoleName)
+      .filter(role => allowed.has(role)));
   }
 }

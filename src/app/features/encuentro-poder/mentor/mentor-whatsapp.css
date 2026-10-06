@@ -22,30 +22,30 @@
 
 .whatsapp-link {
   padding: 0 14px;
-  border: 1px solid rgba(74, 222, 128, .42);
-  background: rgba(37, 211, 102, .14);
-  color: #72ef9d;
+  border: 1px solid color-mix(in srgb, var(--success) 42%, var(--border-color));
+  background: color-mix(in srgb, var(--success) 12%, var(--bg-card));
+  color: var(--success);
 }
 
 .whatsapp-link:hover {
-  border-color: #4ade80;
-  background: rgba(37, 211, 102, .24);
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 20%, var(--bg-card));
   transform: translateY(-1px);
 }
 
 .whatsapp-link:focus-visible,
 .detail-link:focus-visible {
-  outline: 3px solid rgba(101, 214, 197, .3);
+  outline: 3px solid color-mix(in srgb, var(--primary-light) 30%, transparent);
   outline-offset: 2px;
 }
 
 .detail-link {
   padding: 0 4px;
-  color: #78dccc;
+  color: var(--primary-light);
 }
 
 .detail-link:hover {
-  color: #a4f3e6;
+  color: var(--primary);
 }
 
 .profile .whatsapp-link {

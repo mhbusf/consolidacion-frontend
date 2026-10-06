@@ -1,0 +1,86 @@
+<main class="attendance-page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Encuentro de Poder</p>
+      <h1>Asistencia de participantes</h1>
+      <p>Selecciona una clase disponible y registra la asistencia de tu grupo.</p>
+    </div>
+  </header>
+
+  <section class="filters" aria-label="Seleccionar clase">
+    <label>
+      Ciclo
+      <select [value]="cicloId() ?? ''" (change)="seleccionarCiclo($any($event.target).value)" [disabled]="cargandoCiclos()">
+        <option value="">Selecciona un ciclo</option>
+        @for (ciclo of ciclos(); track ciclo.id) {
+          <option [value]="ciclo.id">{{ ciclo.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Clase
+      <select [value]="claseId() ?? ''" (change)="seleccionarClase($any($event.target).value)" [disabled]="!cicloId()">
+        <option value="">Selecciona una clase</option>
+        @for (clase of clases(); track clase.id) {
+          <option [value]="clase.id" [disabled]="!claseHabilitada(clase)">
+            {{ clase.orden }}. {{ clase.nombre }} · {{ clase.fecha }}{{ claseHabilitada(clase) ? '' : ' (no disponible)' }}
+          </option>
+        }
+      </select>
+    </label>
+  </section>
+
+  @if (error()) {
+    <section class="state error-state" role="alert">
+      <p>{{ error() }}</p>
+      @if (cargandoCiclos() || !ciclos().length) {
+        <button type="button" (click)="cargarCiclos()">Reintentar</button>
+      } @else if (claseId()) {
+        <button type="button" (click)="cargarAsistencia()">Reintentar</button>
+      }
+    </section>
+  } @else if (cargandoCiclos()) {
+    <section class="state" aria-live="polite">Cargando ciclos...</section>
+  } @else if (cargandoAsistencia()) {
+    <section class="state" aria-live="polite">Cargando participantes...</section>
+  } @else if (claseSeleccionada()) {
+    <section class="roster-header">
+      <div>
+        <p class="eyebrow">{{ cicloSeleccionado()?.nombre }}</p>
+        <h2>{{ claseSeleccionada()?.nombre }}</h2>
+      </div>
+      <label>
+        <span>Buscar participante</span>
+        <input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Nombre o teléfono">
+      </label>
+    </section>
+
+    @if (errorAccion()) {
+      <p class="action-error" role="alert">{{ errorAccion() }}</p>
+    }
+
+    <section class="roster" aria-label="Lista de participantes">
+      @for (participante of participantesFiltrados(); track participante.inscripcionId) {
+        <article class="participant">
+          <div class="identity">
+            <span class="avatar" aria-hidden="true">{{ participante.nombreCompleto.charAt(0) }}</span>
+            <div><h3>{{ participante.nombreCompleto }}</h3><p>{{ participante.telefono || 'Sin teléfono' }}</p></div>
+          </div>
+          <div class="participant-actions">
+            @if (participante.telefono | whatsappUrl; as whatsappUrl) {
+              <a class="whatsapp-link" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Abrir WhatsApp con ' + participante.nombreCompleto">WhatsApp</a>
+            }
+            <span class="presence" [class.present]="participante.presente">{{ participante.presente ? 'Presente' : 'Pendiente' }}</span>
+            <button type="button" (click)="marcarPresente(participante)" [disabled]="participante.presente || guardando().has(participante.personaId)">
+              {{ participante.presente ? 'Registrado' : guardando().has(participante.personaId) ? 'Guardando...' : 'Marcar presente' }}
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="state compact"><p>{{ busqueda() ? 'No hay coincidencias.' : 'No hay participantes para esta clase.' }}</p></div>
+      }
+    </section>
+  } @else if (cicloId()) {
+    <section class="state"><p>Selecciona una clase disponible para ver su asistencia.</p></section>
+  }
+</main>

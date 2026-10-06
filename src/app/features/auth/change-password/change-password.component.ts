@@ -3,6 +3,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { RoleName } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-change-password',
@@ -264,7 +265,7 @@ export class ChangePasswordComponent {
   }
 
   cancelar(): void {
-    const destino = this.authService.isMentor() && !this.authService.isSuperAdmin()
+    const destino = this.authService.isMentor() && !this.authService.hasRole(RoleName.USER)
       ? '/encuentro-poder/mentor'
       : '/consolidados';
     this.router.navigate([destino]);

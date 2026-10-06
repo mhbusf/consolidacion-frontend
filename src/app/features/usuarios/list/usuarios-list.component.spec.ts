@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { UsuariosListComponent } from './usuarios-list.component';
+import { RoleName, User } from '../../../core/models/auth.model';
 
 describe('UsuariosListComponent permisos', () => {
   let fixture: ComponentFixture<UsuariosListComponent>;
@@ -12,11 +13,10 @@ describe('UsuariosListComponent permisos', () => {
 
   beforeEach(async () => {
     auth = jasmine.createSpyObj<AuthService>('AuthService', [
-      'isAdmin', 'isSuperAdmin', 'getAllUsers', 'assignRole', 'changeUserPassword', 'deleteUser',
+      'isAdmin', 'isSuperAdmin', 'getAllUsers', 'updateRoles', 'changeUserPassword', 'deleteUser',
     ]);
     auth.isAdmin.and.returnValue(true);
     auth.isSuperAdmin.and.returnValue(false);
-    auth.assignRole.and.returnValue(of(''));
     auth.getAllUsers.and.returnValue(of([{
       id: 1,
       username: 'usuario',
@@ -40,16 +40,27 @@ describe('UsuariosListComponent permisos', () => {
     fixture.detectChanges();
   });
 
-  it('permite que un ADMIN asigne cualquier perfil', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-
+  it('permite que un ADMIN edite y guarde el conjunto completo de roles', () => {
     expect(fixture.nativeElement.querySelector('.action-buttons')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('[title="Hacer usuario"]')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Mentor');
-    expect(fixture.nativeElement.textContent).toContain('Super Admin');
+    expect(fixture.nativeElement.querySelector('.role-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.persisted-roles').textContent).toContain('ADMIN');
 
-    fixture.componentInstance.asignarPerfil('usuario', 'ROLE_SUPER_ADMIN', 'SUPER_ADMIN');
+    const user = fixture.componentInstance.usuarios[0];
+    fixture.componentInstance.toggleUserRole(user, RoleName.SUPER_ADMIN, { target: { checked: true } } as unknown as Event);
+    fixture.componentInstance.toggleUserRole(user, RoleName.MENTOR, { target: { checked: true } } as unknown as Event);
+    const updated: User = {
+      ...user,
+      roles: [
+        { id: 1, name: RoleName.USER }, { id: 2, name: RoleName.ADMIN },
+        { id: 3, name: RoleName.MENTOR }, { id: 4, name: RoleName.SUPER_ADMIN },
+      ],
+    };
+    auth.updateRoles.and.returnValue(of(updated));
 
-    expect(auth.assignRole).toHaveBeenCalledWith('usuario', 'ROLE_SUPER_ADMIN');
+    fixture.componentInstance.guardarRoles(user);
+
+    expect(auth.updateRoles).toHaveBeenCalledOnceWith('usuario', [
+      RoleName.USER, RoleName.ADMIN, RoleName.MENTOR, RoleName.SUPER_ADMIN,
+    ]);
   });
 });

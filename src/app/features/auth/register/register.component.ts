@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { RoleName } from '../../../core/models/auth.model';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
@@ -276,7 +277,7 @@ export class RegisterComponent {
 
     const { username, nombre, apellido, email, password } = this.registerForm.value;
 
-    this.authService.register({ username, nombre, apellido, email, password }).subscribe({
+    this.authService.register({ username, nombre, apellido, email, password, roleNames: [RoleName.USER] }).subscribe({
       next: () => {
         this.notificationService.success('Usuario registrado correctamente');
       setTimeout(() => {

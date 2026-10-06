@@ -147,6 +147,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'encuentro-poder/mentor/asistencia',
+    loadComponent: () => import('./features/encuentro-poder/mentor/mentor-asistencia.component').then(m => m.MentorAsistenciaComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_MENTOR', 'ROLE_SUPER_ADMIN'] }
+  },
+
+  {
     path: 'encuentro-poder/mentor/:inscripcionId',
     loadComponent: () => import('./features/encuentro-poder/mentor/mentor-participante-detail.component').then(m => m.MentorParticipanteDetailComponent),
     canActivate: [authGuard],

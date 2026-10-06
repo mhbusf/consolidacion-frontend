@@ -196,8 +196,8 @@ export class AsignarConsolidadoComponent implements OnInit {
   cargarUsuarios(): void {
     this.authService.getAllUsers().subscribe({
       next: (users) => {
-        this.usuarios = users.filter(u => 
-          u.roles.some(r => r.name === 'ROLE_USER')
+        this.usuarios = users.filter(u =>
+          u.roles.some(r => ['ROLE_USER', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'].includes(r.name))
         );
       },
       error: (error) => {

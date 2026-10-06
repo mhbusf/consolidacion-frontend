@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -6,6 +6,9 @@ import {
   CrearEncuentroMentorFeedback,
   EncuentroAsignacionMentor,
   EncuentroMentorFeedback,
+  EncuentroMentorAsistenciaClase,
+  EncuentroMentorCiclo,
+  EncuentroMentorRegistroAsistencia,
   EncuentroMentorOpcion,
   EncuentroMentorParticipante,
   EncuentroMentorParticipanteDetalle,
@@ -66,6 +69,19 @@ export class EncuentroMentoriaService {
       `${this.encuentroApi}/inscripciones/${inscripcionId}/mentor`,
       { mentorId: null },
     ).pipe(map(asignacion => this.asignacion(asignacion)));
+  }
+
+  ciclosAsistencia(): Observable<EncuentroMentorCiclo[]> {
+    return this.http.get<EncuentroMentorCiclo[]>(`${this.mentorApi}/ciclos`);
+  }
+
+  asistenciaClase(cicloId: number, claseId: number): Observable<EncuentroMentorAsistenciaClase> {
+    const params = new HttpParams().set('claseId', claseId);
+    return this.http.get<EncuentroMentorAsistenciaClase>(`${this.mentorApi}/ciclos/${cicloId}/asistencia`, { params });
+  }
+
+  marcarPresente(personaId: number, claseId: number): Observable<EncuentroMentorRegistroAsistencia> {
+    return this.http.post<EncuentroMentorRegistroAsistencia>(`${this.mentorApi}/asistencias`, { personaId, claseId });
   }
 
   private resumenParticipante(response: ParticipanteMentorResponse): EncuentroMentorParticipante {

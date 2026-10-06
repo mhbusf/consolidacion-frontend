@@ -96,4 +96,23 @@ describe('EncuentroMentoriaService', () => {
     expect(unassign.request.method).toBe('PUT');
     unassign.flush(participante);
   });
+
+  it('usa los contratos de ciclos y asistencia del mentor', () => {
+    service.ciclosAsistencia().subscribe();
+    service.asistenciaClase(7, 3).subscribe();
+    service.marcarPresente(10, 3).subscribe();
+
+    const ciclos = http.expectOne(`${mentorApi}/ciclos`);
+    expect(ciclos.request.method).toBe('GET');
+    ciclos.flush([]);
+    const asistencia = http.expectOne(request => request.url === `${mentorApi}/ciclos/7/asistencia`);
+    expect(asistencia.request.params.get('claseId')).toBe('3');
+    asistencia.flush({ cicloId: 7, claseId: 3, claseNombre: 'Clase 3', estado: 'FINALIZADA', participantes: [] });
+    const marcar = http.expectOne(`${mentorApi}/asistencias`);
+    expect(marcar.request.method).toBe('POST');
+    expect(marcar.request.body).toEqual({ personaId: 10, claseId: 3 });
+    marcar.flush({
+      id: 1, personaId: 10, claseId: 3, clase: 'Clase 3', metodo: 'MANUAL', fechaHora: '2026-10-03T10:00:00',
+    });
+  });
 });

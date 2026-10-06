@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { JwtResponse, RoleName } from '../models/auth.model';
+import { of } from 'rxjs';
+import { JwtResponse, RoleName, User } from '../models/auth.model';
 import { AuthService } from './auth.service';
 
 describe('AuthService roles', () => {
@@ -40,6 +41,29 @@ describe('AuthService roles', () => {
 
     expect(service.isAdmin()).toBeTrue();
     expect(service.isSuperAdmin()).toBeFalse();
+  });
+
+  it('reemplaza los roles con un body atómico y retorna el usuario actualizado', () => {
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['put']);
+    const router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    const updated: User = {
+      id: 1,
+      username: 'ana+mentor',
+      email: 'ana@example.com',
+      enabled: true,
+      roles: [{ id: 1, name: RoleName.USER }, { id: 2, name: RoleName.MENTOR }],
+    };
+    http.put.and.returnValue(of(updated));
+    service = new AuthService(http, router);
+
+    let response: User | undefined;
+    service.updateRoles('ana+mentor', [RoleName.USER, RoleName.MENTOR]).subscribe(user => response = user);
+
+    expect(http.put).toHaveBeenCalledOnceWith(
+      jasmine.stringMatching('/users/ana%2Bmentor/roles$'),
+      { roleNames: [RoleName.USER, RoleName.MENTOR] },
+    );
+    expect(response).toEqual(updated);
   });
 
   function serviceWithRole(role: RoleName): AuthService {

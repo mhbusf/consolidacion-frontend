@@ -52,3 +52,44 @@ export interface EncuentroAsignacionMentor {
   telefono: string;
   mentor: EncuentroMentorOpcion | null;
 }
+
+export interface EncuentroMentorClase {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha: string;
+  estado: 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA';
+  obligatoria: boolean;
+}
+
+export interface EncuentroMentorCiclo {
+  id: number;
+  nombre: string;
+  estado: string;
+  clases: EncuentroMentorClase[];
+}
+
+export interface EncuentroMentorAsistenciaParticipante {
+  inscripcionId: number;
+  personaId: number;
+  nombreCompleto: string;
+  telefono: string;
+  presente: boolean;
+}
+
+export interface EncuentroMentorAsistenciaClase {
+  cicloId: number;
+  claseId: number;
+  claseNombre: string;
+  estado: 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA';
+  participantes: EncuentroMentorAsistenciaParticipante[];
+}
+
+export interface EncuentroMentorRegistroAsistencia {
+  id: number;
+  personaId: number;
+  claseId: number;
+  clase: string;
+  metodo: string;
+  fechaHora: string;
+}
