@@ -78,7 +78,18 @@
               }
             </div>
 
-            <a [routerLink]="['/encuentro-poder/mentor', participante.inscripcionId]">Ver detalle <span aria-hidden="true">→</span></a>
+            <div class="mentor-actions">
+              @if (participante.telefono | whatsappUrl; as whatsappUrl) {
+                <a
+                  class="whatsapp-link"
+                  [href]="whatsappUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="'Abrir WhatsApp con ' + participante.nombreCompleto"
+                >WhatsApp</a>
+              }
+              <a class="detail-link" [routerLink]="['/encuentro-poder/mentor', participante.inscripcionId]">Ver detalle <span aria-hidden="true">→</span></a>
+            </div>
           </article>
         }
       </section>

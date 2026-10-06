@@ -49,6 +49,11 @@ describe('MentorParticipanteDetailComponent', () => {
     expect(text).toContain('33%');
     expect(text).toContain('Clase 1');
     expect(text).toContain('Todavía no hay feedback registrado');
+    const whatsapp: HTMLAnchorElement = fixture.nativeElement.querySelector('.whatsapp-link');
+    expect(whatsapp.getAttribute('href')).toBe('https://wa.me/56911111111');
+    expect(whatsapp.getAttribute('target')).toBe('_blank');
+    expect(whatsapp.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(whatsapp.getAttribute('aria-label')).toBe('Abrir WhatsApp con Ana Pérez');
   });
 
   it('evita doble envío y limpia el texto solo al confirmar', () => {

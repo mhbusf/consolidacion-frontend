@@ -7,13 +7,14 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EncuentroMentorParticipante } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
+import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
 @Component({
   selector: 'app-mentor-portal',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WhatsAppUrlPipe],
   templateUrl: './mentor-portal.component.html',
-  styleUrl: './mentor-portal.component.css',
+  styleUrls: ['./mentor-portal.component.css', './mentor-whatsapp.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MentorPortalComponent implements OnInit {

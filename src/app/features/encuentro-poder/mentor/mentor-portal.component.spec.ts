@@ -32,11 +32,25 @@ describe('MentorPortalComponent', () => {
     fixture.detectChanges();
   });
 
-  it('muestra progreso, último feedback y enlace al detalle', () => {
+  it('muestra progreso, último feedback y acciones del participante', () => {
     expect(fixture.nativeElement.textContent).toContain('Ana Pérez');
     expect(fixture.nativeElement.textContent).toContain('2 de 3 clases');
     expect(fixture.nativeElement.textContent).toContain('Conversación inicial');
     expect(fixture.nativeElement.querySelector('a[href="/encuentro-poder/mentor/42"]')).not.toBeNull();
+    const whatsapp: HTMLAnchorElement = fixture.nativeElement.querySelector('.whatsapp-link');
+    expect(whatsapp.getAttribute('href')).toBe('https://wa.me/56911111111');
+    expect(whatsapp.getAttribute('target')).toBe('_blank');
+    expect(whatsapp.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(whatsapp.getAttribute('aria-label')).toBe('Abrir WhatsApp con Ana Pérez');
+  });
+
+  it('no muestra WhatsApp cuando el teléfono no es válido', () => {
+    fixture.componentInstance.participantes.update(participantes =>
+      participantes.map(participante => ({ ...participante, telefono: 'sin teléfono' })),
+    );
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.whatsapp-link')).toBeNull();
   });
 
   it('filtra por nombre, teléfono o ciclo', () => {

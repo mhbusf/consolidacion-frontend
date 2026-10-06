@@ -1,0 +1,65 @@
+.mentor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.whatsapp-link,
+.detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.whatsapp-link {
+  padding: 0 14px;
+  border: 1px solid rgba(74, 222, 128, .42);
+  background: rgba(37, 211, 102, .14);
+  color: #72ef9d;
+}
+
+.whatsapp-link:hover {
+  border-color: #4ade80;
+  background: rgba(37, 211, 102, .24);
+  transform: translateY(-1px);
+}
+
+.whatsapp-link:focus-visible,
+.detail-link:focus-visible {
+  outline: 3px solid rgba(101, 214, 197, .3);
+  outline-offset: 2px;
+}
+
+.detail-link {
+  padding: 0 4px;
+  color: #78dccc;
+}
+
+.detail-link:hover {
+  color: #a4f3e6;
+}
+
+.profile .whatsapp-link {
+  margin-top: 12px;
+}
+
+@media (max-width: 560px) {
+  .mentor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mentor-actions .whatsapp-link,
+  .mentor-actions .detail-link {
+    width: 100%;
+  }
+}

@@ -7,6 +7,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { EncuentroMentorFeedback, EncuentroMentorParticipanteDetalle } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
+import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
 const textoNoVacio = (control: AbstractControl<string>): ValidationErrors | null =>
   control.value.trim() ? null : { required: true };
@@ -14,9 +15,9 @@ const textoNoVacio = (control: AbstractControl<string>): ValidationErrors | null
 @Component({
   selector: 'app-mentor-participante-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, WhatsAppUrlPipe],
   templateUrl: './mentor-participante-detail.component.html',
-  styleUrl: './mentor-participante-detail.component.css',
+  styleUrls: ['./mentor-participante-detail.component.css', './mentor-whatsapp.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MentorParticipanteDetailComponent implements OnInit {

@@ -17,6 +17,15 @@
           <p class="eyebrow">{{ persona.cicloNombre }}</p>
           <h1>{{ persona.nombreCompleto }}</h1>
           <p>{{ persona.telefono }} · {{ persona.comuna || 'Comuna no informada' }}</p>
+          @if (persona.telefono | whatsappUrl; as whatsappUrl) {
+            <a
+              class="whatsapp-link"
+              [href]="whatsappUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              [attr.aria-label]="'Abrir WhatsApp con ' + persona.nombreCompleto"
+            >WhatsApp</a>
+          }
         </div>
       </div>
       <div class="progress-summary">
