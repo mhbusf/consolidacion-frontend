@@ -47,10 +47,8 @@ export class AuthService {
     }
   }
 
-  register(request: RegisterRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/register`, request, {
-      responseType: 'text',
-    });
+  register(request: RegisterRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/register`, request);
   }
 
   login(request: LoginRequest): Observable<JwtResponse> {

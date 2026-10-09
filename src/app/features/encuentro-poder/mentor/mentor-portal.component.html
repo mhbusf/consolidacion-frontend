@@ -6,7 +6,7 @@
       <p class="intro">Acompaña el avance y mantén un registro claro de cada conversación.</p>
     </div>
     @if (!cargando() && !error()) {
-      <div class="count"><strong>{{ participantes().length }}</strong><span>asignados</span></div>
+      <div class="count"><strong>{{ enSeguimiento() }}</strong><span>en seguimiento</span></div>
     }
   </header>
 
@@ -21,14 +21,37 @@
       <span class="spinner" aria-hidden="true"></span>
       <p>Cargando participantes...</p>
     </section>
-  } @else if (!participantes().length) {
-    <section class="state empty-state">
-      <span class="empty-icon" aria-hidden="true">EP</span>
-      <h2>Aún no tienes participantes asignados</h2>
-      <p>Cuando un superadministrador realice una asignación, aparecerá aquí.</p>
-    </section>
   } @else {
-    <section class="tools">
+    @if (resumen(); as metricas) {
+      <section class="summary" aria-label="Resumen del ciclo abierto">
+        <div class="summary-heading">
+          <div>
+            <p class="eyebrow">Ciclo abierto</p>
+            <h2>{{ metricas.ciclo?.nombre || 'Sin ciclo abierto' }}</h2>
+          </div>
+          @if (metricas.ciclo) {
+            <span class="cycle-status">En curso</span>
+          }
+        </div>
+        <div class="metrics">
+          <article class="metric"><span>Asignados</span><strong>{{ metricas.participantesAsignados }}</strong></article>
+          <article class="metric featured"><span>Asistencia</span><strong>{{ metricas.porcentajeAsistencia }}%</strong><small>{{ metricas.asistenciasRegistradas }} de {{ metricas.asistenciasEsperadas }} registros esperados</small></article>
+          <article class="metric"><span>Completaron</span><strong>{{ metricas.participantesCompletos }}</strong></article>
+          <article class="metric"><span>Pendientes</span><strong>{{ metricas.participantesPendientes }}</strong></article>
+        </div>
+      </section>
+    } @else if (errorResumen()) {
+      <p class="summary-error" role="status">{{ errorResumen() }} La lista de participantes sigue disponible.</p>
+    }
+
+    @if (!participantes().length) {
+      <section class="state empty-state">
+        <span class="empty-icon" aria-hidden="true">EP</span>
+        <h2>Aún no tienes participantes asignados</h2>
+        <p>Cuando un superadministrador realice una asignación, aparecerá aquí.</p>
+      </section>
+    } @else {
+      <section class="tools">
       <label for="buscar">Buscar participante</label>
       <div class="search-wrap">
         <input
@@ -48,15 +71,28 @@
         <p>Prueba con otro nombre, teléfono o ciclo.</p>
       </section>
     } @else {
-      <section class="participant-grid" aria-label="Participantes asignados">
-        @for (participante of participantesFiltrados(); track participante.inscripcionId) {
+      @for (seccion of secciones(); track seccion.id) {
+        @if (seccion.participantes.length) {
+          <section class="portal-section" [attr.aria-labelledby]="'section-' + seccion.id">
+            <header class="section-header">
+              <div>
+                <p class="section-kicker">{{ seccion.participantes.length }} participante{{ seccion.participantes.length === 1 ? '' : 's' }}</p>
+                <h2 [id]="'section-' + seccion.id">{{ seccion.titulo }}</h2>
+                <p>{{ seccion.descripcion }}</p>
+              </div>
+            </header>
+            <div class="participant-grid">
+              @for (participante of seccion.participantes; track participante.inscripcionId) {
           <article class="participant-card">
             <div class="card-top">
               <div class="avatar" aria-hidden="true">{{ participante.nombreCompleto.charAt(0) }}</div>
               <div>
-                <p class="cycle">{{ participante.cicloNombre }}</p>
-                <h2>{{ participante.nombreCompleto }}</h2>
+                <p class="cycle">{{ participante.cicloNombre }} <span class="stage" [class.closing]="participante.etapaMentoria === 'CIERRE'" [class.history]="participante.etapaMentoria === 'HISTORICA'">{{ participante.etapaMentoria === 'ACTIVA' ? 'Activo' : participante.etapaMentoria === 'CIERRE' ? 'Cierre' : 'Historial' }}</span></p>
+                <h3>{{ participante.nombreCompleto }}</h3>
                 <p class="contact">{{ participante.telefono }} · {{ participante.comuna || 'Comuna no informada' }}</p>
+                @if (participante.etapaMentoria === 'CIERRE' && participante.cierreHasta) {
+                  <p class="closing-date">Periodo de cierre hasta el {{ participante.cierreHasta | date:'dd/MM/yyyy' }}, inclusive</p>
+                }
               </div>
             </div>
 
@@ -88,11 +124,15 @@
                   [attr.aria-label]="'Abrir WhatsApp con ' + participante.nombreCompleto"
                 >WhatsApp</a>
               }
-              <a class="detail-link" [routerLink]="['/encuentro-poder/mentor', participante.inscripcionId]">Ver detalle <span aria-hidden="true">→</span></a>
+              <a class="detail-link" [routerLink]="['/encuentro-poder/mentor', participante.inscripcionId]">Ver detalle y feedback <span aria-hidden="true">→</span></a>
             </div>
           </article>
+              }
+            </div>
+          </section>
         }
-      </section>
+      }
+      }
     }
   }
 </main>

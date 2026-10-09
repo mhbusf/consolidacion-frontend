@@ -12,6 +12,7 @@ import {
   EncuentroMentorOpcion,
   EncuentroMentorParticipante,
   EncuentroMentorParticipanteDetalle,
+  EncuentroMentorResumenPortal,
 } from '../models/encuentro-mentoria.model';
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +26,10 @@ export class EncuentroMentoriaService {
     return this.http.get<ParticipanteMentorResponse[]>(`${this.mentorApi}/participantes`).pipe(
       map(participantes => participantes.map(participante => this.resumenParticipante(participante))),
     );
+  }
+
+  resumenPortal(): Observable<EncuentroMentorResumenPortal> {
+    return this.http.get<EncuentroMentorResumenPortal>(`${this.mentorApi}/resumen`);
   }
 
   participante(inscripcionId: number): Observable<EncuentroMentorParticipanteDetalle> {
@@ -98,6 +103,9 @@ export class EncuentroMentoriaService {
       clasesCompletadas,
       totalClases,
       porcentajeProgreso: totalClases ? Math.round(clasesCompletadas / totalClases * 100) : 0,
+      cicloEstado: response.ciclo.estado,
+      etapaMentoria: response.etapaMentoria,
+      cierreHasta: response.cierreHasta,
       ultimoFeedback: response.ultimoFeedback ? this.feedbackResponse(response.ultimoFeedback) : null,
     };
   }
@@ -176,7 +184,7 @@ interface ParticipanteMentorResponse {
     invitadoPor: string | null;
     tiempoCatedral: string | null;
   };
-  ciclo: { id: number; nombre: string; fechaInicio: string; fechaCierre: string | null; estado: string };
+  ciclo: { id: number; nombre: string; fechaInicio: string; fechaCierre: string | null; estado: 'ABIERTO' | 'CERRADO' };
   mentor: MentorResponse | null;
   progreso: {
     clasesCompletadas: number;
@@ -190,4 +198,6 @@ interface ParticipanteMentorResponse {
     }>;
   };
   ultimoFeedback: FeedbackResponse | null;
+  etapaMentoria: 'ACTIVA' | 'CIERRE' | 'HISTORICA';
+  cierreHasta: string | null;
 }

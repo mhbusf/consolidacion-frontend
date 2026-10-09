@@ -25,6 +25,9 @@ describe('MentorParticipanteDetailComponent', () => {
       clasesCompletadas: 1,
       totalClases: 3,
       porcentajeProgreso: 33,
+      cicloEstado: 'ABIERTO',
+      etapaMentoria: 'ACTIVA',
+      cierreHasta: '2026-10-22',
       fechaInscripcion: '2026-09-20',
       asistencias: [{ claseId: 1, claseNombre: 'Clase 1', fecha: '2026-10-01', asistio: true }],
     }));
@@ -54,6 +57,18 @@ describe('MentorParticipanteDetailComponent', () => {
     expect(whatsapp.getAttribute('target')).toBe('_blank');
     expect(whatsapp.getAttribute('rel')).toBe('noopener noreferrer');
     expect(whatsapp.getAttribute('aria-label')).toBe('Abrir WhatsApp con Ana Pérez');
+  });
+
+  it('orienta el mensaje de cierre y conserva feedback habilitado en historial', () => {
+    component.participante.update(persona => persona ? { ...persona, etapaMentoria: 'CIERRE' } : null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Registrar mensaje de cierre');
+    expect(fixture.nativeElement.textContent).toContain('22/10/2026');
+
+    component.participante.update(persona => persona ? { ...persona, etapaMentoria: 'HISTORICA' } : null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Agregar seguimiento histórico');
+    expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
   });
 
   it('evita doble envío y limpia el texto solo al confirmar', () => {

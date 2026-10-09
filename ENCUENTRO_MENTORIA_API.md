@@ -5,6 +5,7 @@ El frontend asume que la identidad del mentor se obtiene exclusivamente desde el
 ## Portal mentor
 
 - `GET /api/encuentro-poder/mentor/participantes`: lista resumida de inscripciones asignadas al mentor autenticado.
+- `GET /api/encuentro-poder/mentor/resumen`: indicadores del último ciclo abierto ya iniciado para el mentor autenticado.
 - `GET /api/encuentro-poder/mentor/participantes/{inscripcionId}`: datos y progreso de una inscripción asignada.
 - `GET /api/encuentro-poder/mentor/participantes/{inscripcionId}/feedback`: historial de feedback, ordenado del más reciente al más antiguo.
 - `POST /api/encuentro-poder/mentor/participantes/{inscripcionId}/feedback`: crea feedback con body `{ "contenido": string }` y retorna el registro creado.
@@ -13,6 +14,8 @@ El frontend asume que la identidad del mentor se obtiene exclusivamente desde el
 - `POST /api/encuentro-poder/mentor/asistencias`: registra asistencia manual con body `{ "personaId": number, "claseId": number }`.
 
 Los DTO usados por las pantallas están tipados en `src/app/core/models/encuentro-mentoria.model.ts`; el servicio adapta la respuesta anidada del backend. Las fechas son strings ISO 8601. `porcentajeProgreso` se interpreta en rango 0-100. El detalle muestra las clases obligatorias, incluyendo las ausencias con `asistio: false`.
+
+La etapa de una mentoría se deriva de la tercera clase obligatoria usando `America/Santiago`: permanece `ACTIVA` hasta ese día, pasa a `CIERRE` durante los siete días siguientes y luego queda `HISTORICA`. La asignación no se elimina y el mentor puede consultar y agregar feedback en las tres etapas. El porcentaje del resumen considera solo clases obligatorias con fecha igual o anterior a hoy, evitando que clases futuras reduzcan el indicador.
 
 ## Administración
 

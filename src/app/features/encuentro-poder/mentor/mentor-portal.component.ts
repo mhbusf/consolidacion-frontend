@@ -4,8 +4,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, OnIni
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { EncuentroMentorParticipante } from '../../../core/models/encuentro-mentoria.model';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { EncuentroMentorParticipante, EncuentroMentorResumenPortal } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
@@ -22,18 +22,42 @@ export class MentorPortalComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly participantes = signal<EncuentroMentorParticipante[]>([]);
+  readonly resumen = signal<EncuentroMentorResumenPortal | null>(null);
   readonly busqueda = signal('');
   readonly cargando = signal(true);
   readonly error = signal('');
+  readonly errorResumen = signal('');
   readonly participantesFiltrados = computed(() => {
-    const termino = this.busqueda().trim().toLocaleLowerCase('es');
+    const termino = this.normalizar(this.busqueda());
     if (!termino) return this.participantes();
     return this.participantes().filter(participante =>
-      `${participante.nombreCompleto} ${participante.telefono} ${participante.cicloNombre}`
-        .toLocaleLowerCase('es')
+      this.normalizar(`${participante.nombreCompleto} ${participante.telefono} ${participante.cicloNombre}`)
         .includes(termino),
     );
   });
+  readonly secciones = computed(() => {
+    const participantes = this.participantesFiltrados();
+    return [
+      {
+        id: 'activas', titulo: 'Participantes activos', etapa: 'ACTIVA' as const,
+        descripcion: 'Acompañamiento del ciclo en curso.',
+        participantes: participantes.filter(item => item.etapaMentoria === 'ACTIVA'),
+      },
+      {
+        id: 'cierre', titulo: 'Periodo de cierre', etapa: 'CIERRE' as const,
+        descripcion: 'Una semana para registrar el mensaje de cierre después de la tercera clase.',
+        participantes: participantes.filter(item => item.etapaMentoria === 'CIERRE'),
+      },
+      {
+        id: 'historial', titulo: 'Historial', etapa: 'HISTORICA' as const,
+        descripcion: 'Seguimientos anteriores disponibles para consulta y nuevos mensajes.',
+        participantes: participantes.filter(item => item.etapaMentoria === 'HISTORICA'),
+      },
+    ];
+  });
+  readonly enSeguimiento = computed(() => this.participantes().filter(
+    item => item.etapaMentoria === 'ACTIVA' || item.etapaMentoria === 'CIERRE',
+  ).length);
 
   ngOnInit(): void {
     this.cargar();
@@ -43,11 +67,21 @@ export class MentorPortalComponent implements OnInit {
     if (this.cargando() && this.participantes().length) return;
     this.cargando.set(true);
     this.error.set('');
-    this.service.misParticipantes().pipe(
+    this.errorResumen.set('');
+    forkJoin({
+      participantes: this.service.misParticipantes(),
+      resumen: this.service.resumenPortal().pipe(catchError(() => {
+        this.errorResumen.set('No fue posible cargar los indicadores del ciclo.');
+        return of(null);
+      })),
+    }).pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.cargando.set(false)),
     ).subscribe({
-      next: participantes => this.participantes.set(participantes),
+      next: ({ participantes, resumen }) => {
+        this.participantes.set(participantes);
+        this.resumen.set(resumen);
+      },
       error: error => this.error.set(this.mensajeError(error)),
     });
   }
@@ -66,5 +100,9 @@ export class MentorPortalComponent implements OnInit {
       return 'No tienes acceso a participantes asignados.';
     }
     return 'No fue posible cargar tus participantes. Intenta nuevamente.';
+  }
+
+  private normalizar(value: string): string {
+    return value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
   }
 }

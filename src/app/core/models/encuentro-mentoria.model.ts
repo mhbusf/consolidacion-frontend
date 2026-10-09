@@ -16,7 +16,26 @@ export interface EncuentroMentorParticipante {
   clasesCompletadas: number;
   totalClases: number;
   porcentajeProgreso: number;
+  cicloEstado: 'ABIERTO' | 'CERRADO';
+  etapaMentoria: 'ACTIVA' | 'CIERRE' | 'HISTORICA';
+  cierreHasta: string | null;
   ultimoFeedback?: EncuentroMentorFeedback | null;
+}
+
+export interface EncuentroMentorResumenPortal {
+  ciclo: {
+    id: number;
+    nombre: string;
+    fechaInicio: string;
+    fechaCierre: string | null;
+    estado: 'ABIERTO' | 'CERRADO';
+  } | null;
+  participantesAsignados: number;
+  asistenciasRegistradas: number;
+  asistenciasEsperadas: number;
+  porcentajeAsistencia: number;
+  participantesCompletos: number;
+  participantesPendientes: number;
 }
 
 export interface EncuentroMentorAsistencia {

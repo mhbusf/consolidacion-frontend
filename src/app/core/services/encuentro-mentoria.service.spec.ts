@@ -28,6 +28,8 @@ describe('EncuentroMentoriaService', () => {
       asistencias: [{ claseId: 1, clase: 'Clase 1', fecha: '2026-10-01', obligatoria: true, presente: true }],
     },
     ultimoFeedback: null,
+    etapaMentoria: 'ACTIVA' as const,
+    cierreHasta: '2026-10-22',
   };
   const feedback = {
     id: 1,
@@ -54,8 +56,20 @@ describe('EncuentroMentoriaService', () => {
     request.flush([]);
   });
 
+  it('consulta el resumen del ciclo abierto del mentor', () => {
+    service.resumenPortal().subscribe();
+
+    const request = http.expectOne(`${mentorApi}/resumen`);
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      ciclo: null, participantesAsignados: 0, asistenciasRegistradas: 0, asistenciasEsperadas: 0,
+      porcentajeAsistencia: 0, participantesCompletos: 0, participantesPendientes: 0,
+    });
+  });
+
   it('consulta detalle y feedback por inscripción', () => {
-    service.participante(42).subscribe();
+    let detalle: { etapaMentoria: string; cierreHasta: string | null } | undefined;
+    service.participante(42).subscribe(response => detalle = response);
     service.feedback(42).subscribe();
 
     const detail = http.expectOne(`${mentorApi}/participantes/42`);
@@ -64,6 +78,8 @@ describe('EncuentroMentoriaService', () => {
     expect(feedback.request.method).toBe('GET');
     detail.flush(participante);
     feedback.flush([]);
+    expect(detalle?.etapaMentoria).toBe('ACTIVA');
+    expect(detalle?.cierreHasta).toBe('2026-10-22');
   });
 
   it('adapta comentario al contrato contenido del backend', () => {

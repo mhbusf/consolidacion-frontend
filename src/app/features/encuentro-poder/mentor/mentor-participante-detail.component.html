@@ -34,6 +34,18 @@
       </div>
     </header>
 
+    @if (persona.etapaMentoria === 'CIERRE') {
+      <section class="lifecycle-notice closing" aria-label="Periodo de cierre">
+        <strong>Periodo de cierre</strong>
+        <p>Registra el mensaje de cierre a más tardar el {{ persona.cierreHasta | date:'dd/MM/yyyy' }}. Después, este acompañamiento pasará al historial.</p>
+      </section>
+    } @else if (persona.etapaMentoria === 'HISTORICA') {
+      <section class="lifecycle-notice history" aria-label="Acompañamiento histórico">
+        <strong>Acompañamiento en historial</strong>
+        <p>Puedes consultar todo el seguimiento y agregar un nuevo mensaje cuando sea necesario.</p>
+      </section>
+    }
+
     <div class="content-grid">
       <div>
         <section class="panel facts">
@@ -60,8 +72,8 @@
       <div>
         <section class="panel feedback-form">
           <p class="eyebrow">Seguimiento pastoral</p>
-          <h2>Registrar feedback</h2>
-          <p class="help" id="comentario-ayuda">Deja una nota útil para dar continuidad al acompañamiento.</p>
+          <h2>{{ persona.etapaMentoria === 'CIERRE' ? 'Registrar mensaje de cierre' : persona.etapaMentoria === 'HISTORICA' ? 'Agregar seguimiento histórico' : 'Registrar feedback' }}</h2>
+          <p class="help" id="comentario-ayuda">{{ persona.etapaMentoria === 'CIERRE' ? 'Resume el cierre del proceso, los avances y próximos pasos.' : 'Deja una nota útil para dar continuidad al acompañamiento.' }}</p>
           <form (ngSubmit)="guardarFeedback()">
             <label for="comentario">Comentario</label>
             <textarea id="comentario" [formControl]="comentario" maxlength="5000" rows="7" placeholder="Escribe acuerdos, avances o temas para la próxima conversación..." [attr.aria-invalid]="comentario.touched && comentario.invalid" [attr.aria-describedby]="comentario.touched && comentario.invalid ? 'comentario-ayuda comentario-error' : 'comentario-ayuda'"></textarea>

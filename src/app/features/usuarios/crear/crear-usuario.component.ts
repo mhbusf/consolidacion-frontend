@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -361,11 +362,22 @@ export class CrearUsuarioComponent {
           this.router.navigate(['/usuarios']);
         }, 2000);
       },
-      error: () => {
-        this.notificationService.error('Error al crear usuario');
+      error: (error: unknown) => {
+        this.errorMessage = this.getErrorMessage(error);
+        this.notificationService.error(this.errorMessage);
         this.isLoading = false;
       }
     });
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) return 'Error al crear usuario';
+    if (error.error && typeof error.error === 'object' && typeof error.error.message === 'string') {
+      return error.error.message;
+    }
+    return error.status === 0
+      ? 'No fue posible conectar con el servidor'
+      : 'Error al crear usuario';
   }
 
   cancelar(): void {
