@@ -1,0 +1,161 @@
+<main class="reports-page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Encuentro de Poder</p>
+      <h1>Resultados por ciclo</h1>
+      <p class="hero-copy">Asistencia, cumplimiento y graduación en una vista preparada para tomar decisiones.</p>
+    </div>
+    <div class="cycle-control">
+      <label for="ciclo">Ciclo analizado</label>
+      <select id="ciclo" [value]="cicloSeleccionado() ?? ''" (change)="seleccionarCiclo($event)"
+        [disabled]="cargandoCiclos() || !ciclos().length">
+        @for (ciclo of ciclos(); track ciclo.id) {
+          <option [value]="ciclo.id">{{ ciclo.nombre }} · {{ ciclo.estado }}</option>
+        }
+      </select>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert" role="alert">
+      <span>{{ error() }}</span>
+      @if (accionError()) { <button type="button" (click)="recargar()">Reintentar</button> }
+    </div>
+  }
+
+  @if (cargando() || cargandoCiclos()) {
+    <div class="loading" aria-live="polite">Preparando resultados del ciclo...</div>
+  } @else if (dashboard(); as data) {
+    <section class="section" aria-labelledby="totales-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">01</p>
+          <h2 id="totales-title">Números totales</h2>
+        </div>
+        <button class="excel-button" type="button" (click)="exportar('RESUMEN')"
+          [disabled]="exportando() !== null" [attr.aria-busy]="exportando() === 'RESUMEN'">
+          {{ exportando() === 'RESUMEN' ? 'Generando...' : 'Excel de totales' }}
+        </button>
+      </div>
+
+      <div class="metrics">
+        <article class="metric primary"><span>Inscritos</span><strong>{{ data.inscritos }}</strong></article>
+        <article class="metric"><span>Con asistencia</span><strong>{{ data.conAsistencia }}</strong></article>
+        <article class="metric success"><span>Graduados</span><strong>{{ data.graduados.length }}</strong></article>
+        <article class="metric"><span>En proceso</span><strong>{{ enProceso().length }}</strong></article>
+        <article class="metric danger"><span>No cumplen</span><strong>{{ noCumplen().length }}</strong></article>
+        <article class="metric"><span>No graduados</span><strong>{{ noGraduados().length }}</strong></article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="asistencia-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">02</p>
+          <h2 id="asistencia-title">Asistencia por clase</h2>
+          <p>Solo las clases obligatorias definen el cumplimiento de graduación.</p>
+        </div>
+        <button class="excel-button" type="button" (click)="exportar('ASISTENCIA')"
+          [disabled]="exportando() !== null" [attr.aria-busy]="exportando() === 'ASISTENCIA'">
+          {{ exportando() === 'ASISTENCIA' ? 'Generando...' : 'Excel de asistencia' }}
+        </button>
+      </div>
+
+      <div class="class-grid">
+        @for (clase of clasesObligatorias(); track clase.claseId) {
+          <article class="class-card">
+            <div class="class-card-head">
+              <div>
+                <span class="class-status" [class.finished]="clase.estado === 'FINALIZADA'">
+                  {{ clase.estado === 'EN_CURSO' ? 'EN CURSO' : clase.estado }}
+                </span>
+                <h3>{{ clase.nombre }}</h3>
+              </div>
+              <time>{{ clase.fecha }}</time>
+            </div>
+            <div class="attendance-numbers">
+              <div><strong>{{ clase.presentes }}</strong><span>asistieron</span></div>
+              <div><strong>{{ clase.ausentes }}</strong><span>faltaron</span></div>
+            </div>
+            <div class="progress" role="progressbar" [attr.aria-valuenow]="porcentaje(clase.presentes, clase.inscritos)"
+              aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Asistencia de ' + clase.nombre">
+              <span [style.width.%]="porcentaje(clase.presentes, clase.inscritos)"></span>
+            </div>
+            <p class="rate">{{ porcentaje(clase.presentes, clase.inscritos) }}% de {{ clase.inscritos }} inscritos</p>
+          </article>
+        }
+      </div>
+
+      <div class="risk-panel">
+        <div class="risk-intro">
+          <span class="risk-count">{{ noCumplen().length }}</span>
+          <div>
+            <h3>Ya no cumplen el requisito</h3>
+            <p>Personas ausentes en una o más clases obligatorias finalizadas.</p>
+          </div>
+        </div>
+        @if (noCumplen().length) {
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Participante</th><th>Teléfono</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
+              <tbody>
+                @for (participante of noCumplen(); track participante.persona.id) {
+                  <tr>
+                    <td><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.comuna || 'Sin comuna' }}</small></td>
+                    <td>{{ participante.persona.telefono }}</td>
+                    <td><span class="missing">{{ clasesAusentesFinalizadas(participante).join(', ') }}</span></td>
+                    <td>{{ participante.clasesCompletadas }} / {{ clasesObligatorias().length }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="empty">Nadie ha perdido el requisito de graduación en este ciclo.</p>
+        }
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="graduacion-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">03</p>
+          <h2 id="graduacion-title">Resultado de graduación</h2>
+        </div>
+        <button class="excel-button" type="button" (click)="exportar('GRADUACION')"
+          [disabled]="exportando() !== null" [attr.aria-busy]="exportando() === 'GRADUACION'">
+          {{ exportando() === 'GRADUACION' ? 'Generando...' : 'Excel de graduación' }}
+        </button>
+      </div>
+
+      <div class="outcome-grid">
+        <article class="outcome graduated">
+          <header><span>{{ data.graduados.length }}</span><h3>Se gradúan</h3></header>
+          @if (data.graduados.length) {
+            <ul>
+              @for (participante of data.graduados; track participante.persona.id) {
+                <li><div><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.telefono }}</small></div><span>Completo</span></li>
+              }
+            </ul>
+          } @else { <p class="empty">Aún no hay participantes con todas las clases completas.</p> }
+        </article>
+
+        <article class="outcome pending">
+          <header><span>{{ noGraduados().length }}</span><h3>No se gradúan todavía</h3></header>
+          @if (noGraduados().length) {
+            <ul>
+              @for (participante of noGraduados(); track participante.persona.id) {
+                <li>
+                  <div><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.clasesFaltantes.join(', ') }}</small></div>
+                  <span [class.failed]="situacion(participante) === 'NO CUMPLE'">{{ situacion(participante) }}</span>
+                </li>
+              }
+            </ul>
+          } @else { <p class="empty">Todas las personas inscritas cumplen la graduación.</p> }
+        </article>
+      </div>
+    </section>
+  } @else if (!error() && !ciclos().length) {
+    <div class="empty-page">No hay ciclos disponibles para generar reportes.</div>
+  }
+</main>

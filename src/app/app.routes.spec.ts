@@ -1,11 +1,12 @@
 import { routes } from './app.routes';
 
 describe('rutas de Encuentro de Poder', () => {
-  it('reserva dashboard y crear ciclo al superadministrador', () => {
+  it('reserva dashboard, reportes y crear ciclo al superadministrador', () => {
     const privateRoutes = routes.filter(route =>
-      route.path === 'encuentro-poder' || route.path === 'encuentro-poder/ciclos/nuevo');
+      route.path === 'encuentro-poder' || route.path === 'encuentro-poder/ciclos/nuevo'
+      || route.path === 'encuentro-poder/reportes');
 
-    expect(privateRoutes.length).toBe(2);
+    expect(privateRoutes.length).toBe(3);
     expect(privateRoutes.every(route => route.data?.['roles']?.includes('ROLE_SUPER_ADMIN'))).toBeTrue();
   });
 

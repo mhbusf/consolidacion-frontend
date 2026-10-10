@@ -116,11 +116,16 @@ import { filter, map, startWith } from 'rxjs';
                 </button>
                 <div class="nav-submenu" id="submenu-encuentro">
                    @if (isSuperAdmin()) {
-                     <a routerLink="/encuentro-poder" routerLinkActive="active" (click)="closeMenus()">
-                       <span class="menu-icon">⚡</span>
-                       Panel de Encuentro
-                     </a>
-                   }
+                      <a routerLink="/encuentro-poder" routerLinkActive="active"
+                        [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenus()">
+                        <span class="menu-icon">⚡</span>
+                        Panel de Encuentro
+                      </a>
+                      <a routerLink="/encuentro-poder/reportes" routerLinkActive="active" (click)="closeMenus()">
+                        <span class="menu-icon">▤</span>
+                        Dashboard de resultados
+                      </a>
+                    }
                    <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
                      <span class="menu-icon">👥</span>
                      Portal de mentoría

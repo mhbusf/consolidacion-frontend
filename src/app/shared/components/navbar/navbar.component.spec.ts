@@ -39,6 +39,7 @@ describe('NavbarComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Encuentro de Poder');
     expect(fixture.nativeElement.textContent).toContain('Dashboard');
+    expect(fixture.nativeElement.textContent).toContain('Dashboard de resultados');
     expect(fixture.nativeElement.textContent).toContain('Portal de mentoría');
     expect(fixture.nativeElement.textContent).toContain('Tomar asistencia');
   });
@@ -67,6 +68,7 @@ describe('NavbarComponent', () => {
     expect(text).toContain('Portal de mentoría');
     expect(text).toContain('Tomar asistencia');
     expect(text).not.toContain('Panel de Encuentro');
+    expect(text).not.toContain('Dashboard de resultados');
   });
 
   it('cierra el grupo desplegado con un segundo clic, clic exterior o Escape', () => {

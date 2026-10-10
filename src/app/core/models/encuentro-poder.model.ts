@@ -1,4 +1,5 @@
 export type EncuentroEstadoClase = 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA';
+export type EncuentroTipoReporte = 'RESUMEN' | 'ASISTENCIA' | 'GRADUACION';
 
 export interface EncuentroClase {
   id: number;
