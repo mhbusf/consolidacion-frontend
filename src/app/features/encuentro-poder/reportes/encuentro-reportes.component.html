@@ -95,15 +95,47 @@
           </div>
         </div>
         @if (noCumplen().length) {
+          <div class="risk-breakdown" aria-label="Ausentes por clase obligatoria finalizada">
+            @for (seguimiento of seguimientoPorClase(); track seguimiento.clase.id) {
+              <article class="risk-class">
+                <header>
+                  <div><span>Clase finalizada</span><h4>{{ seguimiento.clase.nombre }}</h4></div>
+                  <strong>{{ seguimiento.participantes.length }}</strong>
+                </header>
+                @if (seguimiento.participantes.length) {
+                  <ul>
+                    @for (participante of seguimiento.participantes; track participante.persona.id) {
+                      <li>{{ participante.persona.nombreCompleto }}</li>
+                    }
+                  </ul>
+                } @else {
+                  <p>Sin ausentes</p>
+                }
+              </article>
+            }
+          </div>
+          <div class="risk-list-heading">
+            <div>
+              <h4>Listado acumulado</h4>
+              <p>Se actualiza al finalizar cada clase y reúne todas las ausencias obligatorias.</p>
+            </div>
+          </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Participante</th><th>Teléfono</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
+              <thead><tr><th>Participante</th><th>Teléfono</th><th>Ausencias</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
               <tbody>
                 @for (participante of noCumplen(); track participante.persona.id) {
                   <tr>
                     <td><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.comuna || 'Sin comuna' }}</small></td>
                     <td>{{ participante.persona.telefono }}</td>
-                    <td><span class="missing">{{ clasesAusentesFinalizadas(participante).join(', ') }}</span></td>
+                    <td><span class="absence-count">{{ clasesAusentesFinalizadas(participante).length }}</span></td>
+                    <td>
+                      <div class="missing-tags">
+                        @for (clase of clasesAusentesFinalizadas(participante); track clase) {
+                          <span>{{ clase }}</span>
+                        }
+                      </div>
+                    </td>
                     <td>{{ participante.clasesCompletadas }} / {{ clasesObligatorias().length }}</td>
                   </tr>
                 }

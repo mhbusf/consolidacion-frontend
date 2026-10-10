@@ -44,7 +44,23 @@ export class EncuentroReportesComponent {
   readonly noCumplen = computed(() => {
     const data = this.dashboard();
     if (!data) return [];
-    return data.participantes.filter(participante => this.clasesAusentesFinalizadas(participante).length > 0);
+    return data.participantes
+      .filter(participante => this.clasesAusentesFinalizadas(participante).length > 0)
+      .sort((a, b) => this.clasesAusentesFinalizadas(b).length - this.clasesAusentesFinalizadas(a).length
+        || a.persona.nombreCompleto.localeCompare(b.persona.nombreCompleto, 'es'));
+  });
+
+  readonly seguimientoPorClase = computed(() => {
+    const data = this.dashboard();
+    if (!data) return [];
+    return data.ciclo.clases
+      .filter(clase => clase.obligatoria && clase.estado === 'FINALIZADA')
+      .sort((a, b) => a.orden - b.orden)
+      .map(clase => ({
+        clase,
+        participantes: data.participantes.filter(participante =>
+          !participante.asistencias.some(asistencia => asistencia.claseId === clase.id)),
+      }));
   });
 
   readonly enProceso = computed(() => {

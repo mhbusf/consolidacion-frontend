@@ -6,7 +6,7 @@ import { EncuentroReportesComponent } from './encuentro-reportes.component';
 
 const clases = [
   { id: 11, nombre: 'Clase 1', orden: 1, fecha: '2026-10-01', obligatoria: true, publicToken: 'c1', estado: 'FINALIZADA' as const },
-  { id: 12, nombre: 'Clase 2', orden: 2, fecha: '2026-10-08', obligatoria: true, publicToken: 'c2', estado: 'EN_CURSO' as const },
+  { id: 12, nombre: 'Clase 2', orden: 2, fecha: '2026-10-08', obligatoria: true, publicToken: 'c2', estado: 'FINALIZADA' as const },
   { id: 13, nombre: 'Clase 3', orden: 3, fecha: '2026-10-15', obligatoria: true, publicToken: 'c3', estado: 'PROGRAMADA' as const },
 ];
 
@@ -40,10 +40,13 @@ const failed = {
 const inProgress = {
   persona: { id: 3, nombreCompleto: 'Persona en Proceso', telefono: '56933333333', comuna: 'Ñuñoa' },
   inscrito: true,
-  clasesCompletadas: 1,
-  clasesFaltantes: ['Clase 2', 'Clase 3'],
+  clasesCompletadas: 2,
+  clasesFaltantes: ['Clase 3'],
   estado: 'PENDIENTE' as const,
-  asistencias: [{ id: 5, personaId: 3, claseId: 11, clase: 'Clase 1', metodo: 'QR', fechaHora: '2026-10-01T20:00:00' }],
+  asistencias: [
+    { id: 5, personaId: 3, claseId: 11, clase: 'Clase 1', metodo: 'QR', fechaHora: '2026-10-01T20:00:00' },
+    { id: 6, personaId: 3, claseId: 12, clase: 'Clase 2', metodo: 'QR', fechaHora: '2026-10-08T20:00:00' },
+  ],
 };
 
 function dashboard(): EncuentroDashboard {
@@ -57,9 +60,9 @@ function dashboard(): EncuentroDashboard {
       claseId: clase.id,
       nombre: clase.nombre,
       fecha: clase.fecha,
-      presentes: clase.id === 11 ? 2 : clase.id === 12 ? 1 : 0,
+      presentes: clase.id === 11 || clase.id === 12 ? 2 : 0,
       inscritos: 3,
-      ausentes: clase.id === 11 ? 1 : 0,
+      ausentes: clase.id === 11 || clase.id === 12 ? 1 : 0,
       estado: clase.estado,
     })),
     participantes: [graduate, failed, inProgress],
@@ -101,6 +104,14 @@ describe('EncuentroReportesComponent', () => {
     expect(text).toContain('Persona Graduada');
     expect(component.noCumplen().map(persona => persona.persona.id)).toEqual([2]);
     expect(component.enProceso().map(persona => persona.persona.id)).toEqual([3]);
+    expect(component.seguimientoPorClase().map(item => ({
+      clase: item.clase.nombre,
+      personas: item.participantes.map(participante => participante.persona.id),
+    }))).toEqual([
+      { clase: 'Clase 1', personas: [2] },
+      { clase: 'Clase 2', personas: [2] },
+    ]);
+    expect(component.clasesAusentesFinalizadas(failed)).toEqual(['Clase 1', 'Clase 2']);
   });
 
   it('solicita el Excel correspondiente y bloquea descargas simultáneas', () => {
