@@ -37,6 +37,16 @@ describe('EncuentroMentorAssignmentComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Mentor Uno');
   });
 
+  it('muestra la cantidad asignada a cada mentor y la actualiza con los cambios', () => {
+    expect(component.resumenMentores()).toEqual([{ mentor, cantidad: 0 }]);
+
+    component.cambiarMentor(asignacion, '9');
+    expect(component.resumenMentores()).toEqual([{ mentor, cantidad: 1 }]);
+
+    component.cambiarMentor(component.asignaciones()[0], '');
+    expect(component.resumenMentores()).toEqual([{ mentor, cantidad: 0 }]);
+  });
+
   it('asigna y desasigna usando la inscripción del ciclo', () => {
     component.cambiarMentor(asignacion, '9');
 
@@ -54,5 +64,20 @@ describe('EncuentroMentorAssignmentComponent', () => {
 
     component.filtro.set('9');
     expect(component.asignacionesFiltradas().length).toBe(0);
+  });
+
+  it('busca participantes por nombre o teléfono y combina la búsqueda con el mentor', () => {
+    component.busqueda.set('ana pérez');
+    expect(component.asignacionesFiltradas()).toEqual([asignacion]);
+
+    component.busqueda.set('11111111');
+    expect(component.asignacionesFiltradas()).toEqual([asignacion]);
+
+    component.filtro.set('9');
+    expect(component.asignacionesFiltradas()).toEqual([]);
+
+    component.filtro.set('TODOS');
+    component.busqueda.set('persona inexistente');
+    expect(component.asignacionesFiltradas()).toEqual([]);
   });
 });
