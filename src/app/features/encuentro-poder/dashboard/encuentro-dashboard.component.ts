@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
-import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroEstadoClase, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
+import { EncuentroAsistencia, EncuentroCiclo, EncuentroContinuidadPreview, EncuentroDashboard, EncuentroEstadoClase, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignment.component';
 
@@ -19,14 +19,14 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
 
     <section class="toolbar">
       <label>Ciclo
-        <select [value]="cicloSeleccionado() ?? ''" (change)="seleccionarCiclo($event)" [disabled]="cargandoCiclos() || importando() || marcando().size > 0">
+        <select [value]="cicloSeleccionado() ?? ''" (change)="seleccionarCiclo($event)" [disabled]="cargandoCiclos() || importando() || confirmandoContinuidad() || marcando().size > 0">
           <option value="">{{ cargandoCiclos() ? 'Cargando ciclos...' : 'Selecciona un ciclo' }}</option>
           @for (ciclo of ciclos(); track ciclo.id) {<option [value]="ciclo.id">{{ ciclo.nombre }} · {{ ciclo.estado }}</option>}
         </select>
       </label>
       @if (dashboard()) {
         <button class="button" (click)="exportar()" [disabled]="exportando()">{{ exportando() ? 'Exportando...' : 'Exportar Excel' }}</button>
-        <button class="button secondary" (click)="archivoInput.click()" [disabled]="importando() || marcando().size > 0">{{ importando() ? 'Importando...' : 'Importar Excel' }}</button>
+        <button class="button secondary" (click)="archivoInput.click()" [disabled]="importando() || confirmandoContinuidad() || marcando().size > 0">{{ importando() ? 'Importando...' : 'Importar Excel' }}</button>
         <input #archivoInput type="file" accept=".xlsx" hidden (change)="importar($event)">
         <button class="button secondary" (click)="copiarEnlace()">Copiar enlace de inscripción</button>
       }
@@ -34,6 +34,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
 
     @if (enlaceCopiado()) {<p class="notice">{{ enlaceCopiado() }}</p>}
     @if (mensajeImportacion()) {<p class="notice">{{ mensajeImportacion() }}</p>}
+    @if (mensajeContinuidad()) {<p class="notice">{{ mensajeContinuidad() }}</p>}
     @if (errorImportacion()) {<p class="error">{{ errorImportacion() }}</p>}
     @if (errorAsistencia()) {<p class="error">{{ errorAsistencia() }}</p>}
     @if (errorAccion()) {<p class="error">{{ errorAccion() }}</p>}
@@ -43,10 +44,20 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
 
     @if (dashboard(); as data) {
       <section class="stats">
-        <article><b>{{ data.inscritos }}</b><span>Inscritos</span></article>
+        <article><b>{{ data.inscritos }}</b><span>Inscritos históricos</span></article>
+        <article><b>{{ data.activos }}</b><span>Activos</span></article>
+        <article><b>{{ data.noContinuaron }}</b><span>No continuaron</span></article>
         <article><b>{{ data.conAsistencia }}</b><span>Con asistencia</span></article>
         <article class="highlight"><b>{{ data.graduados.length }}</b><span>Graduados</span></article>
         <article><b>{{ data.pendientes }}</b><span>Pendientes</span></article>
+      </section>
+
+      <section class="panel">
+        <h2>Continuidad después de la primera clase</h2>
+        <p class="muted">Previsualiza las personas ausentes antes de cerrar la continuidad. Al confirmar quedarán fuera del ciclo y se eliminará su asignación de mentor.</p>
+        <button class="button" type="button" (click)="previsualizarContinuidad()" [disabled]="cargandoContinuidad() || confirmandoContinuidad()">
+          {{ cargandoContinuidad() ? 'Preparando vista previa...' : 'Revisar cierre de Clase 1' }}
+        </button>
       </section>
 
       <section class="grid">
@@ -84,7 +95,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
               <div class="attendee">
                 <div><span><strong>{{ participante.persona.nombreCompleto }}</strong>@if (participante.estado === 'COMPLETO') {<span class="graduate-star" title="Graduado" aria-label="Graduado" style="display:inline-block;margin-left:7px;color:#f5b700;font-size:19px;line-height:1;vertical-align:-1px">★</span>}</span><small>{{ participante.persona.telefono }}</small></div>
                 @if (presentesClase().has(participante.persona.id)) {<span class="present">Presente</span>}
-                @else {<div class="attendee-action"><span [class.absent]="estadoClaseSeleccionada() === 'FINALIZADA'" class="attendance-state">{{ etiquetaEstadoPersona(estadoClaseSeleccionada()) }}</span><button class="mark" [disabled]="!claseSeleccionada() || estadoClaseSeleccionada() === 'PROGRAMADA' || cargando() || importando() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : estadoClaseSeleccionada() === 'FINALIZADA' ? 'Corregir a presente' : estadoClaseSeleccionada() === 'PROGRAMADA' ? 'Aún no disponible' : 'Marcar presente' }}</button></div>}
+                @else {<div class="attendee-action"><span [class.absent]="estadoClaseSeleccionada() === 'FINALIZADA'" class="attendance-state">{{ etiquetaEstadoPersona(estadoClaseSeleccionada()) }}</span><button class="mark" [disabled]="!claseSeleccionada() || estadoClaseSeleccionada() === 'PROGRAMADA' || cargando() || importando() || confirmandoContinuidad() || estaMarcando(participante.persona.id)" (click)="marcar(participante)">{{ estaMarcando(participante.persona.id) ? '...' : estadoClaseSeleccionada() === 'FINALIZADA' ? 'Corregir a presente' : estadoClaseSeleccionada() === 'PROGRAMADA' ? 'Aún no disponible' : 'Marcar presente' }}</button></div>}
               </div>
             }
           </div>
@@ -114,6 +125,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
 
       @if (historial(); as detalle) {<div class="modal-backdrop" (click)="cerrarHistorial()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarHistorial()">×</button><h2>{{ detalle.persona.nombreCompleto }}</h2><p>{{ detalle.persona.telefono }} · {{ detalle.persona.comuna || 'Sin comuna' }}</p><h3>{{ detalle.estado }}</h3>@for (asistencia of detalle.asistencias; track asistencia.id) {<div class="history-row"><span>{{ asistencia.clase }}</span><span>{{ asistencia.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span></div>} @if (!detalle.asistencias.length) {<p>No registra asistencias.</p>}</article></div>}
       @if (qr(); as codigo) {<div class="modal-backdrop" (click)="cerrarQr()"><article class="modal qr-modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarQr()">×</button><h2>QR {{ codigo.nombre }}</h2><p>{{ codigo.fecha | date:'dd/MM/yyyy' }}</p><img [src]="codigo.imagen" [alt]="'QR para ' + codigo.nombre"><button class="button" (click)="descargarQr()">Descargar QR</button><small>{{ codigo.url }}</small></article></div>}
+      @if (continuidad(); as preview) {<div class="modal-backdrop" (click)="cerrarContinuidad()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarContinuidad()" [disabled]="confirmandoContinuidad()">×</button><h2>Continuidad · {{ preview.claseNombre }}</h2>@if (preview.procesada) {<p>Este cierre ya fue procesado el {{ preview.procesadaEn | date:'dd/MM/yyyy HH:mm' }}.</p>} @else if (!preview.disponible) {<p>La primera clase obligatoria debe estar finalizada antes de procesar la continuidad.</p>} @else {<p><strong>{{ preview.candidatos.length }}</strong> persona{{ preview.candidatos.length === 1 ? '' : 's' }} quedará{{ preview.candidatos.length === 1 ? '' : 'n' }} fuera del ciclo.</p><p class="error">Esta acción desasignará sus mentores. La reincorporación posterior será manual y no restaurará el mentor.</p><div class="attendees">@for (candidato of preview.candidatos; track candidato.inscripcionId) {<div class="attendee"><div><strong>{{ candidato.persona.nombreCompleto }}</strong><small>{{ candidato.persona.telefono }}</small></div><span>{{ candidato.mentorNombre || 'Sin mentor' }}</span></div>} @empty {<p class="muted">No hay personas ausentes. Confirma para dejar registrado el cierre.</p>}</div><button class="button" type="button" (click)="confirmarContinuidad()" [disabled]="confirmandoContinuidad() || !preview.previewToken">{{ confirmandoContinuidad() ? 'Procesando...' : 'Confirmar cierre' }}</button>}</article></div>}
     } @else if (!cargando() && !errorDashboard()) {<div class="empty">Selecciona un ciclo para comenzar.</div>}
   </div>`,
   styles: [`:host{display:block;color:var(--text-primary)}.page{max-width:1280px;margin:0 auto;padding:28px 22px}.heading,.toolbar,.stats,.grid{display:flex;gap:16px}.heading{justify-content:space-between;align-items:center;margin-bottom:22px}.eyebrow{color:#7da9ff;font-weight:700}h1{font-size:34px;margin:6px 0 0}h2{margin-top:0;font-size:18px}.toolbar{align-items:end;flex-wrap:wrap;padding:16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.toolbar label,.panel label{display:grid;gap:6px;font-size:13px;font-weight:600}select,.search{min-width:240px;padding:10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary)}.button,.mark{border:0;border-radius:8px;background:#3978ee;color:white;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}.button:disabled,.mark:disabled{opacity:.55;cursor:not-allowed}.secondary{background:transparent;border:1px solid var(--border-color);color:var(--text-primary)}.notice,.empty{padding:14px;background:rgba(59,130,246,.12);border-radius:10px;margin:16px 0}.stats{margin:20px 0}.stats article{flex:1;padding:18px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px}.stats b{display:block;font-size:28px}.stats span{color:var(--text-secondary);font-size:13px}.grid{align-items:start}.panel{flex:1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:18px}.class-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}.class-count{text-align:right}.lifecycle{font-weight:700}.lifecycle.current,.present{color:#16a34a}.lifecycle.finalized,.absent,.absence-cell{color:#dc2626}.bar{grid-column:1/-1;height:7px;background:var(--bg-secondary);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:#4f8cff}.attendance-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}.attendance-actions .button{flex:1;min-width:190px}.search{width:100%;box-sizing:border-box;margin:14px 0}.attendees{max-height:420px;overflow:auto}.attendee{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-color)}small{display:block;color:var(--text-secondary);margin-top:3px}.present,.attendance-state{font-weight:700}.attendee-action{display:flex;align-items:center;justify-content:flex-end;gap:8px}.mark{padding:7px 10px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border-color);white-space:nowrap}.status{color:#f59e0b}.status.complete{color:#16a34a}.link{border:0;background:none;color:#2563eb;cursor:pointer}.modal-backdrop{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:20px}.modal{position:relative;background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:26px;min-width:min(500px,100%)}.close{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--text-primary);font-size:26px}.history-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color)}.muted{color:var(--text-secondary)}@media(max-width:800px){.grid,.stats{display:grid;grid-template-columns:1fr}.heading{align-items:start}.stats article{display:flex;justify-content:space-between;align-items:center}.attendee{align-items:flex-start}.attendee-action{align-items:flex-end;flex-direction:column}}`],
@@ -122,11 +134,13 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
 export class EncuentroDashboardComponent implements OnInit {
   private readonly service = inject(EncuentroPoderService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly mentorAssignment = viewChild(EncuentroMentorAssignmentComponent);
   private dashboardRequest?: Subscription;
   private historyRequest?: Subscription;
   private dashboardSequence = 0;
   private dataRevision = 0;
   private qrSequence = 0;
+  private continuidadSequence = 0;
   private copyTimer?: ReturnType<typeof setTimeout>;
   private readonly pageSize = 25;
 
@@ -144,6 +158,7 @@ export class EncuentroDashboardComponent implements OnInit {
   readonly exportando = signal(false);
   readonly generandoQr = signal<number | null>(null);
   readonly mensajeImportacion = signal('');
+  readonly mensajeContinuidad = signal('');
   readonly errorImportacion = signal('');
   readonly errorAsistencia = signal('');
   readonly errorAccion = signal('');
@@ -151,6 +166,9 @@ export class EncuentroDashboardComponent implements OnInit {
   readonly errorDashboard = signal('');
   readonly paginaEstado = signal(0);
   readonly qr = signal<{ nombre: string; fecha: string; url: string; imagen: string } | null>(null);
+  readonly continuidad = signal<EncuentroContinuidadPreview | null>(null);
+  readonly cargandoContinuidad = signal(false);
+  readonly confirmandoContinuidad = signal(false);
 
   readonly participantesFiltrados = computed(() => {
     const participantes = this.dashboard()?.participantes ?? [];
@@ -206,6 +224,11 @@ export class EncuentroDashboardComponent implements OnInit {
     this.generandoQr.set(null);
     this.qr.set(null);
     this.errorAccion.set('');
+    this.continuidadSequence++;
+    this.continuidad.set(null);
+    this.mensajeContinuidad.set('');
+    this.cargandoContinuidad.set(false);
+    this.confirmandoContinuidad.set(false);
     this.cargar();
   }
 
@@ -279,7 +302,7 @@ export class EncuentroDashboardComponent implements OnInit {
   marcar(participante: EncuentroParticipante): void {
     const data = this.dashboard();
     const claseId = this.claseSeleccionada();
-    if (!data || !claseId || this.estadoClaseSeleccionada() === 'PROGRAMADA' || this.cargando() || this.importando()) return;
+    if (!data || !claseId || this.estadoClaseSeleccionada() === 'PROGRAMADA' || this.cargando() || this.importando() || this.confirmandoContinuidad()) return;
     const cicloId = data.ciclo.id;
     const key = `${claseId}:${participante.persona.id}`;
     if (this.marcando().has(key)) return;
@@ -381,7 +404,7 @@ export class EncuentroDashboardComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const archivo = input.files?.[0];
     const cicloId = this.cicloSeleccionado();
-    if (!archivo || !cicloId || this.importando()) return;
+    if (!archivo || !cicloId || this.importando() || this.confirmandoContinuidad()) return;
     this.importando.set(true);
     this.mensajeImportacion.set('');
     this.errorImportacion.set('');
@@ -392,11 +415,63 @@ export class EncuentroDashboardComponent implements OnInit {
       next: resultado => {
         if (this.cicloSeleccionado() !== cicloId) return;
         this.dataRevision++;
-        this.mensajeImportacion.set(`Importadas ${resultado.inscripcionesImportadas} inscripciones y ${resultado.asistenciasImportadas} asistencias. Sin teléfono: ${resultado.filasSinTelefono}; sin coincidencia: ${resultado.asistenciasSinCoincidencia}; ambiguas: ${resultado.asistenciasAmbiguas}.`);
+        this.mensajeImportacion.set(`Importadas ${resultado.inscripcionesImportadas} inscripciones y ${resultado.asistenciasImportadas} asistencias. Sin teléfono: ${resultado.filasSinTelefono}; sin coincidencia: ${resultado.asistenciasSinCoincidencia}; ambiguas: ${resultado.asistenciasAmbiguas}; omitidas por no continuidad: ${resultado.omitidasNoContinua}.`);
         this.cargar();
       },
       error: error => this.errorImportacion.set(this.mensajeError(error, 'No fue posible importar el archivo Excel.')),
     });
+  }
+
+  previsualizarContinuidad(): void {
+    const cicloId = this.cicloSeleccionado();
+    if (!cicloId || this.cargandoContinuidad() || this.confirmandoContinuidad() || this.importando() || this.marcando().size > 0) return;
+    const sequence = ++this.continuidadSequence;
+    this.cargandoContinuidad.set(true);
+    this.errorAccion.set('');
+    this.mensajeContinuidad.set('');
+    this.service.previewContinuidad(cicloId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { if (sequence === this.continuidadSequence) this.cargandoContinuidad.set(false); }),
+    ).subscribe({
+      next: preview => {
+        if (sequence === this.continuidadSequence && this.cicloSeleccionado() === cicloId) this.continuidad.set(preview);
+      },
+      error: error => {
+        if (sequence === this.continuidadSequence) this.errorAccion.set(this.mensajeError(error, 'No fue posible preparar el cierre de continuidad.'));
+      },
+    });
+  }
+
+  confirmarContinuidad(): void {
+    const cicloId = this.cicloSeleccionado();
+    const preview = this.continuidad();
+    if (!cicloId || !preview?.previewToken || this.confirmandoContinuidad()) return;
+    const sequence = ++this.continuidadSequence;
+    this.confirmandoContinuidad.set(true);
+    this.errorAccion.set('');
+    this.service.confirmarContinuidad(cicloId, preview.previewToken).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { if (sequence === this.continuidadSequence) this.confirmandoContinuidad.set(false); }),
+    ).subscribe({
+      next: resultado => {
+        if (sequence !== this.continuidadSequence || this.cicloSeleccionado() !== cicloId) return;
+        this.dataRevision++;
+        this.continuidad.set(null);
+        this.mensajeContinuidad.set(`Cierre procesado: ${resultado.excluidos} persona${resultado.excluidos === 1 ? '' : 's'} no continúa${resultado.excluidos === 1 ? '' : 'n'}.`);
+        this.cargar();
+        this.mentorAssignment()?.cargar();
+      },
+      error: error => {
+        if (sequence === this.continuidadSequence) this.errorAccion.set(this.mensajeError(error, 'No fue posible confirmar el cierre de continuidad.'));
+      },
+    });
+  }
+
+  cerrarContinuidad(): void {
+    if (this.confirmandoContinuidad()) return;
+    this.continuidadSequence++;
+    this.continuidad.set(null);
+    this.cargandoContinuidad.set(false);
   }
 
   cambiarPagina(delta: number): void {

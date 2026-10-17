@@ -1,5 +1,6 @@
 export type EncuentroEstadoClase = 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA';
 export type EncuentroTipoReporte = 'RESUMEN' | 'ASISTENCIA' | 'GRADUACION';
+export type EncuentroEstadoParticipacion = 'ACTIVO' | 'NO_CONTINUA';
 
 export interface EncuentroClase {
   id: number;
@@ -35,6 +36,7 @@ export interface EncuentroInscripcion {
   persona: EncuentroPersona;
   cicloId: number;
   fechaInscripcion: string;
+  estadoParticipacion: EncuentroEstadoParticipacion;
 }
 
 export interface EncuentroAsistencia {
@@ -60,6 +62,43 @@ export interface EncuentroImportacion {
   filasSinTelefono: number;
   asistenciasSinCoincidencia: number;
   asistenciasAmbiguas: number;
+  omitidasNoContinua: number;
+}
+
+export interface EncuentroContinuidadCandidato {
+  inscripcionId: number;
+  persona: EncuentroPersona;
+  mentorId: number | null;
+  mentorNombre: string | null;
+}
+
+export interface EncuentroContinuidadPreview {
+  cicloId: number;
+  claseId: number;
+  claseNombre: string;
+  disponible: boolean;
+  procesada: boolean;
+  procesadaEn: string | null;
+  previewToken: string | null;
+  candidatos: EncuentroContinuidadCandidato[];
+}
+
+export interface EncuentroNoContinuidad {
+  id: number;
+  inscripcionId: number;
+  persona: EncuentroPersona;
+  motivo: string;
+  fechaExclusion: string;
+  excluidoPor: string | null;
+  mentorAnterior: string | null;
+  fechaReintegracion: string | null;
+  reintegradoPor: string | null;
+  estadoActual: EncuentroEstadoParticipacion;
+}
+
+export interface EncuentroContinuidadResultado {
+  excluidos: number;
+  registros: EncuentroNoContinuidad[];
 }
 
 export interface EncuentroParticipante {
@@ -74,10 +113,13 @@ export interface EncuentroParticipante {
 export interface EncuentroDashboard {
   ciclo: EncuentroCiclo;
   inscritos: number;
+  activos: number;
+  noContinuaron: number;
   conAsistencia: number;
   completos: number;
   pendientes: number;
   clases: { claseId: number; nombre: string; fecha: string; presentes: number; inscritos: number; ausentes: number; estado: EncuentroEstadoClase }[];
   participantes: EncuentroParticipante[];
   graduados: EncuentroParticipante[];
+  historialNoContinuaron: EncuentroNoContinuidad[];
 }

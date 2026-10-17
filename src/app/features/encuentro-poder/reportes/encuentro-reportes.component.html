@@ -22,6 +22,7 @@
       @if (accionError()) { <button type="button" (click)="recargar()">Reintentar</button> }
     </div>
   }
+  @if (mensaje()) { <div class="success-message" role="status">{{ mensaje() }}</div> }
 
   @if (cargando() || cargandoCiclos()) {
     <div class="loading" aria-live="polite">Preparando resultados del ciclo...</div>
@@ -39,7 +40,9 @@
       </div>
 
       <div class="metrics">
-        <article class="metric primary"><span>Inscritos</span><strong>{{ data.inscritos }}</strong></article>
+        <article class="metric primary"><span>Inscritos históricos</span><strong>{{ data.inscritos }}</strong></article>
+        <article class="metric"><span>Activos</span><strong>{{ data.activos }}</strong></article>
+        <article class="metric danger"><span>No continuaron</span><strong>{{ data.noContinuaron }}</strong></article>
         <article class="metric"><span>Con asistencia</span><strong>{{ data.conAsistencia }}</strong></article>
         <article class="metric success"><span>Graduados</span><strong>{{ data.graduados.length }}</strong></article>
         <article class="metric"><span>En proceso</span><strong>{{ enProceso().length }}</strong></article>
@@ -90,8 +93,8 @@
         <div class="risk-intro">
           <span class="risk-count">{{ noCumplen().length }}</span>
           <div>
-            <h3>Ya no cumplen el requisito</h3>
-            <p>Personas ausentes en una o más clases obligatorias finalizadas.</p>
+             <h3>Activos que no cumplen el requisito</h3>
+             <p>Participantes activos ausentes en una o más clases obligatorias finalizadas.</p>
           </div>
         </div>
         @if (noCumplen().length) {
@@ -186,6 +189,47 @@
           } @else { <p class="empty">Todas las personas inscritas cumplen la graduación.</p> }
         </article>
       </div>
+    </section>
+
+    <section class="section" aria-labelledby="continuidad-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">04</p>
+          <h2 id="continuidad-title">Historial de continuidad</h2>
+          <p>Auditoría de personas excluidas después de la primera clase, incluidas las reincorporaciones.</p>
+        </div>
+      </div>
+
+      @if (data.historialNoContinuaron.length) {
+        <div class="history-panel table-wrap">
+          <table>
+            <thead><tr><th>Participante</th><th>Exclusión</th><th>Motivo</th><th>Mentor anterior</th><th>Estado</th><th>Acción</th></tr></thead>
+            <tbody>
+              @for (registro of data.historialNoContinuaron; track registro.id) {
+                <tr>
+                  <td><strong>{{ registro.persona.nombreCompleto }}</strong><small>{{ registro.persona.telefono }}</small></td>
+                  <td>{{ registro.fechaExclusion | date:'dd/MM/yyyy HH:mm' }}<small>Por {{ registro.excluidoPor || 'Sin registro' }}</small></td>
+                  <td>{{ motivoContinuidad(registro) }}</td>
+                  <td>{{ registro.mentorAnterior || 'Sin mentor' }}</td>
+                  <td>
+                    <span class="status-pill" [class.active]="registro.estadoActual === 'ACTIVO'">{{ registro.estadoActual === 'ACTIVO' ? 'Reincorporado' : 'No continúa' }}</span>
+                    @if (registro.fechaReintegracion) {<small>{{ registro.fechaReintegracion | date:'dd/MM/yyyy HH:mm' }} · {{ registro.reintegradoPor || 'Sin registro' }}</small>}
+                  </td>
+                  <td>
+                    @if (registro.estadoActual === 'NO_CONTINUA' && !registro.fechaReintegracion) {
+                      <button class="reinstate-button" type="button" (click)="reintegrar(registro)" [disabled]="reintegrando() !== null">
+                        {{ reintegrando() === registro.inscripcionId ? 'Reincorporando...' : 'Reincorporar' }}
+                      </button>
+                    } @else { <span class="muted-action">Sin acción pendiente</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="empty history-empty">No hay exclusiones registradas para este ciclo.</p>
+      }
     </section>
   } @else if (!error() && !ciclos().length) {
     <div class="empty-page">No hay ciclos disponibles para generar reportes.</div>

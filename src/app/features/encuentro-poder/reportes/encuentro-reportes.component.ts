@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,6 +7,7 @@ import {
   EncuentroCiclo,
   EncuentroDashboard,
   EncuentroParticipante,
+  EncuentroNoContinuidad,
   EncuentroTipoReporte,
 } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
@@ -14,6 +15,7 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 @Component({
   selector: 'app-encuentro-reportes',
   standalone: true,
+  imports: [DatePipe],
   templateUrl: './encuentro-reportes.component.html',
   styleUrl: './encuentro-reportes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +35,8 @@ export class EncuentroReportesComponent {
   readonly exportando = signal<EncuentroTipoReporte | null>(null);
   readonly error = signal('');
   readonly accionError = signal<'CICLOS' | 'DASHBOARD' | null>(null);
+  readonly reintegrando = signal<number | null>(null);
+  readonly mensaje = signal('');
 
   readonly clasesObligatorias = computed(() => {
     const data = this.dashboard();
@@ -84,6 +88,7 @@ export class EncuentroReportesComponent {
     this.exportSequence++;
     this.exportando.set(null);
     this.cicloSeleccionado.set(cicloId);
+    this.mensaje.set('');
     this.cargarDashboard(cicloId);
   }
 
@@ -138,6 +143,35 @@ export class EncuentroReportesComponent {
   situacion(participante: EncuentroParticipante): 'GRADUADO' | 'NO CUMPLE' | 'EN PROCESO' {
     if (participante.estado === 'COMPLETO') return 'GRADUADO';
     return this.clasesAusentesFinalizadas(participante).length ? 'NO CUMPLE' : 'EN PROCESO';
+  }
+
+  motivoContinuidad(registro: EncuentroNoContinuidad): string {
+    return registro.motivo === 'INASISTENCIA_CLASE_1' ? 'Inasistencia a Clase 1' : registro.motivo;
+  }
+
+  reintegrar(registro: EncuentroNoContinuidad): void {
+    const cicloId = this.cicloSeleccionado();
+    if (!cicloId || this.reintegrando() !== null || registro.estadoActual !== 'NO_CONTINUA') return;
+    this.reintegrando.set(registro.inscripcionId);
+    this.error.set('');
+    this.mensaje.set('');
+    this.service.reintegrar(registro.inscripcionId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (this.reintegrando() === registro.inscripcionId) this.reintegrando.set(null);
+      }),
+    ).subscribe({
+      next: () => {
+        if (this.cicloSeleccionado() !== cicloId) return;
+        this.mensaje.set(`${registro.persona.nombreCompleto} se reincorporó sin asignación de mentor.`);
+        this.cargarDashboard(cicloId);
+      },
+      error: error => {
+        if (this.cicloSeleccionado() === cicloId) {
+          this.error.set(this.mensajeError(error, 'No fue posible reincorporar a la persona.'));
+        }
+      },
+    });
   }
 
   private cargarCiclos(): void {

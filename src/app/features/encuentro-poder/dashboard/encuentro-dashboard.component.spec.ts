@@ -26,6 +26,8 @@ function dashboard(): EncuentroDashboard {
   return {
     ciclo,
     inscritos: 1,
+    activos: 1,
+    noContinuaron: 0,
     conAsistencia: 0,
     completos: 0,
     pendientes: 1,
@@ -47,6 +49,7 @@ function dashboard(): EncuentroDashboard {
       asistencias: [],
     }],
     graduados: [],
+    historialNoContinuaron: [],
   };
 }
 
@@ -59,6 +62,7 @@ describe('EncuentroDashboardComponent', () => {
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
       'ciclos', 'dashboard', 'registrarAsistencia', 'historial', 'exportar', 'importar',
+      'previewContinuidad', 'confirmarContinuidad',
     ]);
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.callFake(() => of(dashboard()));
@@ -244,5 +248,39 @@ describe('EncuentroDashboardComponent', () => {
 
     component.marcar(component.dashboard()!.participantes[0]);
     expect(service.registrarAsistencia).not.toHaveBeenCalled();
+  });
+
+  it('previsualiza y confirma continuidad con el token exacto', () => {
+    component.cicloSeleccionado.set(1);
+    component.cargar();
+    const preview = {
+      cicloId: 1,
+      claseId: 11,
+      claseNombre: 'Clase 1',
+      disponible: true,
+      procesada: false,
+      procesadaEn: null,
+      previewToken: 'token-preview',
+      candidatos: [{
+        inscripcionId: 41,
+        persona: { id: 21, nombreCompleto: 'Persona Prueba', telefono: '+56912345678' },
+        mentorId: 9,
+        mentorNombre: 'Mentor Prueba',
+      }],
+    };
+    service.previewContinuidad.and.returnValue(of(preview));
+    service.confirmarContinuidad.and.returnValue(of({ excluidos: 1, registros: [] }));
+    component.previsualizarContinuidad();
+    fixture.detectChanges();
+
+    expect(component.continuidad()).toEqual(preview);
+    expect(fixture.nativeElement.textContent).toContain('Mentor Prueba');
+    const cargasMentoria = mentoriaService.asignaciones.calls.count();
+    component.confirmarContinuidad();
+
+    expect(service.confirmarContinuidad).toHaveBeenCalledOnceWith(1, 'token-preview');
+    expect(component.continuidad()).toBeNull();
+    expect(component.mensajeContinuidad()).toContain('1 persona no continúa');
+    expect(mentoriaService.asignaciones.calls.count()).toBe(cargasMentoria + 1);
   });
 });

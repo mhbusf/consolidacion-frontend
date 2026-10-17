@@ -52,7 +52,9 @@ const inProgress = {
 function dashboard(): EncuentroDashboard {
   return {
     ciclo,
-    inscritos: 3,
+    inscritos: 4,
+    activos: 3,
+    noContinuaron: 1,
     conAsistencia: 2,
     completos: 1,
     pendientes: 2,
@@ -67,6 +69,18 @@ function dashboard(): EncuentroDashboard {
     })),
     participantes: [graduate, failed, inProgress],
     graduados: [graduate],
+    historialNoContinuaron: [{
+      id: 50,
+      inscripcionId: 40,
+      persona: { id: 4, nombreCompleto: 'Persona No Continúa', telefono: '56944444444', comuna: 'Renca' },
+      motivo: 'INASISTENCIA_CLASE_1',
+      fechaExclusion: '2026-10-02T10:30:00',
+      excluidoPor: 'Super Admin',
+      mentorAnterior: 'Mentor Anterior',
+      fechaReintegracion: null,
+      reintegradoPor: null,
+      estadoActual: 'NO_CONTINUA',
+    }],
   };
 }
 
@@ -78,10 +92,12 @@ describe('EncuentroReportesComponent', () => {
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
       'ciclos', 'dashboard', 'exportarReporte',
+      'reintegrar',
     ]);
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.returnValue(of(dashboard()));
     service.exportarReporte.and.returnValue(of(new Blob()));
+    service.reintegrar.and.returnValue(of(dashboard().historialNoContinuaron[0]));
 
     await TestBed.configureTestingModule({
       imports: [EncuentroReportesComponent],
@@ -102,6 +118,8 @@ describe('EncuentroReportesComponent', () => {
     expect(text).toContain('Persona Ausente');
     expect(text).toContain('Clase 1');
     expect(text).toContain('Persona Graduada');
+    expect(text).toContain('Persona No Continúa');
+    expect(text).toContain('Mentor Anterior');
     expect(component.noCumplen().map(persona => persona.persona.id)).toEqual([2]);
     expect(component.enProceso().map(persona => persona.persona.id)).toEqual([3]);
     expect(component.seguimientoPorClase().map(item => ({
@@ -154,5 +172,15 @@ describe('EncuentroReportesComponent', () => {
 
     expect(component.error()).toBe('');
     expect(component.exportando()).toBeNull();
+  });
+
+  it('reincorpora por inscripción y recarga el dashboard', () => {
+    const registro = component.dashboard()!.historialNoContinuaron[0];
+
+    component.reintegrar(registro);
+
+    expect(service.reintegrar).toHaveBeenCalledOnceWith(40);
+    expect(service.dashboard).toHaveBeenCalledTimes(2);
+    expect(component.mensaje()).toContain('Persona No Continúa se reincorporó');
   });
 });

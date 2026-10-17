@@ -6,6 +6,7 @@ import {
   EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard, EncuentroInscripcion,
   EncuentroParticipante, EncuentroPersona, EncuentroAsistenciaPublica, EncuentroImportacion,
   EncuentroTipoReporte,
+  EncuentroContinuidadPreview, EncuentroContinuidadResultado, EncuentroNoContinuidad,
 } from '../models/encuentro-poder.model';
 
 @Injectable({ providedIn: 'root' })
@@ -36,5 +37,9 @@ export class EncuentroPoderService {
   exportar(cicloId: number): Observable<Blob> { return this.http.get(`${this.api}/ciclos/${cicloId}/exportar`, { responseType: 'blob' }); }
   exportarReporte(cicloId: number, tipo: EncuentroTipoReporte): Observable<Blob> { return this.http.get(`${this.api}/ciclos/${cicloId}/reportes/${tipo}`, { responseType: 'blob' }); }
   importar(cicloId: number, archivo: File): Observable<EncuentroImportacion> { const body = new FormData(); body.append('archivo', archivo); return this.http.post<EncuentroImportacion>(`${this.api}/ciclos/${cicloId}/importar`, body); }
+  previewContinuidad(cicloId: number): Observable<EncuentroContinuidadPreview> { return this.http.get<EncuentroContinuidadPreview>(`${this.api}/ciclos/${cicloId}/continuidad-clase-1/preview`); }
+  confirmarContinuidad(cicloId: number, previewToken: string): Observable<EncuentroContinuidadResultado> { return this.http.post<EncuentroContinuidadResultado>(`${this.api}/ciclos/${cicloId}/continuidad-clase-1/confirmar`, { previewToken }); }
+  historialNoContinuaron(cicloId: number): Observable<EncuentroNoContinuidad[]> { return this.http.get<EncuentroNoContinuidad[]>(`${this.api}/ciclos/${cicloId}/no-continuaron`); }
+  reintegrar(inscripcionId: number): Observable<EncuentroNoContinuidad> { return this.http.put<EncuentroNoContinuidad>(`${this.api}/inscripciones/${inscripcionId}/reintegrar`, null); }
   urlExportacion(cicloId: number): string { return `${this.api}/ciclos/${cicloId}/exportar`; }
 }
