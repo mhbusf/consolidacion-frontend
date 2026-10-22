@@ -39,6 +39,10 @@ export interface EncuentroInscripcion {
   estadoParticipacion: EncuentroEstadoParticipacion;
 }
 
+export interface EncuentroInscripcionPublica {
+  cicloNombre: string;
+}
+
 export interface EncuentroAsistencia {
   id: number;
   personaId: number;

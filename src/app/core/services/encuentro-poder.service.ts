@@ -7,6 +7,7 @@ import {
   EncuentroParticipante, EncuentroPersona, EncuentroAsistenciaPublica, EncuentroImportacion,
   EncuentroTipoReporte,
   EncuentroContinuidadPreview, EncuentroContinuidadResultado, EncuentroNoContinuidad,
+  EncuentroInscripcionPublica,
 } from '../models/encuentro-poder.model';
 
 @Injectable({ providedIn: 'root' })
@@ -31,6 +32,7 @@ export class EncuentroPoderService {
   registrarAsistencia(personaId: number, claseId: number): Observable<EncuentroAsistencia> { return this.http.post<EncuentroAsistencia>(`${this.api}/asistencias`, { personaId, claseId }); }
   crearCiclo(request: { nombre: string; fechaInicio: string; clase0?: string; clase1: string; clase2: string; clase3: string }): Observable<EncuentroCiclo> { return this.http.post<EncuentroCiclo>(`${this.api}/ciclos`, request).pipe(tap(() => this.ciclosCache$ = undefined)); }
   cerrarCiclo(id: number): Observable<void> { return this.http.put<void>(`${this.api}/ciclos/${id}/cerrar`, null).pipe(tap(() => this.ciclosCache$ = undefined)); }
+  infoInscripcion(token: string): Observable<EncuentroInscripcionPublica> { return this.http.get<EncuentroInscripcionPublica>(`${this.publicApi}/${token}`); }
   inscribir(token: string, request: { nombreCompleto: string; telefono: string; comuna?: string; invitadoPor?: string; tiempoCatedral?: string }): Observable<EncuentroInscripcion> { return this.http.post<EncuentroInscripcion>(`${this.publicApi}/${token}/inscripciones`, request); }
   infoAsistencia(token: string): Observable<EncuentroAsistenciaPublica> { return this.http.get<EncuentroAsistenciaPublica>(`${this.publicApi}/asistencia/${token}`); }
   autoAsistencia(token: string, request: { nombreCompleto: string; telefono: string }): Observable<EncuentroAsistencia> { return this.http.post<EncuentroAsistencia>(`${this.publicApi}/asistencia/${token}`, request); }
