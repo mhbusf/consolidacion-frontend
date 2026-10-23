@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ComunaService } from '../../../core/services/comuna.service';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroPublicComponent } from './encuentro-public.component';
@@ -20,7 +20,10 @@ describe('EncuentroPublicComponent', () => {
       providers: [
         { provide: EncuentroPoderService, useValue: service },
         { provide: ComunaService, useValue: comunaService },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ token: 'ciclo-token' }) } } },
+        { provide: ActivatedRoute, useValue: { snapshot: {
+          paramMap: convertToParamMap({ token: 'ciclo-token' }),
+          queryParamMap: convertToParamMap({ ciclo: 'Octubre 2026' }),
+        } } },
       ],
     }).compileComponents();
 
@@ -32,5 +35,25 @@ describe('EncuentroPublicComponent', () => {
     expect(service.infoInscripcion).toHaveBeenCalledOnceWith('ciclo-token');
     const titulo = fixture.nativeElement.querySelector('h1').textContent.replace(/\s+/g, ' ');
     expect(titulo).toContain('Inscripción · Octubre 2026');
+  });
+
+  it('usa el ciclo del enlace y permite inscribirse si el backend todavía no puede informarlo', () => {
+    fixture.destroy();
+    service.infoInscripcion.and.returnValue(throwError(() => ({ status: 500 })));
+    fixture = TestBed.createComponent(EncuentroPublicComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.form.setValue({
+      nombreCompleto: 'Persona Prueba',
+      telefono: '56912345678',
+      comuna: '',
+      invitadoPor: '',
+      tiempoCatedral: '',
+    });
+    fixture.detectChanges();
+
+    const titulo = fixture.nativeElement.querySelector('h1').textContent.replace(/\s+/g, ' ');
+    expect(titulo).toContain('Inscripción · Octubre 2026');
+    expect(fixture.nativeElement.querySelector('.warning')).toBeNull();
+    expect(fixture.nativeElement.querySelector('button').disabled).toBeFalse();
   });
 });

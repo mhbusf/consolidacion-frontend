@@ -21,14 +21,14 @@ import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-ch
       <label>Comuna<select formControlName="comuna"><option value="">{{ cargandoComunas() ? 'Cargando comunas...' : 'Selecciona una comuna' }}</option>@for (grupo of comunasPorProvincia(); track grupo.provincia) {<optgroup [label]="grupo.provincia">@for (comuna of grupo.comunas; track comuna.id) {<option [value]="comuna.nombre">{{ comuna.nombre }}</option>}</optgroup>}</select></label>
       <label>Invitado por / servidor de GDC<input formControlName="invitadoPor"></label>
       <label>Tiempo en Catedral<input formControlName="tiempoCatedral"></label>
-      <button [disabled]="form.invalid || enviando() || cargandoCiclo() || !!errorCiclo()">{{ enviando() ? 'Enviando...' : 'Inscribirme' }}</button>
+      <button [disabled]="form.invalid || enviando() || (cargandoCiclo() && !cicloNombre())">{{ enviando() ? 'Enviando...' : 'Inscribirme' }}</button>
     </form>
     @if (mensaje()) { <div class="success">{{ mensaje() }}</div> }
-    @if (errorCiclo()) { <div class="error">{{ errorCiclo() }}</div> }
+    @if (errorCiclo()) { <div class="warning" role="status">{{ errorCiclo() }}</div> }
     @if (errorComunas()) { <div class="error">{{ errorComunas() }}</div> }
     @if (errorEnvio()) { <div class="error">{{ errorEnvio() }}</div> }
   </section></main>`,
-  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0}h1 span{color:#8fb7ff}.eyebrow{color:#8fb7ff;font-weight:700}.cycle-state,.muted{color:#aab7ca}.cycle-state{margin:8px 0}.muted{margin-top:10px}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input,select{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}select:disabled{opacity:.6}.field-error{color:#fca5a5;font-weight:500}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.error{background:#642c35}`],
+  styles: [`:host{display:block;min-height:100vh;background:#101827;color:#f8fafc}.public-page{padding:32px 16px}.card{max-width:520px;margin:auto;background:#182337;border:1px solid #334155;border-radius:18px;padding:32px;box-shadow:0 18px 50px #0004}h1{font-size:34px;margin:8px 0;color:#f8fafc}h1 span{color:#8fb7ff}.eyebrow{color:#8fb7ff;font-weight:700}.cycle-state,.muted{color:#aab7ca}.cycle-state{margin:8px 0}.muted{margin-top:10px}label{display:grid;gap:7px;margin:18px 0;color:#dbe5f2;font-weight:600}input,select{box-sizing:border-box;width:100%;padding:12px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;font:inherit}select:disabled{opacity:.6}.field-error{color:#fca5a5;font-weight:500}button{width:100%;padding:13px;border:0;border-radius:9px;background:#4f8cff;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.55}.success,.warning,.error{margin-top:18px;padding:14px;border-radius:9px}.success{background:#164e3b}.warning{background:#4a3515;color:#fde68a}.error{background:#642c35}`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EncuentroPublicComponent implements OnInit {
@@ -43,7 +43,7 @@ export class EncuentroPublicComponent implements OnInit {
   readonly cargandoComunas = signal(true);
   readonly cargandoCiclo = signal(true);
   readonly enviando = signal(false);
-  readonly cicloNombre = signal('');
+  readonly cicloNombre = signal(this.route.snapshot.queryParamMap.get('ciclo')?.trim() ?? '');
   readonly mensaje = signal('');
   readonly errorCiclo = signal('');
   readonly errorComunas = signal('');
@@ -55,7 +55,11 @@ export class EncuentroPublicComponent implements OnInit {
       finalize(() => this.cargandoCiclo.set(false)),
     ).subscribe({
       next: info => this.cicloNombre.set(info.cicloNombre),
-      error: error => this.errorCiclo.set(error.error?.message ?? 'No fue posible identificar el ciclo de inscripción.'),
+      error: () => {
+        if (!this.cicloNombre()) {
+          this.errorCiclo.set('No fue posible mostrar el nombre del ciclo, pero puedes continuar con la inscripción.');
+        }
+      },
     });
     this.comunaService.listarTodas().pipe(
       takeUntilDestroyed(this.destroyRef),

@@ -388,7 +388,9 @@ export class EncuentroDashboardComponent implements OnInit {
   async copiarEnlace(): Promise<void> {
     const ciclo = this.ciclos().find(item => item.id === this.cicloSeleccionado());
     if (!ciclo) return;
-    await this.copiarUrl(`${window.location.origin}/inscripcion-encuentro/${ciclo.publicToken}`, 'Enlace de inscripción copiado al portapapeles.');
+    const url = new URL(`/inscripcion-encuentro/${ciclo.publicToken}`, window.location.origin);
+    url.searchParams.set('ciclo', ciclo.nombre);
+    await this.copiarUrl(url.toString(), 'Enlace de inscripción copiado al portapapeles.');
   }
 
   async copiarEnlaceAsistencia(clases: EncuentroCiclo['clases'], claseId: number): Promise<void> {
