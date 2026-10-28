@@ -67,9 +67,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
             <div class="class-row">
               <span>{{ clase.nombre }}<small>{{ clase.fecha | date:'dd/MM/yyyy' }}</small></span>
               <span class="class-count"><strong>{{ clase.presentes }} / {{ clase.inscritos }} ({{ porcentaje(clase.presentes, clase.inscritos) }}%)</strong><small class="lifecycle" [class.finalized]="clase.estado === 'FINALIZADA'" [class.current]="clase.estado === 'EN_CURSO'">{{ etiquetaEstadoClase(clase.estado) }}@if (clase.estado === 'FINALIZADA' && esClaseObligatoria(data.ciclo.clases, clase.claseId)) { · {{ clase.ausentes }} ausente{{ clase.ausentes === 1 ? '' : 's' }}}</small></span>
-              @if (esClaseObligatoria(data.ciclo.clases, clase.claseId)) {
-                <span><button class="link" (click)="copiarEnlaceAsistencia(data.ciclo.clases, clase.claseId)">Copiar enlace de asistencia</button> · <button class="link" (click)="generarQr(data.ciclo.clases, clase.claseId)" [disabled]="generandoQr() === clase.claseId">{{ generandoQr() === clase.claseId ? 'Generando...' : 'Generar QR' }}</button></span>
-              }
+              <span><button class="link" (click)="copiarEnlaceAsistencia(data.ciclo.clases, clase.claseId)">Copiar enlace de asistencia</button> · <button class="link" (click)="generarQr(data.ciclo.clases, clase.claseId)" [disabled]="generandoQr() === clase.claseId">{{ generandoQr() === clase.claseId ? 'Generando...' : 'Generar QR' }}</button></span>
               <div class="bar"><i [style.width.%]="porcentaje(clase.presentes, clase.inscritos)"></i></div>
             </div>
           }
@@ -80,7 +78,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
           <label>Clase
             <select [ngModel]="claseSeleccionada()" (ngModelChange)="seleccionarClase($event)">
               <option [ngValue]="null">Selecciona una clase</option>
-              @for (clase of data.ciclo.clases; track clase.id) { @if (clase.obligatoria) {<option [ngValue]="clase.id">{{ clase.nombre }}</option>} }
+              @for (clase of data.ciclo.clases; track clase.id) {<option [ngValue]="clase.id">{{ clase.nombre }}{{ clase.obligatoria ? '' : ' · No obligatoria' }}</option>}
             </select>
           </label>
           @if (claseSeleccionada(); as claseId) {
@@ -108,7 +106,7 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
         <h2>Graduados del ciclo ({{ data.graduados.length }})</h2>
         @if (data.graduados.length) {
           <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Clases completadas</th><th>Comuna</th><th></th></tr></thead><tbody>
-            @for (participante of data.graduados; track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td>{{ participante.persona.comuna || '—' }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
+            @for (participante of data.graduados; track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / {{ totalClasesObligatorias() }}</td><td>{{ participante.persona.comuna || '—' }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
           </tbody></table></div>
         } @else {<p class="muted">Todavía no hay personas graduadas en este ciclo.</p>}
       </section>
@@ -117,10 +115,10 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
         <h2>Pendientes de graduación ({{ participantesPendientes().length }})</h2>
         @if (participantesPendientes().length) {
           <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Progreso</th><th>Clases que faltan</th><th></th></tr></thead><tbody>
-            @for (participante of pendientesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / 3</td><td class="missing-classes"><strong>{{ participante.clasesFaltantes.length }}</strong> · {{ participante.clasesFaltantes.join(', ') }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
+            @for (participante of pendientesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / {{ totalClasesObligatorias() }}</td><td class="missing-classes"><strong>{{ participante.clasesFaltantes.length }}</strong> · {{ participante.clasesFaltantes.join(', ') }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
           </tbody></table></div>
           @if (totalPaginas() > 1) {<div><button class="button secondary" [disabled]="paginaEstado() === 0" (click)="cambiarPagina(-1)">Anterior</button> Página {{ paginaEstado() + 1 }} de {{ totalPaginas() }} <button class="button secondary" [disabled]="paginaEstado() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button></div>}
-        } @else {<p class="muted">Todas las personas inscritas completaron las tres clases.</p>}
+        } @else {<p class="muted">Todas las personas inscritas completaron las clases obligatorias.</p>}
       </section>
 
       @if (historial(); as detalle) {<div class="modal-backdrop" (click)="cerrarHistorial()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarHistorial()">×</button><h2>{{ detalle.persona.nombreCompleto }}</h2><p>{{ detalle.persona.telefono }} · {{ detalle.persona.comuna || 'Sin comuna' }}</p><h3>{{ detalle.estado }}</h3>@for (asistencia of detalle.asistencias; track asistencia.id) {<div class="history-row"><span>{{ asistencia.clase }}</span><span>{{ asistencia.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span></div>} @if (!detalle.asistencias.length) {<p>No registra asistencias.</p>}</article></div>}
@@ -189,6 +187,7 @@ export class EncuentroDashboardComponent implements OnInit {
     const claseId = this.claseSeleccionada();
     return this.dashboard()?.clases.find(clase => clase.claseId === claseId)?.estado ?? null;
   });
+  readonly totalClasesObligatorias = computed(() => this.dashboard()?.ciclo.clases.filter(clase => clase.obligatoria).length ?? 0);
   readonly participantesPendientes = computed(() => (this.dashboard()?.participantes ?? [])
     .filter(participante => participante.estado === 'PENDIENTE')
     .sort((a, b) => a.clasesFaltantes.length - b.clasesFaltantes.length
@@ -258,11 +257,11 @@ export class EncuentroDashboardComponent implements OnInit {
         if (sequence !== this.dashboardSequence) return;
         if (revision !== this.dataRevision) { this.cargar(); return; }
         const claseActual = this.claseSeleccionada();
-        const obligatorias = data.ciclo.clases.filter(clase => clase.obligatoria);
-        const conservaClase = obligatorias.some(clase => clase.id === claseActual);
-        const clasePreferida = obligatorias.find(clase => clase.estado === 'EN_CURSO')
-          ?? [...obligatorias].reverse().find(clase => clase.estado === 'FINALIZADA')
-          ?? obligatorias[0];
+        const clases = data.ciclo.clases;
+        const conservaClase = clases.some(clase => clase.id === claseActual);
+        const clasePreferida = clases.find(clase => clase.estado === 'EN_CURSO')
+          ?? [...clases].reverse().find(clase => clase.estado === 'FINALIZADA')
+          ?? clases[0];
         this.dashboard.set(data);
         this.claseSeleccionada.set(conservaClase ? claseActual : clasePreferida?.id ?? null);
         const pendientes = data.participantes.filter(participante => participante.estado === 'PENDIENTE').length;
@@ -339,7 +338,7 @@ export class EncuentroDashboardComponent implements OnInit {
 
   async generarQr(clases: EncuentroCiclo['clases'], claseId: number): Promise<void> {
     const clase = clases.find(item => item.id === claseId);
-    if (!clase?.obligatoria) return;
+    if (!clase) return;
     if (!clase.publicToken) {
       this.errorAccion.set('Esta clase no tiene token QR. Ejecuta la migración 007_encuentro_poder_qr.sql en la base de datos.');
       return;
@@ -394,7 +393,7 @@ export class EncuentroDashboardComponent implements OnInit {
   }
 
   async copiarEnlaceAsistencia(clases: EncuentroCiclo['clases'], claseId: number): Promise<void> {
-    const clase = clases.find(item => item.id === claseId && item.obligatoria);
+    const clase = clases.find(item => item.id === claseId);
     if (!clase?.publicToken) {
       this.errorAccion.set('Esta clase no tiene un enlace público de asistencia.');
       return;

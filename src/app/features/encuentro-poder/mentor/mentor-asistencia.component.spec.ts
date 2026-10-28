@@ -15,7 +15,7 @@ describe('MentorAsistenciaComponent', () => {
     clases: [
       { id: 2, nombre: 'Clase disponible', orden: 1, fecha: '2020-01-01', estado: 'FINALIZADA', obligatoria: true },
       { id: 3, nombre: 'Clase futura', orden: 2, fecha: '2999-01-01', estado: 'PROGRAMADA', obligatoria: true },
-      { id: 4, nombre: 'Clase opcional', orden: 3, fecha: '2020-01-01', estado: 'FINALIZADA', obligatoria: false },
+      { id: 4, nombre: 'Clase 0 - Informativa', orden: 0, fecha: '2020-01-01', estado: 'FINALIZADA', obligatoria: false },
       { id: 5, nombre: 'Otra clase', orden: 4, fecha: '2020-01-02', estado: 'FINALIZADA', obligatoria: true },
     ],
   }];
@@ -47,7 +47,7 @@ describe('MentorAsistenciaComponent', () => {
     fixture.detectChanges();
   });
 
-  it('carga el roster y deshabilita las clases programadas o futuras', () => {
+  it('carga el roster, habilita clase 0 y deshabilita clases programadas', () => {
     fixture.componentInstance.seleccionarCiclo('7');
     fixture.componentInstance.seleccionarClase('2');
     fixture.detectChanges();
@@ -57,7 +57,10 @@ describe('MentorAsistenciaComponent', () => {
     expect(fixture.nativeElement.querySelector('a.whatsapp-link').getAttribute('href')).toContain('wa.me/56911111111');
     const options = Array.from(fixture.nativeElement.querySelectorAll('select option')) as HTMLOptionElement[];
     expect(options.find(option => option.value === '3')?.disabled).toBeTrue();
-    expect(options.find(option => option.value === '4')?.disabled).toBeTrue();
+    expect(options.find(option => option.value === '4')?.disabled).toBeFalse();
+
+    fixture.componentInstance.seleccionarClase('4');
+    expect(service.asistenciaClase).toHaveBeenCalledWith(7, 4);
   });
 
   it('evita envíos duplicados y actualiza la presencia local al guardar', () => {

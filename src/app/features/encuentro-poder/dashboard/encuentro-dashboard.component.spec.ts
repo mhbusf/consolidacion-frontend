@@ -104,6 +104,8 @@ describe('EncuentroDashboardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Persona Prueba');
     expect(fixture.nativeElement.textContent).toContain('Copiar enlace de asistencia');
     expect(fixture.nativeElement.querySelector('.attendance-actions')?.textContent).toContain('Copiar link de autoasistencia');
+    const claseOptions = Array.from(fixture.nativeElement.querySelectorAll('.panel select option')) as HTMLOptionElement[];
+    expect(claseOptions.find(option => option.textContent?.includes('Clase 0 - Informativa'))).toBeDefined();
     expect(fixture.nativeElement.textContent).toContain('1 ausente');
     expect(fixture.nativeElement.querySelector('.missing-classes')?.textContent).toContain('Clase 1');
   });
@@ -197,6 +199,28 @@ describe('EncuentroDashboardComponent', () => {
     expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.presentes).toBe(1);
     expect(component.dashboard()?.clases.find(clase => clase.claseId === 11)?.ausentes).toBe(0);
     expect(component.dashboard()?.participantes[0].clasesCompletadas).toBe(1);
+  });
+
+  it('registra clase 0 sin sumarla al progreso de graduación', () => {
+    component.cicloSeleccionado.set(1);
+    component.cargar();
+    component.seleccionarClase(10);
+    service.registrarAsistencia.and.returnValue(of({
+      id: 30,
+      personaId: 21,
+      claseId: 10,
+      clase: 'Clase 0 - Informativa',
+      metodo: 'MANUAL',
+      fechaHora: '2026-10-01T20:00:00',
+    }));
+
+    component.marcar(component.dashboard()!.participantes[0]);
+
+    expect(service.registrarAsistencia).toHaveBeenCalledOnceWith(21, 10);
+    expect(component.dashboard()?.clases.find(clase => clase.claseId === 10)?.presentes).toBe(1);
+    expect(component.dashboard()?.participantes[0].asistencias).toHaveSize(1);
+    expect(component.dashboard()?.participantes[0].clasesCompletadas).toBe(0);
+    expect(component.dashboard()?.participantes[0].estado).toBe('PENDIENTE');
   });
 
   it('conserva la clase elegida al actualizar el mismo ciclo', () => {

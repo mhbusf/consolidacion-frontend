@@ -133,7 +133,7 @@ export class MentorAsistenciaComponent implements OnInit {
   }
 
   claseHabilitada(clase: EncuentroMentorClase): boolean {
-    return clase.obligatoria && clase.estado !== 'PROGRAMADA';
+    return clase.estado !== 'PROGRAMADA';
   }
 
   limpiarBusqueda(): void {

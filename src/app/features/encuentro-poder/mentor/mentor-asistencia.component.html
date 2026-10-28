@@ -23,7 +23,7 @@
         <option value="">Selecciona una clase</option>
         @for (clase of clases(); track clase.id) {
           <option [value]="clase.id" [disabled]="!claseHabilitada(clase)">
-            {{ clase.orden }}. {{ clase.nombre }} · {{ clase.fecha }}{{ claseHabilitada(clase) ? '' : ' (no disponible)' }}
+            {{ clase.orden }}. {{ clase.nombre }} · {{ clase.fecha }}{{ clase.obligatoria ? '' : ' · No obligatoria' }}{{ claseHabilitada(clase) ? '' : ' (no disponible)' }}
           </option>
         }
       </select>
