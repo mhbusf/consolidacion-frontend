@@ -274,6 +274,36 @@ describe('EncuentroDashboardComponent', () => {
     expect(service.registrarAsistencia).not.toHaveBeenCalled();
   });
 
+  it('genera el QR como PNG con la URL pública exacta', async () => {
+    component.cicloSeleccionado.set(1);
+    component.cargar();
+
+    await component.generarQr(component.dashboard()!.ciclo.clases, 10);
+
+    expect(component.qr()?.url).toBe(`${window.location.origin}/asistencia-encuentro/c0`);
+    expect(component.qr()!.imagen.startsWith('data:image/png;base64,')).toBeTrue();
+    expect(component.qr()?.nombre).toBe('Clase 0 - Informativa');
+    expect(component.generandoQr()).toBeNull();
+  });
+
+  it('descarga el QR manteniendo el formato PNG', () => {
+    const anchor = document.createElement('a');
+    const click = spyOn(anchor, 'click');
+    spyOn(document, 'createElement').and.returnValue(anchor);
+    component.qr.set({
+      nombre: 'Clase 0 - Informativa',
+      fecha: '2026-10-01',
+      url: 'https://frontend.test/asistencia-encuentro/c0',
+      imagen: 'data:image/png;base64,qr',
+    });
+
+    component.descargarQr();
+
+    expect(anchor.href).toBe('data:image/png;base64,qr');
+    expect(anchor.download).toBe('qr-clase-0---informativa.png');
+    expect(click).toHaveBeenCalled();
+  });
+
   it('previsualiza y confirma continuidad con el token exacto', () => {
     component.cicloSeleccionado.set(1);
     component.cargar();

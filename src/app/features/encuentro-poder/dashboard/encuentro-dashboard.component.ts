@@ -349,8 +349,22 @@ export class EncuentroDashboardComponent implements OnInit {
     this.generandoQr.set(claseId);
     this.errorAccion.set('');
     try {
-      const { default: QRCode } = await import('qrcode');
-      const imagen = await QRCode.toDataURL(url, { width: 360, margin: 2 });
+      const { encode } = await import('uqr');
+      const qr = encode(url, { border: 2, ecc: 'M' });
+      const canvas = document.createElement('canvas');
+      canvas.width = 360;
+      canvas.height = 360;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas no disponible');
+      const moduleSize = Math.max(1, Math.floor(canvas.width / qr.size));
+      const offset = Math.floor((canvas.width - qr.size * moduleSize) / 2);
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = '#000';
+      qr.data.forEach((row, y) => row.forEach((dark, x) => {
+        if (dark) context.fillRect(offset + x * moduleSize, offset + y * moduleSize, moduleSize, moduleSize);
+      }));
+      const imagen = canvas.toDataURL('image/png');
       if (sequence === this.qrSequence && this.dashboard()?.ciclo.id === cicloId) this.qr.set({ nombre: clase.nombre, fecha: clase.fecha, url, imagen });
     } catch {
       if (sequence === this.qrSequence) this.errorAccion.set('No fue posible generar el código QR.');
