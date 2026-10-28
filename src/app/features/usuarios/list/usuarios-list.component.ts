@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -125,12 +126,12 @@ interface UsuarioConStats {
                           🔑 Cambiar Pass
                         </button>
                       }
-                      @if (esSuperAdmin || !tienePerfilProtegido(user.usuario)) {
+                      @if (user.usuario.enabled && (esSuperAdmin || !tienePerfilProtegido(user.usuario))) {
                         <button
                           class="btn-small btn-danger"
                           (click)="eliminarUsuario(user.usuario.username)"
-                          title="Eliminar usuario">
-                          🗑️ Eliminar
+                          title="Desactivar usuario">
+                          🗑️ Desactivar
                         </button>
                       }
                     </div>
@@ -535,17 +536,39 @@ export class UsuariosListComponent implements OnInit {
 
   eliminarUsuario(username: string): void {
     if (!this.esAdmin) return;
-    if (confirm(`¿Está seguro de eliminar al usuario ${username}?\n\nEsta acción no se puede deshacer.`)) {
+    if (confirm(`¿Está seguro de desactivar al usuario ${username}?\n\nNo podrá iniciar sesión y su historial se conservará.`)) {
       this.authService.deleteUser(username).subscribe({
-        next: () => {
-          this.notificationService.success('Usuario eliminado correctamente');
+        next: (message) => {
+          this.notificationService.success(message || 'Usuario desactivado correctamente');
           this.cargarDatos();
         },
-        error: (error) => {
-          this.notificationService.error('Error al eliminar usuario');
+        error: (error: unknown) => {
+          this.notificationService.error(this.deleteErrorMessage(error));
         }
       });
     }
+  }
+
+  private deleteErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) return 'No fue posible desactivar el usuario';
+    if (error.status === 0) return 'No fue posible conectar con el servidor';
+    if (error.status === 504) return 'El servidor tardó demasiado en responder. Inténtalo nuevamente.';
+
+    if (error.error && typeof error.error === 'object' && typeof error.error.message === 'string') {
+      return error.error.message;
+    }
+    if (typeof error.error === 'string') {
+      try {
+        const body: unknown = JSON.parse(error.error);
+        if (body && typeof body === 'object' && 'message' in body
+          && typeof (body as { message?: unknown }).message === 'string') {
+          return (body as { message: string }).message;
+        }
+      } catch {
+        // Las respuestas HTML del proxy no son mensajes aptos para mostrar al usuario.
+      }
+    }
+    return 'No fue posible desactivar el usuario';
   }
 
   private userRoleNames(user: User): RoleName[] {

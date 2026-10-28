@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -10,6 +11,7 @@ import { RoleName, User } from '../../../core/models/auth.model';
 describe('UsuariosListComponent permisos', () => {
   let fixture: ComponentFixture<UsuariosListComponent>;
   let auth: jasmine.SpyObj<AuthService>;
+  let notification: jasmine.SpyObj<NotificationService>;
 
   beforeEach(async () => {
     auth = jasmine.createSpyObj<AuthService>('AuthService', [
@@ -26,13 +28,14 @@ describe('UsuariosListComponent permisos', () => {
     }]));
     const consolidado = jasmine.createSpyObj<ConsolidadoService>('ConsolidadoService', ['obtenerTodos']);
     consolidado.obtenerTodos.and.returnValue(of([]));
+    notification = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'warning', 'error']);
 
     await TestBed.configureTestingModule({
       imports: [UsuariosListComponent],
       providers: [
         { provide: AuthService, useValue: auth },
         { provide: ConsolidadoService, useValue: consolidado },
-        { provide: NotificationService, useValue: jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'warning', 'error']) },
+        { provide: NotificationService, useValue: notification },
         { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate']) },
       ],
     }).compileComponents();
@@ -62,5 +65,28 @@ describe('UsuariosListComponent permisos', () => {
     expect(auth.updateRoles).toHaveBeenCalledOnceWith('usuario', [
       RoleName.USER, RoleName.ADMIN, RoleName.MENTOR, RoleName.SUPER_ADMIN,
     ]);
+  });
+
+  it('muestra el mensaje descriptivo del backend al fallar la desactivación', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    auth.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: '{"message":"No puedes desactivar tu propia cuenta"}',
+    })));
+
+    fixture.componentInstance.eliminarUsuario('usuario');
+
+    expect(notification.error).toHaveBeenCalledOnceWith('No puedes desactivar tu propia cuenta');
+  });
+
+  it('explica un timeout del servidor al desactivar', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    auth.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+
+    fixture.componentInstance.eliminarUsuario('usuario');
+
+    expect(notification.error).toHaveBeenCalledOnceWith(
+      'El servidor tardó demasiado en responder. Inténtalo nuevamente.',
+    );
   });
 });
