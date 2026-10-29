@@ -7,11 +7,12 @@ import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { User } from '../../../core/models/auth.model';
+import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
 @Component({
   selector: 'app-consolidados-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, WhatsAppUrlPipe],
   template: `
     <div class="container">
       <div class="header">
@@ -233,6 +234,16 @@ import { User } from '../../../core/models/auth.model';
                     <td data-label="Acciones" class="actions-cell">
                       <div class="row-actions">
                         <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
+                        @if (!vistaHistorico && (c.telefono | whatsappUrl); as whatsappUrl) {
+                          <a
+                            class="btn-whatsapp"
+                            [href]="whatsappUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            [attr.aria-label]="'Abrir WhatsApp con ' + c.nombre">
+                            WhatsApp
+                          </a>
+                        }
                         @if (isAdmin && !vistaHistorico && !c.usuarioAsignado) {
                           <button class="btn-success" (click)="asignar(c.id)">Asignar</button>
                         }
@@ -540,7 +551,10 @@ import { User } from '../../../core/models/auth.model';
       align-items: center;
     }
 
-    .btn-primary, .btn-secondary, .btn-success, .btn-info {
+    .btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 10px 16px;
       border: none;
       border-radius: 14px;
@@ -548,6 +562,7 @@ import { User } from '../../../core/models/auth.model';
       font-size: 14px;
       transition: opacity 0.2s;
       font-weight: 900;
+      text-decoration: none;
     }
 
     .btn-primary {
@@ -570,7 +585,12 @@ import { User } from '../../../core/models/auth.model';
       color: white;
     }
 
-    button:hover {
+    .btn-whatsapp {
+      background: #16a34a;
+      color: white;
+    }
+
+    button:hover, .btn-whatsapp:hover {
       opacity: 0.9;
     }
 
@@ -727,9 +747,11 @@ import { User } from '../../../core/models/auth.model';
         gap: 8px;
       }
 
-      .row-actions button {
+      .row-actions button,
+      .row-actions a {
         width: 100%;
         min-height: 44px;
+        box-sizing: border-box;
       }
     }
 
