@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, timeout } from 'rxjs';
 import { Dashboard, ConsolidadoGDCHistorico } from '../models/consolidado.model';
 import { environment } from '../../../environments/environment';
 import { CafeConJesusResponse } from './cafe-con-jesus.service';
@@ -28,13 +28,16 @@ export interface ConsolidadorResumen {
   providedIn: 'root',
 })
 export class DashboardService {
+  private static readonly REQUEST_TIMEOUT_MS = 15_000;
   private apiUrl = `${environment.apiUrl}/dashboard`;
   private historicoUrl = `${environment.apiUrl}/consolidados/historico`;
 
   constructor(private http: HttpClient) {}
 
   getDashboard(): Observable<Dashboard> {
-    return this.http.get<Dashboard>(this.apiUrl);
+    return this.http.get<Dashboard>(this.apiUrl).pipe(
+      timeout({ first: DashboardService.REQUEST_TIMEOUT_MS }),
+    );
   }
 
   getHistorico(): Observable<ConsolidadoGDCHistorico[]> {
@@ -42,6 +45,8 @@ export class DashboardService {
   }
 
   getResumenConsolidador(username: string): Observable<ConsolidadorResumen> {
-    return this.http.get<ConsolidadorResumen>(`${this.apiUrl}/consolidador/${encodeURIComponent(username)}`);
+    return this.http.get<ConsolidadorResumen>(`${this.apiUrl}/consolidador/${encodeURIComponent(username)}`).pipe(
+      timeout({ first: DashboardService.REQUEST_TIMEOUT_MS }),
+    );
   }
 }

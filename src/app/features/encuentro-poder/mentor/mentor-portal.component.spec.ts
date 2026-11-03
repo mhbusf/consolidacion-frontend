@@ -102,4 +102,19 @@ describe('MentorPortalComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('La lista de participantes sigue disponible');
     expect(fixture.nativeElement.textContent).not.toContain('No pudimos cargar la información');
   });
+
+  it('descarta participantes que no pertenecen al ciclo indicado por el resumen', () => {
+    const actual = fixture.componentInstance.participantes()[0];
+    service.misParticipantes.and.returnValue(of([
+      actual,
+      { ...actual, inscripcionId: 50, cicloId: 3, cicloNombre: 'Noviembre 2026', nombreCompleto: 'Persona futura' },
+    ]));
+
+    fixture.componentInstance.cargar();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.participantes().map(item => item.inscripcionId)).toEqual([42]);
+    expect(fixture.nativeElement.textContent).not.toContain('Persona futura');
+    expect(fixture.nativeElement.textContent).not.toContain('Noviembre 2026');
+  });
 });

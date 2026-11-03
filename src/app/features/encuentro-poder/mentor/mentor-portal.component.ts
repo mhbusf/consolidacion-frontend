@@ -79,7 +79,11 @@ export class MentorPortalComponent implements OnInit {
       finalize(() => this.cargando.set(false)),
     ).subscribe({
       next: ({ participantes, resumen }) => {
-        this.participantes.set(participantes);
+        this.participantes.set(resumen
+          ? resumen.ciclo
+            ? participantes.filter(participante => participante.cicloId === resumen.ciclo?.id)
+            : []
+          : participantes);
         this.resumen.set(resumen);
       },
       error: error => this.error.set(this.mensajeError(error)),
