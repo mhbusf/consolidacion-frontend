@@ -14,7 +14,7 @@
     <section class="state error-state" role="alert">
       <h2>No pudimos cargar la información</h2>
       <p>{{ error() }}</p>
-      <button type="button" (click)="cargar()">Reintentar</button>
+      <button type="button" (click)="reintentar()">Reintentar</button>
     </section>
   } @else if (cargando()) {
     <section class="state" aria-live="polite">
@@ -22,15 +22,25 @@
       <p>Cargando participantes...</p>
     </section>
   } @else {
+    @if (ciclos().length) {
+      <section class="cycle-picker" aria-label="Selección de ciclo">
+        <label for="mentor-cycle">Ciclo a visualizar</label>
+        <select id="mentor-cycle" [ngModel]="cicloId()" (ngModelChange)="seleccionarCiclo($event)">
+          @for (ciclo of ciclos(); track ciclo.id) {
+            <option [ngValue]="ciclo.id">{{ ciclo.nombre }} · {{ ciclo.estado === 'ABIERTO' ? 'Abierto' : 'Cerrado' }}</option>
+          }
+        </select>
+      </section>
+    }
     @if (resumen(); as metricas) {
-      <section class="summary" aria-label="Resumen del ciclo abierto">
+      <section class="summary" aria-label="Resumen del ciclo seleccionado">
         <div class="summary-heading">
           <div>
-            <p class="eyebrow">Ciclo abierto</p>
-            <h2>{{ metricas.ciclo?.nombre || 'Sin ciclo abierto' }}</h2>
+            <p class="eyebrow">Ciclo seleccionado</p>
+            <h2>{{ metricas.ciclo?.nombre || 'Sin ciclo seleccionado' }}</h2>
           </div>
           @if (metricas.ciclo) {
-            <span class="cycle-status">En curso</span>
+            <span class="cycle-status" [class.closed]="metricas.ciclo.estado !== 'ABIERTO'">{{ metricas.ciclo.estado === 'ABIERTO' ? 'Abierto' : 'Cerrado' }}</span>
           }
         </div>
         <div class="metrics">

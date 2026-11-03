@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
-import { EncuentroMentorParticipante, EncuentroMentorResumenPortal } from '../../../core/models/encuentro-mentoria.model';
+import { EncuentroMentorCiclo, EncuentroMentorParticipante, EncuentroMentorResumenPortal } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
@@ -20,7 +20,10 @@ import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 export class MentorPortalComponent implements OnInit {
   private readonly service = inject(EncuentroMentoriaService);
   private readonly destroyRef = inject(DestroyRef);
+  private loadSequence = 0;
 
+  readonly ciclos = signal<EncuentroMentorCiclo[]>([]);
+  readonly cicloId = signal<number | null>(null);
   readonly participantes = signal<EncuentroMentorParticipante[]>([]);
   readonly resumen = signal<EncuentroMentorResumenPortal | null>(null);
   readonly busqueda = signal('');
@@ -60,25 +63,61 @@ export class MentorPortalComponent implements OnInit {
   ).length);
 
   ngOnInit(): void {
+    this.cargarCiclos();
+  }
+
+  cargarCiclos(): void {
+    this.cargando.set(true);
+    this.error.set('');
+    this.service.ciclosAsistencia().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ciclos => {
+        this.ciclos.set(ciclos);
+        const seleccionado = ciclos.find(ciclo => ciclo.estado === 'ABIERTO') ?? ciclos[0] ?? null;
+        this.cicloId.set(seleccionado?.id ?? null);
+        if (seleccionado) this.cargar();
+        else this.cargando.set(false);
+      },
+      error: () => {
+        this.error.set('No fue posible cargar los ciclos disponibles. Intenta nuevamente.');
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  seleccionarCiclo(value: string): void {
+    const cicloId = value ? Number(value) : null;
+    if (!cicloId || cicloId === this.cicloId()) return;
+    this.cicloId.set(cicloId);
+    this.busqueda.set('');
+    this.participantes.set([]);
+    this.resumen.set(null);
     this.cargar();
+  }
+
+  reintentar(): void {
+    if (this.ciclos().length) this.cargar();
+    else this.cargarCiclos();
   }
 
   cargar(): void {
     if (this.cargando() && this.participantes().length) return;
+    const cicloId = this.cicloId();
+    const sequence = ++this.loadSequence;
     this.cargando.set(true);
     this.error.set('');
     this.errorResumen.set('');
     forkJoin({
-      participantes: this.service.misParticipantes(),
-      resumen: this.service.resumenPortal().pipe(catchError(() => {
+      participantes: this.service.misParticipantes(cicloId),
+      resumen: this.service.resumenPortal(cicloId).pipe(catchError(() => {
         this.errorResumen.set('No fue posible cargar los indicadores del ciclo.');
         return of(null);
       })),
     }).pipe(
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.cargando.set(false)),
+      finalize(() => { if (sequence === this.loadSequence) this.cargando.set(false); }),
     ).subscribe({
       next: ({ participantes, resumen }) => {
+        if (sequence !== this.loadSequence || this.cicloId() !== cicloId) return;
         this.participantes.set(resumen
           ? resumen.ciclo
             ? participantes.filter(participante => participante.cicloId === resumen.ciclo?.id)

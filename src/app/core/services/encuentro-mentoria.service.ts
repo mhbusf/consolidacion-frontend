@@ -22,14 +22,16 @@ export class EncuentroMentoriaService {
 
   constructor(private readonly http: HttpClient) {}
 
-  misParticipantes(): Observable<EncuentroMentorParticipante[]> {
-    return this.http.get<ParticipanteMentorResponse[]>(`${this.mentorApi}/participantes`).pipe(
+  misParticipantes(cicloId?: number | null): Observable<EncuentroMentorParticipante[]> {
+    const params = cicloId == null ? undefined : new HttpParams().set('cicloId', cicloId);
+    return this.http.get<ParticipanteMentorResponse[]>(`${this.mentorApi}/participantes`, { params }).pipe(
       map(participantes => participantes.map(participante => this.resumenParticipante(participante))),
     );
   }
 
-  resumenPortal(): Observable<EncuentroMentorResumenPortal> {
-    return this.http.get<EncuentroMentorResumenPortal>(`${this.mentorApi}/resumen`);
+  resumenPortal(cicloId?: number | null): Observable<EncuentroMentorResumenPortal> {
+    const params = cicloId == null ? undefined : new HttpParams().set('cicloId', cicloId);
+    return this.http.get<EncuentroMentorResumenPortal>(`${this.mentorApi}/resumen`, { params });
   }
 
   participante(inscripcionId: number): Observable<EncuentroMentorParticipanteDetalle> {

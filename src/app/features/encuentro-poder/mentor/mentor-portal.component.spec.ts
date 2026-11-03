@@ -9,7 +9,13 @@ describe('MentorPortalComponent', () => {
   let service: jasmine.SpyObj<EncuentroMentoriaService>;
 
   beforeEach(async () => {
-    service = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', ['misParticipantes', 'resumenPortal']);
+    service = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', ['ciclosAsistencia', 'misParticipantes', 'resumenPortal']);
+    service.ciclosAsistencia.and.returnValue(of([{
+      id: 2,
+      nombre: 'Octubre 2026',
+      estado: 'ABIERTO',
+      clases: [],
+    }]));
     service.misParticipantes.and.returnValue(of([{
       inscripcionId: 42,
       personaId: 10,
@@ -45,6 +51,9 @@ describe('MentorPortalComponent', () => {
   });
 
   it('muestra progreso, último feedback y acciones del participante', () => {
+    expect(service.misParticipantes).toHaveBeenCalledWith(2);
+    expect(service.resumenPortal).toHaveBeenCalledWith(2);
+    expect(fixture.nativeElement.querySelector('#mentor-cycle')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Ana Pérez');
     expect(fixture.nativeElement.textContent).toContain('2 de 3 clases');
     expect(fixture.nativeElement.textContent).toContain('Conversación inicial');
@@ -116,5 +125,44 @@ describe('MentorPortalComponent', () => {
     expect(fixture.componentInstance.participantes().map(item => item.inscripcionId)).toEqual([42]);
     expect(fixture.nativeElement.textContent).not.toContain('Persona futura');
     expect(fixture.nativeElement.textContent).not.toContain('Noviembre 2026');
+  });
+
+  it('recarga participantes y resumen al seleccionar otro ciclo', () => {
+    const actual = fixture.componentInstance.participantes()[0];
+    service.misParticipantes.calls.reset();
+    service.resumenPortal.calls.reset();
+    service.misParticipantes.and.returnValue(of([{
+      ...actual,
+      inscripcionId: 50,
+      cicloId: 3,
+      cicloNombre: 'Noviembre 2026',
+      nombreCompleto: 'Persona noviembre',
+    }]));
+    service.resumenPortal.and.returnValue(of({
+      ciclo: { id: 3, nombre: 'Noviembre 2026', fechaInicio: '2026-11-01', fechaCierre: null, estado: 'ABIERTO' },
+      participantesAsignados: 1,
+      asistenciasRegistradas: 0,
+      asistenciasEsperadas: 0,
+      porcentajeAsistencia: 0,
+      participantesCompletos: 0,
+      participantesPendientes: 1,
+    }));
+
+    fixture.componentInstance.seleccionarCiclo('3');
+    fixture.detectChanges();
+
+    expect(service.misParticipantes).toHaveBeenCalledWith(3);
+    expect(service.resumenPortal).toHaveBeenCalledWith(3);
+    expect(fixture.nativeElement.textContent).toContain('Noviembre 2026');
+    expect(fixture.nativeElement.textContent).toContain('Persona noviembre');
+  });
+
+  it('vuelve a consultar los ciclos cuando falla la carga inicial', () => {
+    service.ciclosAsistencia.calls.reset();
+    fixture.componentInstance.ciclos.set([]);
+
+    fixture.componentInstance.reintentar();
+
+    expect(service.ciclosAsistencia).toHaveBeenCalled();
   });
 });

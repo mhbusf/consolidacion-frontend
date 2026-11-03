@@ -67,6 +67,21 @@ describe('EncuentroMentoriaService', () => {
     });
   });
 
+  it('envía el ciclo seleccionado al consultar participantes y resumen', () => {
+    service.misParticipantes(9).subscribe();
+    service.resumenPortal(9).subscribe();
+
+    const participantes = http.expectOne(request => request.url === `${mentorApi}/participantes`);
+    const resumen = http.expectOne(request => request.url === `${mentorApi}/resumen`);
+    expect(participantes.request.params.get('cicloId')).toBe('9');
+    expect(resumen.request.params.get('cicloId')).toBe('9');
+    participantes.flush([]);
+    resumen.flush({
+      ciclo: null, participantesAsignados: 0, asistenciasRegistradas: 0, asistenciasEsperadas: 0,
+      porcentajeAsistencia: 0, participantesCompletos: 0, participantesPendientes: 0,
+    });
+  });
+
   it('consulta detalle y feedback por inscripción', () => {
     let detalle: { etapaMentoria: string; cierreHasta: string | null } | undefined;
     service.participante(42).subscribe(response => detalle = response);
