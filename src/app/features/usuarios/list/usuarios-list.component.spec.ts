@@ -67,26 +67,26 @@ describe('UsuariosListComponent permisos', () => {
     ]);
   });
 
-  it('muestra el mensaje descriptivo del backend al fallar la desactivación', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+  it('muestra un mensaje seguro al fallar la desactivación', () => {
     auth.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({
       status: 409,
       error: '{"message":"No puedes desactivar tu propia cuenta"}',
     })));
 
     fixture.componentInstance.eliminarUsuario('usuario');
+    fixture.componentInstance.confirmarAccion();
 
-    expect(notification.error).toHaveBeenCalledOnceWith('No puedes desactivar tu propia cuenta');
+    expect(fixture.componentInstance.modalError).toContain('conflicto');
   });
 
   it('explica un timeout del servidor al desactivar', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
     auth.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
 
     fixture.componentInstance.eliminarUsuario('usuario');
+    fixture.componentInstance.confirmarAccion();
 
-    expect(notification.error).toHaveBeenCalledOnceWith(
-      'El servidor tardó demasiado en responder. Inténtalo nuevamente.',
+    expect(fixture.componentInstance.modalError).toBe(
+      'El servidor tardó demasiado en responder. Intenta nuevamente.',
     );
   });
 });

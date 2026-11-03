@@ -20,6 +20,7 @@ describe('ConsolidadosListComponent WhatsApp', () => {
     quienInvito: 'María',
     motivoOracion: 'Motivo de prueba',
     comuna: null,
+    reunion: 'Reunión Centro',
     usuarioReporta: 'reporta',
     usuarioAsignado: 'consolidador',
     usuarioAsigno: 'admin',
@@ -67,7 +68,8 @@ describe('ConsolidadosListComponent WhatsApp', () => {
   it('abre WhatsApp con el teléfono normalizado desde una tarjeta activa', () => {
     const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.btn-whatsapp');
 
-    expect(link.getAttribute('href')).toBe('https://wa.me/56911111111');
+    expect(link.getAttribute('href')).toContain('https://wa.me/56911111111?text=');
+    expect(decodeURIComponent(link.getAttribute('href') || '')).toContain('Hola Ana Pérez');
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(link.getAttribute('aria-label')).toBe('Abrir WhatsApp con Ana Pérez');

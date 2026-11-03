@@ -9,6 +9,8 @@ import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { User } from '../../../core/models/auth.model';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-consolidados-list',
@@ -795,7 +797,9 @@ export class ConsolidadosListComponent implements OnInit {
     private consolidadoService: ConsolidadoService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {
     this.authService.currentUser$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -839,8 +843,8 @@ export class ConsolidadosListComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar consolidados', error);
-        this.errorCarga = error?.error?.message || 'No fue posible cargar los consolidados.';
+        this.logger.httpError('consolidados.list.load', error);
+        this.errorCarga = this.errorMapper.message(error, { fallback: 'No fue posible cargar los consolidados.' });
         this.isLoading = false;
       }
     });
@@ -848,7 +852,7 @@ export class ConsolidadosListComponent implements OnInit {
     if (this.isAdmin) {
       this.authService.getAllUsers().subscribe({
         next: (users) => { this.usuarios = users; },
-        error: (error) => { console.error('Error al cargar usuarios', error); }
+        error: (error) => this.logger.httpError('consolidados.list.load-users', error)
       });
 
       this.consolidadoService.obtenerCerrados().subscribe({
@@ -878,8 +882,8 @@ export class ConsolidadosListComponent implements OnInit {
       },
       error: (error) => {
         this.consolidados = [];
-        console.error('Error al cargar el histórico de cierres', error);
-        this.errorCarga = error?.error?.message || 'No fue posible cargar el histórico de cierres.';
+        this.logger.httpError('consolidados.list.load-history', error);
+        this.errorCarga = this.errorMapper.message(error, { fallback: 'No fue posible cargar el histórico de cierres.' });
         this.isLoading = false;
       }
     });

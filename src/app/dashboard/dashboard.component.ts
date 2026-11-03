@@ -141,8 +141,8 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
               <p class="section-kicker">Accesos rápidos</p>
               <h2 id="quick-title">Reportes y análisis</h2>
               <nav aria-label="Accesos a reportes">
-                <a routerLink="/reportes/consolidados">
-                  <span>Reporte de consolidados</span>
+                <a routerLink="/reportes">
+                  <span>Centro de informes</span>
                   <span aria-hidden="true">→</span>
                 </a>
                 <a routerLink="/reportes/cafe-con-jesus">

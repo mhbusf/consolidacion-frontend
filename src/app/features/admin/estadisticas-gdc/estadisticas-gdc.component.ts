@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { DashboardService } from '../../../core/services/dashboard.service';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ConsolidadoGDCHistorico, Dashboard } from '../../../core/models/consolidado.model';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-estadisticas-gdc',
@@ -203,7 +204,8 @@ export class EstadisticasGdcComponent implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private consolidadoService: ConsolidadoService
+    private consolidadoService: ConsolidadoService,
+    private errorMapper: HttpErrorMapperService
   ) {}
 
   ngOnInit(): void {
@@ -230,7 +232,7 @@ export class EstadisticasGdcComponent implements OnInit {
       },
       error: (error) => {
         this.historico = [];
-        this.errorHistorico = error?.error?.message || 'No fue posible cargar el histórico de cierres.';
+        this.errorHistorico = this.errorMapper.message(error, { fallback: 'No fue posible cargar el histórico de cierres.' });
         this.isLoadingHistorico = false;
       }
     });

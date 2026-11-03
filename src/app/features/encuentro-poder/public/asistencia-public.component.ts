@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroAsistenciaPublica } from '../../../core/models/encuentro-poder.model';
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-asistencia-public',
@@ -33,6 +34,7 @@ export class AsistenciaPublicComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly service = inject(EncuentroPoderService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly errorMapper = inject(HttpErrorMapperService);
   readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3)]], telefono: ['', [Validators.required, TelefonoChilenoValidator.validarConCodigoPais()]] });
   readonly info = signal<EncuentroAsistenciaPublica | null>(null);
   readonly cargando = signal(true);
@@ -47,7 +49,7 @@ export class AsistenciaPublicComponent implements OnInit {
       finalize(() => this.cargando.set(false)),
     ).subscribe({
       next: info => this.info.set(info),
-      error: error => this.error.set(error.error?.message ?? 'El enlace de asistencia no es válido.'),
+      error: error => this.error.set(this.errorMapper.message(error, { fallback: 'El enlace de asistencia no es válido.' })),
     });
   }
 
@@ -61,7 +63,7 @@ export class AsistenciaPublicComponent implements OnInit {
       finalize(() => this.enviando.set(false)),
     ).subscribe({
       next: () => { this.mensaje.set('Asistencia registrada correctamente.'); this.registrada.set(true); },
-      error: error => this.error.set(error.error?.message ?? 'No fue posible registrar la asistencia.'),
+      error: error => this.error.set(this.errorMapper.message(error, { fallback: 'No fue posible registrar la asistencia.' })),
     });
   }
 

@@ -100,6 +100,7 @@ export interface ComentarioPendiente {
 export interface ConsolidadoEstado {
   id: number;
   titulo: string;
+  telefono: string;
   fechaIngreso: string;
   asignadoA: string;
   estado: string;

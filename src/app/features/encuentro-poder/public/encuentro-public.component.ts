@@ -8,6 +8,7 @@ import { Comuna } from '../../../core/models/consolidado.model';
 import { ComunaService } from '../../../core/services/comuna.service';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-encuentro-public', standalone: true, imports: [CommonModule, ReactiveFormsModule],
@@ -37,6 +38,7 @@ export class EncuentroPublicComponent implements OnInit {
   private readonly service = inject(EncuentroPoderService);
   private readonly comunaService = inject(ComunaService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly errorMapper = inject(HttpErrorMapperService);
   private readonly token = this.route.snapshot.paramMap.get('token') ?? '';
   readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3)]], telefono: ['', [Validators.required, TelefonoChilenoValidator.validarConCodigoPais()]], comuna: [{ value: '', disabled: true }], invitadoPor: [''], tiempoCatedral: [''] });
   readonly comunasPorProvincia = signal<{ provincia: string; comunas: Comuna[] }[]>([]);
@@ -94,7 +96,7 @@ export class EncuentroPublicComponent implements OnInit {
         this.mensaje.set(`Inscripción registrada para ${resultado.persona.nombreCompleto}.`);
         this.form.reset();
       },
-      error: error => this.errorEnvio.set(error.error?.message ?? 'No fue posible completar la inscripción.'),
+      error: error => this.errorEnvio.set(this.errorMapper.message(error, { fallback: 'No fue posible completar la inscripción.' })),
     });
   }
 }

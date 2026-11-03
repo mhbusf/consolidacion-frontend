@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { LoginComponent } from './login.component';
 import { RoleName } from '../../../core/models/auth.model';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 describe('LoginComponent redirection', () => {
   let auth: jasmine.SpyObj<AuthService>;
@@ -22,6 +23,7 @@ describe('LoginComponent redirection', () => {
       auth,
       router,
       jasmine.createSpyObj<NotificationService>('NotificationService', ['success']),
+      new HttpErrorMapperService(),
     );
   });
 

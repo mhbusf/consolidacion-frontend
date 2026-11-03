@@ -33,6 +33,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'reportes',
+    loadComponent: () => import('./features/admin/centro-reportes-consolidacion/centro-reportes-consolidacion.component').then(m => m.CentroReportesConsolidacionComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_ADMIN'] }
+  },
+
+  {
     path: 'reportes/consolidados',
     loadComponent: () => import('./features/admin/reportes-consolidados/reportes-consolidados.component').then(m => m.ReportesConsolidadosComponent),
     canActivate: [authGuard],

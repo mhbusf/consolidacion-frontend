@@ -5,6 +5,7 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { LoggerService } from '../services/logger.service';
 import { SESSION_EXPIRED_REASON } from '../constants/auth-session.constants';
+import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);

@@ -1,6 +1,4 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -9,6 +7,8 @@ import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ROLE_OPTIONS, RoleName, User, normalizeRoleNames, toggleRoleName } from '../../../core/models/auth.model';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 interface UsuarioConStats {
   usuario: User;
@@ -146,6 +146,26 @@ interface UsuarioConStats {
         </div>
       }
     </div>
+    @if (modalAccion) {
+      <div class="modal-backdrop" (click)="cerrarModal()">
+        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="user-action-title" (click)="$event.stopPropagation()">
+          <h3 id="user-action-title">{{ modalAccion === 'password' ? 'Cambiar contraseña' : 'Desactivar usuario' }}</h3>
+          <p>Usuario: <strong>{{ modalUsuario }}</strong></p>
+          @if (modalAccion === 'password') {
+            <label>Nueva contraseña<input type="password" [(ngModel)]="nuevaPassword" autocomplete="new-password"></label>
+            <label>Confirmar contraseña<input type="password" [(ngModel)]="confirmarPassword" autocomplete="new-password"></label>
+            <small>Mínimo 8 caracteres. Las dos contraseñas deben coincidir.</small>
+          } @else {
+            <p>Esta persona no podrá iniciar sesión y su historial se conservará.</p>
+          }
+          @if (modalError) {<p class="modal-error" role="alert">{{ modalError }}</p>}
+          <div class="modal-actions">
+            <button type="button" class="modal-cancel" [disabled]="modalSaving" (click)="cerrarModal()">Cancelar</button>
+            <button type="button" [class.btn-danger]="modalAccion === 'deactivate'" [disabled]="modalSaving" (click)="confirmarAccion()">{{ modalSaving ? 'Procesando...' : (modalAccion === 'password' ? 'Actualizar contraseña' : 'Desactivar usuario') }}</button>
+          </div>
+        </section>
+      </div>
+    }
     `,
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
@@ -354,6 +374,10 @@ interface UsuarioConStats {
     .btn-small:hover {
       opacity: 0.9;
     }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(9,24,39,.68); }
+    .modal-card { box-sizing: border-box; width: min(460px,100%); padding: 26px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); box-shadow: 0 24px 70px rgba(0,0,0,.3); }
+    .modal-card h3 { margin: 0 0 10px; }.modal-card label { display: grid; gap: 7px; margin-top: 15px; font-weight: 700; }.modal-card input { box-sizing: border-box; width: 100%; padding: 11px; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); background: var(--bg-secondary); }.modal-card small { display: block; margin-top: 9px; color: var(--text-muted); }.modal-error { color: var(--danger); font-weight: 700; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }.modal-actions button { padding: 10px 14px; border: 0; border-radius: 8px; color: white; background: var(--primary-light); font-weight: 750; cursor: pointer; }.modal-actions .modal-cancel { color: var(--text-primary); background: var(--bg-secondary); border: 1px solid var(--border-color); }.modal-actions button:disabled { opacity: .55; cursor: wait; }
   `]
 })
 export class UsuariosListComponent implements OnInit {
@@ -366,6 +390,12 @@ export class UsuariosListComponent implements OnInit {
   readonly esSuperAdmin: boolean;
   readonly roleOptions = ROLE_OPTIONS;
   readonly savingRoleIds = new Set<number>();
+  modalAccion: 'password' | 'deactivate' | null = null;
+  modalUsuario = '';
+  nuevaPassword = '';
+  confirmarPassword = '';
+  modalError = '';
+  modalSaving = false;
   private readonly roleDrafts = new Map<number, RoleName[]>();
 
   get usuariosFiltrados(): UsuarioConStats[] {
@@ -384,7 +414,9 @@ export class UsuariosListComponent implements OnInit {
     private authService: AuthService,
     private consolidadoService: ConsolidadoService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {
     this.esAdmin = this.authService.isAdmin();
     this.esSuperAdmin = this.authService.isSuperAdmin();
@@ -421,7 +453,7 @@ export class UsuariosListComponent implements OnInit {
       this.isLoading = false;
       },
       error: (error) => {
-      console.error('Error al cargar datos', error);
+      this.logger.httpError('users.list.load', error);
       this.notificationService.error('Error al cargar usuarios');
       this.isLoading = false;
       }
@@ -511,64 +543,74 @@ export class UsuariosListComponent implements OnInit {
 
   cambiarPassword(username: string): void {
     if (!this.esAdmin) return;
-    const newPassword = prompt(`Ingrese la nueva contraseña para ${username}:`);
-    
-    if (newPassword && newPassword.trim()) {
-      if (newPassword.length < 6) {
-        this.notificationService.warning('La contraseña debe tener al menos 6 caracteres');
-        return;
-      }
-
-      const confirmar = confirm(`¿Está seguro de cambiar la contraseña de ${username}?`);
-      
-      if (confirmar) {
-        this.authService.changeUserPassword(username, newPassword).subscribe({
-          next: () => {
-            this.notificationService.success('Contraseña actualizada correctamente');
-          },
-          error: (error) => {
-            this.notificationService.error('Error al cambiar contraseña');
-          }
-        });
-      }
-    }
+    this.abrirModal('password', username);
   }
 
   eliminarUsuario(username: string): void {
     if (!this.esAdmin) return;
-    if (confirm(`¿Está seguro de desactivar al usuario ${username}?\n\nNo podrá iniciar sesión y su historial se conservará.`)) {
+    this.abrirModal('deactivate', username);
+  }
+
+  confirmarAccion(): void {
+    if (!this.modalAccion || !this.modalUsuario || this.modalSaving) return;
+    this.modalError = '';
+    if (this.modalAccion === 'password') {
+      if (this.nuevaPassword.length < 8) {
+        this.modalError = 'La contraseña debe tener al menos 8 caracteres.';
+        return;
+      }
+      if (this.nuevaPassword !== this.confirmarPassword) {
+        this.modalError = 'Las contraseñas no coinciden.';
+        return;
+      }
+      this.modalSaving = true;
+      this.authService.changeUserPassword(this.modalUsuario, this.nuevaPassword).subscribe({
+        next: () => {
+          this.notificationService.success('Contraseña actualizada.');
+          this.modalSaving = false;
+          this.cerrarModal();
+        },
+        error: (error) => {
+          this.logger.httpError('users.password.update', error);
+          this.modalError = this.errorMapper.message(error, { fallback: 'No fue posible cambiar la contraseña.' });
+          this.modalSaving = false;
+        },
+      });
+      return;
+    }
+
+    this.modalSaving = true;
+    const username = this.modalUsuario;
       this.authService.deleteUser(username).subscribe({
-        next: (message) => {
-          this.notificationService.success(message || 'Usuario desactivado correctamente');
+        next: () => {
+          this.notificationService.success('Usuario desactivado.');
+          this.modalSaving = false;
+          this.cerrarModal();
           this.cargarDatos();
         },
         error: (error: unknown) => {
-          this.notificationService.error(this.deleteErrorMessage(error));
+          this.logger.httpError('users.deactivate', error);
+          this.modalError = this.errorMapper.message(error, { fallback: 'No fue posible desactivar el usuario.' });
+          this.modalSaving = false;
         }
       });
-    }
   }
 
-  private deleteErrorMessage(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) return 'No fue posible desactivar el usuario';
-    if (error.status === 0) return 'No fue posible conectar con el servidor';
-    if (error.status === 504) return 'El servidor tardó demasiado en responder. Inténtalo nuevamente.';
+  cerrarModal(): void {
+    if (this.modalSaving) return;
+    this.modalAccion = null;
+    this.modalUsuario = '';
+    this.nuevaPassword = '';
+    this.confirmarPassword = '';
+    this.modalError = '';
+  }
 
-    if (error.error && typeof error.error === 'object' && typeof error.error.message === 'string') {
-      return error.error.message;
-    }
-    if (typeof error.error === 'string') {
-      try {
-        const body: unknown = JSON.parse(error.error);
-        if (body && typeof body === 'object' && 'message' in body
-          && typeof (body as { message?: unknown }).message === 'string') {
-          return (body as { message: string }).message;
-        }
-      } catch {
-        // Las respuestas HTML del proxy no son mensajes aptos para mostrar al usuario.
-      }
-    }
-    return 'No fue posible desactivar el usuario';
+  private abrirModal(accion: 'password' | 'deactivate', username: string): void {
+    this.modalAccion = accion;
+    this.modalUsuario = username;
+    this.nuevaPassword = '';
+    this.confirmarPassword = '';
+    this.modalError = '';
   }
 
   private userRoleNames(user: User): RoleName[] {

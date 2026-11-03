@@ -7,6 +7,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/auth.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-asignar-consolidado',
@@ -221,7 +223,9 @@ export class AsignarConsolidadoComponent implements OnInit {
     private router: Router,
     private consolidadoService: ConsolidadoService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {}
 
   ngOnInit(): void {
@@ -249,8 +253,8 @@ export class AsignarConsolidadoComponent implements OnInit {
         completar();
       },
       error: (error) => {
-        console.error('Error al cargar consolidado', error);
-        this.errorCarga = error?.error?.message || 'No fue posible cargar el consolidado.';
+        this.logger.httpError('consolidados.assign.load-record', error);
+        this.errorCarga = this.errorMapper.message(error, { fallback: 'No fue posible cargar el consolidado.' });
         this.isLoadingDatos = false;
       },
     });
@@ -264,8 +268,8 @@ export class AsignarConsolidadoComponent implements OnInit {
         completar();
       },
       error: (error) => {
-        console.error('Error al cargar usuarios', error);
-        this.errorCarga = error?.error?.message || 'No fue posible cargar los usuarios disponibles.';
+        this.logger.httpError('consolidados.assign.load-users', error);
+        this.errorCarga = this.errorMapper.message(error, { fallback: 'No fue posible cargar los usuarios disponibles.' });
         this.isLoadingDatos = false;
       }
     });
@@ -281,7 +285,8 @@ export class AsignarConsolidadoComponent implements OnInit {
     void this.router.navigateByUrl(this.returnUrl);
   },
   error: (error) => {
-    this.notificationService.error('Error al asignar');
+    this.logger.httpError('consolidados.assign.save', error);
+    this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos actualizar la asignación.' }));
     this.isLoading = false;
   }
 });

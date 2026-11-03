@@ -63,7 +63,7 @@ describe('AsistenciaPublicComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('autoasistencia ya finalizó');
   });
 
-  it('muestra el rechazo del backend si una página abierta queda fuera de fecha', () => {
+  it('muestra un rechazo seguro si una página abierta queda fuera de fecha', () => {
     service.infoAsistencia.and.returnValue(of(info('EN_CURSO')));
     service.autoAsistencia.and.returnValue(throwError(() => ({ error: { message: 'La autoasistencia de esta clase ya finalizó' } })));
     fixture.detectChanges();
@@ -72,7 +72,7 @@ describe('AsistenciaPublicComponent', () => {
     component.enviar();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('La autoasistencia de esta clase ya finalizó');
+    expect(fixture.nativeElement.textContent).toContain('No fue posible registrar la asistencia.');
   });
 
   function info(estado: EncuentroEstadoClase): EncuentroAsistenciaPublica {

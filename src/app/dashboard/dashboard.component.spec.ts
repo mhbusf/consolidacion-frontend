@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { Dashboard } from '../core/models/consolidado.model';
 import { AuthService } from '../core/services/auth.service';
 import { DashboardService } from '../core/services/dashboard.service';
@@ -9,7 +9,6 @@ import { DashboardComponent } from './dashboard.component';
 describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
   let dashboardService: jasmine.SpyObj<DashboardService>;
-  let dashboardResponse: Subject<Dashboard>;
 
   const dashboard: Dashboard = {
     totalConsolidados: 18,
@@ -23,6 +22,7 @@ describe('DashboardComponent', () => {
     consolidadosConAtrasos: [{
       id: 11,
       titulo: 'Ana Pérez',
+      telefono: '56911111111',
       fechaIngreso: '2026-10-01',
       asignadoA: 'consolidador',
       estado: 'EN_PROCESO',
@@ -40,11 +40,10 @@ describe('DashboardComponent', () => {
   };
 
   beforeEach(async () => {
-    dashboardResponse = new Subject<Dashboard>();
     dashboardService = jasmine.createSpyObj<DashboardService>('DashboardService', [
       'getDashboard', 'getResumenConsolidador',
     ]);
-    dashboardService.getDashboard.and.returnValue(dashboardResponse);
+    dashboardService.getDashboard.and.returnValue(of(dashboard));
     dashboardService.getResumenConsolidador.and.returnValue(of({
       username: 'consolidador',
       totalCafes: 0,
@@ -66,12 +65,10 @@ describe('DashboardComponent', () => {
 
     fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('muestra métricas de atención y acciones hacia rutas operativas', () => {
-    dashboardResponse.next(dashboard);
-    fixture.detectChanges();
-
     const overdue: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-testid="attention-overdue"]');
     const unassigned: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-testid="attention-unassigned"]');
     const active: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-testid="attention-active"]');
@@ -85,18 +82,20 @@ describe('DashboardComponent', () => {
   });
 
   it('distingue el error principal del estado vacío y permite reintentar', () => {
-    dashboardResponse.error(new Error('network'));
+    dashboardService.getDashboard.and.returnValue(throwError(() => new Error('network')));
+    fixture.componentInstance.dashboard = null;
+    fixture.componentInstance.cargarDashboard();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.state-error')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.state-empty')).toBeNull();
 
     fixture.nativeElement.querySelector('.state-error button').click();
-    expect(dashboardService.getDashboard).toHaveBeenCalledTimes(2);
+    expect(dashboardService.getDashboard).toHaveBeenCalledTimes(3);
   });
 
   it('muestra un estado vacío real cuando la carga correcta no contiene registros', () => {
-    dashboardResponse.next({
+    dashboardService.getDashboard.and.returnValue(of({
       ...dashboard,
       totalConsolidados: 0,
       consolidadosEnProceso: 0,
@@ -109,7 +108,8 @@ describe('DashboardComponent', () => {
       consolidadosConAtrasos: [],
       estadisticasPorUsuario: [],
       estadisticasPorReunion: [],
-    });
+    }));
+    fixture.componentInstance.cargarDashboard();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.state-empty')).not.toBeNull();
@@ -117,9 +117,6 @@ describe('DashboardComponent', () => {
   });
 
   it('expone semántica accesible en la tabla de estado del equipo', () => {
-    dashboardResponse.next(dashboard);
-    fixture.detectChanges();
-
     const table: HTMLTableElement = fixture.nativeElement.querySelector('.team-table');
     const progress: HTMLElement = table.querySelector('[role="progressbar"]')!;
 

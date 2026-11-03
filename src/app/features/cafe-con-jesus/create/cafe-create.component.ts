@@ -11,6 +11,8 @@ import { CafeConJesusService } from '../../../core/services/cafe-con-jesus.servi
 import { NotificationService } from '../../../core/services/notification.service';
 import { DuplicateValidationResponse, Reunion } from '../../../core/models/consolidado.model';
 import { ReunionService } from '../../../core/services/reunion.service';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-cafe-create',
@@ -319,7 +321,9 @@ export class CafeCreateComponent implements OnInit {
     private cafeService: CafeConJesusService,
     private reunionService: ReunionService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(2)]],
@@ -365,7 +369,7 @@ export class CafeCreateComponent implements OnInit {
         this.router.navigate(['/cafe-con-jesus']);
       },
       error: (error) => {
-        console.error('Error:', error);
+        this.logger.httpError('cafe.create.save', error);
         if (error.status === 409 && error.error?.coincidencias) {
           this.duplicateWarning = error.error as DuplicateValidationResponse;
           this.notificationService.warning('Se encontraron posibles coincidencias');
@@ -373,7 +377,7 @@ export class CafeCreateComponent implements OnInit {
           return;
         }
 
-        this.notificationService.error('Error al crear el registro');
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos crear el registro.' }));
         this.isLoading = false;
       },
     });

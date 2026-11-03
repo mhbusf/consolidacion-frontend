@@ -12,6 +12,8 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { User } from '../../../core/models/auth.model';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivados';
 
@@ -285,6 +287,22 @@ type GrupoKey = 'sinAsignar' | 'asignados' | 'pasaronAConsolidacion' | 'archivad
               </button>
             </div>
           </div>
+        </div>
+      }
+      @if (registroAccion) {
+        <div class="modal-overlay" (click)="cerrarAccion()">
+          <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="cafe-action-title" (click)="$event.stopPropagation()">
+            <h3 id="cafe-action-title">{{ accionActual === 'convertir' ? 'Convertir a Consolidación' : 'Archivar seguimiento' }}</h3>
+            <p class="modal-sub">{{ registroAccion.nombre }} {{ registroAccion.apellido }}</p>
+            @if (accionActual === 'convertir') {
+              <p>Se creará un nuevo registro en Consolidación porque esta persona aceptó al Señor.</p>
+            } @else {
+              <div class="form-group"><label>Motivo de cierre</label><select [(ngModel)]="archivoMotivo" class="form-control"><option value="">Selecciona un motivo</option><option value="NO_RESPONDE">No responde</option><option value="NO_DESEA_CONTACTO">No desea contacto</option><option value="DATOS_INCORRECTOS">Datos incorrectos</option><option value="OTRO">Otro</option></select></div>
+              <div class="form-group"><label>Comentario de cierre</label><textarea [(ngModel)]="archivoComentario" class="form-control" rows="3"></textarea></div>
+            }
+            @if (errorAccion) {<p class="modal-error" role="alert">{{ errorAccion }}</p>}
+            <div class="modal-actions"><button class="btn-secondary" [disabled]="isSavingAction" (click)="cerrarAccion()">Cancelar</button><button class="btn-primary" [disabled]="isSavingAction" (click)="confirmarAccion()">{{ isSavingAction ? 'Procesando...' : 'Confirmar' }}</button></div>
+          </section>
         </div>
       }
     </div>
@@ -783,19 +801,27 @@ export class CafeAdminDashboardComponent implements OnInit {
   editFechaAsistencia = '';
   editComentario = '';
   editEtapa = '';
+  registroAccion: CafeConJesusResponse | null = null;
+  accionActual: 'convertir' | 'archivar' | null = null;
+  archivoMotivo = '';
+  archivoComentario = '';
+  errorAccion = '';
+  isSavingAction = false;
 
   constructor(
     private cafeService: CafeConJesusService,
     private authService: AuthService,
     private notificationService: NotificationService,
     private router: Router,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService,
   ) {}
 
   ngOnInit(): void {
     this.cargarDashboard();
     this.authService.getAllUsers().subscribe({
       next: (users) => { this.usuarios = users; },
-      error: (e) => console.error('Error al cargar usuarios', e),
+      error: (e) => this.logger.httpError('cafe.admin.load-users', e),
     });
   }
 
@@ -807,7 +833,7 @@ export class CafeAdminDashboardComponent implements OnInit {
         this.isLoading = false;
       },
       error: (e) => {
-        console.error('Error al cargar dashboard', e);
+        this.logger.httpError('cafe.admin.load-dashboard', e);
         this.notificationService.error('Error al cargar el dashboard');
         this.isLoading = false;
       },
@@ -843,7 +869,7 @@ export class CafeAdminDashboardComponent implements OnInit {
         this.cargarDashboard();
       },
       error: (e) => {
-        console.error('Error al asignar', e);
+        this.logger.httpError('cafe.admin.assign', e);
         this.notificationService.error('Error al asignar');
         this.isSaving = false;
       },
@@ -900,7 +926,7 @@ export class CafeAdminDashboardComponent implements OnInit {
         this.cargarDashboard();
       },
       error: (e) => {
-        console.error('Error al actualizar', e);
+        this.logger.httpError('cafe.admin.update', e);
         this.notificationService.error('Error al actualizar');
         this.isSaving = false;
       },
@@ -908,46 +934,67 @@ export class CafeAdminDashboardComponent implements OnInit {
   }
 
   convertir(r: CafeConJesusResponse): void {
-    if (!confirm(`¿Confirmas que ${r.nombre} ${r.apellido} aceptó al Señor? Se creará un registro en Consolidación.`)) {
+    this.abrirAccion('convertir', r);
+  }
+
+  archivar(r: CafeConJesusResponse): void {
+    this.abrirAccion('archivar', r);
+  }
+
+  confirmarAccion(): void {
+    if (!this.registroAccion || !this.accionActual || this.isSavingAction) return;
+    this.errorAccion = '';
+    if (this.accionActual === 'archivar' && (!this.archivoMotivo || !this.archivoComentario.trim())) {
+      this.errorAccion = 'Selecciona un motivo y escribe un comentario de cierre.';
       return;
     }
-    this.cafeService.convertirAConsolidado(r.id).subscribe({
+    this.isSavingAction = true;
+    if (this.accionActual === 'convertir') {
+      this.cafeService.convertirAConsolidado(this.registroAccion.id).subscribe({
       next: () => {
         this.notificationService.success('Convertido a consolidación');
+        this.isSavingAction = false;
+        this.cerrarAccion();
         this.cargarDashboard();
       },
       error: (e) => {
-        console.error('Error al convertir', e);
-        this.notificationService.error(e.error?.message || 'Error al convertir');
+        this.logger.httpError('cafe.admin.convert', e);
+        this.errorAccion = this.errorMapper.message(e, { fallback: 'No pudimos convertir el registro.' });
+        this.isSavingAction = false;
+      },
+      });
+      return;
+    }
+    this.cafeService.archivar(this.registroAccion.id, this.archivoMotivo, this.archivoComentario.trim()).subscribe({
+      next: () => {
+        this.notificationService.success('Registro archivado');
+        this.isSavingAction = false;
+        this.cerrarAccion();
+        this.cargarDashboard();
+      },
+      error: (e) => {
+        this.logger.httpError('cafe.admin.archive', e);
+        this.errorAccion = this.errorMapper.message(e, { fallback: 'No pudimos archivar el registro.' });
+        this.isSavingAction = false;
       },
     });
   }
 
-  archivar(r: CafeConJesusResponse): void {
-    const motivo = prompt('Motivo de cierre:\n1. No responde\n2. No desea que lo contacten\n3. Datos incorrectos\n4. Otro', '1');
-    const motivos: Record<string, string> = {
-      '1': 'NO_RESPONDE',
-      '2': 'NO_DESEA_CONTACTO',
-      '3': 'DATOS_INCORRECTOS',
-      '4': 'OTRO',
-    };
-    if (!motivo || !motivos[motivo]) {
-      return;
-    }
-    const comentario = prompt('Comentario de cierre (obligatorio):', '');
-    if (!comentario?.trim()) {
-      return;
-    }
-    this.cafeService.archivar(r.id, motivos[motivo], comentario.trim()).subscribe({
-      next: () => {
-        this.notificationService.success('Registro archivado');
-        this.cargarDashboard();
-      },
-      error: (e) => {
-        console.error('Error al archivar', e);
-        this.notificationService.error('Error al archivar');
-      },
-    });
+  cerrarAccion(): void {
+    if (this.isSavingAction) return;
+    this.registroAccion = null;
+    this.accionActual = null;
+    this.archivoMotivo = '';
+    this.archivoComentario = '';
+    this.errorAccion = '';
+  }
+
+  private abrirAccion(accion: 'convertir' | 'archivar', registro: CafeConJesusResponse): void {
+    this.accionActual = accion;
+    this.registroAccion = registro;
+    this.archivoMotivo = '';
+    this.archivoComentario = '';
+    this.errorAccion = '';
   }
 
   desarchivar(r: CafeConJesusResponse): void {
@@ -957,7 +1004,7 @@ export class CafeAdminDashboardComponent implements OnInit {
         this.cargarDashboard();
       },
       error: (e) => {
-        console.error('Error al desarchivar', e);
+        this.logger.httpError('cafe.admin.unarchive', e);
         this.notificationService.error('Error al desarchivar');
       },
     });

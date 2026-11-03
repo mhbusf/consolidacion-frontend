@@ -54,7 +54,7 @@ import { filter, map, startWith } from 'rxjs';
                 </a>
               </li>
             }
-            <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc', '/reportes/consolidados'])">
+            <li class="nav-group" [class.open]="openGroup === 'consolidacion'" [class.active]="isRouteGroupActive(['/consolidados', '/consolidados-atrasos', '/estadisticas-gdc', '/reportes'])">
               <button class="nav-group-toggle" type="button" (click)="toggleGroup('consolidacion', $event)"
                 [attr.aria-expanded]="openGroup === 'consolidacion'" aria-controls="submenu-consolidacion">
                 <span class="menu-icon">👥</span>
@@ -75,9 +75,9 @@ import { filter, map, startWith } from 'rxjs';
                     <span class="menu-icon">📈</span>
                     Histórico de cierres
                   </a>
-                  <a routerLink="/reportes/consolidados" routerLinkActive="active" (click)="closeMenus()">
+                  <a routerLink="/reportes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenus()">
                     <span class="menu-icon">📑</span>
-                    Reportes consolidados
+                    Centro de informes
                   </a>
                 }
               </div>

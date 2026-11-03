@@ -14,6 +14,8 @@ import { ComentarioResponse } from '../../../core/models/comentario.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-consolidado-detail',
@@ -58,7 +60,9 @@ export class ConsolidadoDetailComponent implements OnInit {
     private consolidadoService: ConsolidadoService,
     private comentarioService: ComentarioService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {
     this.isAdmin = this.authService.isAdmin();
   }
@@ -84,8 +88,8 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar consolidado', error);
-        this.errorCarga = error?.error?.message || 'No fue posible cargar el consolidado.';
+        this.logger.httpError('consolidados.detail.load', error);
+        this.errorCarga = this.errorMapper.message(error, { fallback: 'No fue posible cargar el consolidado.' });
         this.isLoading = false;
       }
     });
@@ -104,8 +108,8 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.isLoadingComentarios = false;
       },
       error: (error) => {
-        console.error('Error al cargar comentarios', error);
-        this.errorComentarios = error?.error?.message || 'No fue posible cargar los comentarios.';
+        this.logger.httpError('consolidados.detail.load-comments', error);
+        this.errorComentarios = this.errorMapper.message(error, { fallback: 'No fue posible cargar los comentarios.' });
         this.isLoadingComentarios = false;
       }
     });
@@ -128,7 +132,8 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.notificationService.success('Comentario agregado');
       },
       error: (error) => {
-        this.notificationService.error(error?.error?.message || 'Error al agregar comentario');
+        this.logger.httpError('consolidados.detail.add-comment', error);
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos guardar el comentario.' }));
         this.isLoadingComentario = false;
       }
     });
@@ -190,9 +195,9 @@ export class ConsolidadoDetailComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.notificationService.error(error?.error?.message || 'Error al cerrar con GDC');
+        this.logger.httpError('consolidados.detail.close-gdc', error);
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos cerrar el seguimiento con GDC.' }));
         this.isClosing = false;
-        console.error(error);
       }
     });
   }
@@ -221,8 +226,8 @@ export class ConsolidadoDetailComponent implements OnInit {
       },
       error: (error) => {
         this.isClosing = false;
-        this.notificationService.error(error?.error?.message || 'Error al cerrar el consolidado');
-        console.error(error);
+        this.logger.httpError('consolidados.detail.close', error);
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos cerrar el seguimiento.' }));
       }
     });
   }
@@ -239,8 +244,8 @@ export class ConsolidadoDetailComponent implements OnInit {
       },
       error: (error) => {
         this.isUpdatingHito = false;
-        this.notificationService.error(error?.error?.message || 'Error al actualizar el hito de 3 semanas');
-        console.error(error);
+        this.logger.httpError('consolidados.detail.update-milestone', error);
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos actualizar el hito de tres semanas.' }));
       }
     });
   }

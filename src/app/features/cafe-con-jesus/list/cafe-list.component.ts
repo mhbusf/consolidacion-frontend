@@ -14,6 +14,8 @@ import { NotificationService } from '../../../core/services/notification.service
 import { User } from '../../../core/models/auth.model';
 import { Reunion } from '../../../core/models/consolidado.model';
 import { ReunionService } from '../../../core/services/reunion.service';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 
 @Component({
   selector: 'app-cafe-list',
@@ -305,6 +307,16 @@ import { ReunionService } from '../../../core/services/reunion.service';
                   </button>
                 </div>
               </div>
+            </div>
+          }
+          @if (registroConvirtiendo) {
+            <div class="modal-overlay" (click)="cerrarConversion()">
+              <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="convert-title" (click)="$event.stopPropagation()">
+                <h3 id="convert-title">Convertir a Consolidación</h3>
+                <p class="modal-sub">{{ registroConvirtiendo.nombre }} {{ registroConvirtiendo.apellido }}</p>
+                <p>Se creará un nuevo registro en Consolidación porque esta persona aceptó al Señor.</p>
+                <div class="modal-actions"><button class="btn-secondary" type="button" [disabled]="isConverting" (click)="cerrarConversion()">Cancelar</button><button class="btn-primary" type="button" [disabled]="isConverting" (click)="confirmarConversion()">{{ isConverting ? 'Convirtiendo...' : 'Confirmar conversión' }}</button></div>
+              </section>
             </div>
           }
         </div>
@@ -901,13 +913,17 @@ export class CafeListComponent implements OnInit {
   cierreMotivo = '';
   cierreComentario = '';
   isSavingCierre = false;
+  registroConvirtiendo: CafeConJesusResponse | null = null;
+  isConverting = false;
 
   constructor(
     private cafeService: CafeConJesusService,
     private authService: AuthService,
     private reunionService: ReunionService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {}
 
   ngOnInit(): void {
@@ -917,7 +933,7 @@ export class CafeListComponent implements OnInit {
     if (this.isAdmin) {
       this.authService.getAllUsers().subscribe({
         next: (users) => { this.usuarios = users; },
-        error: (error) => { console.error('Error al cargar usuarios', error); }
+        error: (error) => this.logger.httpError('cafe.list.load-users', error)
       });
     }
   }
@@ -934,7 +950,7 @@ export class CafeListComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar registros:', error);
+        this.logger.httpError('cafe.list.load', error);
         this.isLoading = false;
       },
     });
@@ -1003,7 +1019,7 @@ export class CafeListComponent implements OnInit {
         this.cargarRegistros();
       },
       error: (error) => {
-        this.notificationService.error(error?.error?.message || 'Error al cerrar el seguimiento');
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos cerrar el seguimiento.' }));
         this.isSavingCierre = false;
       },
     });
@@ -1093,7 +1109,7 @@ export class CafeListComponent implements OnInit {
               this.cargarRegistros();
             },
             error: (error) => {
-              console.error('Error al asignar:', error);
+              this.logger.httpError('cafe.list.assign', error);
               this.notificationService.error('Registro actualizado pero error al asignar');
               this.isSaving = false;
               this.cargarRegistros();
@@ -1107,7 +1123,7 @@ export class CafeListComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error al actualizar:', error);
+        this.logger.httpError('cafe.list.update', error);
         this.notificationService.error('Error al actualizar el registro');
         this.isSaving = false;
       },
@@ -1120,19 +1136,29 @@ export class CafeListComponent implements OnInit {
       return;
     }
 
-    if (!confirm(`¿Confirmas que ${r.nombre} ${r.apellido} acepto al Senor? Se creara un registro en Consolidacion.`)) {
-      return;
-    }
+    this.registroConvirtiendo = r;
+  }
 
-    this.cafeService.convertirAConsolidado(r.id).subscribe({
+  confirmarConversion(): void {
+    if (!this.registroConvirtiendo || this.isConverting) return;
+    this.isConverting = true;
+    this.cafeService.convertirAConsolidado(this.registroConvirtiendo.id).subscribe({
       next: () => {
-        this.notificationService.success('Registro convertido a consolidacion exitosamente');
+        this.notificationService.success('Registro convertido a Consolidación.');
+        this.isConverting = false;
+        this.cerrarConversion();
         this.cargarRegistros();
       },
       error: (error) => {
-        console.error('Error al convertir:', error);
-        this.notificationService.error(error.error?.message || 'Error al convertir a consolidado');
+        this.logger.httpError('cafe.list.convert', error);
+        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos convertir el registro a Consolidación.' }));
+        this.isConverting = false;
       },
     });
+  }
+
+  cerrarConversion(): void {
+    if (this.isConverting) return;
+    this.registroConvirtiendo = null;
   }
 }

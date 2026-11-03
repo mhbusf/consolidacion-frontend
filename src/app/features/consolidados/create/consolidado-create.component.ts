@@ -12,6 +12,8 @@ import { ComunaService } from '../../../core/services/comuna.service';
 import { ReunionService } from '../../../core/services/reunion.service'; // ← NUEVO
 import { TelefonoChilenoValidator } from '../../../shared/validators/telefono-chileno.validator';
 import { NotificationService } from '../../../core/services/notification.service';
+import { LoggerService } from '../../../core/services/logger.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
 import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/models/consolidado.model'; // ← AGREGAR Reunion
 
 @Component({
@@ -503,7 +505,9 @@ export class ConsolidadoCreateComponent implements OnInit {
     private reunionService: ReunionService, // ← NUEVO
     private route: ActivatedRoute,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService,
+    private errorMapper: HttpErrorMapperService
   ) {
     this.consolidadoForm = this.fb.group({
       nombre: [
@@ -546,8 +550,8 @@ export class ConsolidadoCreateComponent implements OnInit {
         this.isLoadingComunas = false;
       },
       error: (error) => {
-        console.error('Error al cargar comunas', error);
-        this.errorComunas = error?.error?.message || 'No fue posible cargar las comunas.';
+        this.logger.httpError('consolidados.create.load-communes', error);
+        this.errorComunas = this.errorMapper.message(error, { fallback: 'No fue posible cargar las comunas.' });
         this.isLoadingComunas = false;
       },
     });
@@ -563,8 +567,8 @@ export class ConsolidadoCreateComponent implements OnInit {
         this.isLoadingReuniones = false;
       },
       error: (error) => {
-        console.error('Error al cargar reuniones', error);
-        this.errorReuniones = error?.error?.message || 'No fue posible cargar las reuniones.';
+        this.logger.httpError('consolidados.create.load-meetings', error);
+        this.errorReuniones = this.errorMapper.message(error, { fallback: 'No fue posible cargar las reuniones.' });
         this.isLoadingReuniones = false;
       },
     });
@@ -605,7 +609,7 @@ export class ConsolidadoCreateComponent implements OnInit {
         void this.router.navigateByUrl(this.returnUrl);
       },
       error: (error) => {
-        console.error('Error Backend:', error);
+        this.logger.httpError('consolidados.create.save', error);
         if (error.status === 409 && error.error?.coincidencias) {
           this.duplicateWarning = error.error as DuplicateValidationResponse;
           this.notificationService.warning('Se encontraron posibles coincidencias');
@@ -613,10 +617,8 @@ export class ConsolidadoCreateComponent implements OnInit {
           return;
         }
 
-        this.notificationService.error(
-          'Error al crear el consolidado. Verifique los datos.'
-        );
-        this.errorMessage = error?.error?.message || 'Error al crear el consolidado. Verifique los datos.';
+        this.errorMessage = this.errorMapper.message(error, { fallback: 'No pudimos crear el consolidado. Revisa los datos e intenta nuevamente.' });
+        this.notificationService.error(this.errorMessage);
         this.isLoading = false;
       },
     });

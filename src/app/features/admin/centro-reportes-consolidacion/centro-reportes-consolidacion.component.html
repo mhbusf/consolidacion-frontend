@@ -1,0 +1,68 @@
+<main class="reports-page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Centro de informes</p>
+      <h1>Informes de Consolidación</h1>
+      <p>Consulta el alcance antes de descargar y genera archivos Excel listos para análisis operativo.</p>
+    </div>
+    <a routerLink="/reportes/consolidados" class="secondary-link">Abrir base consolidada</a>
+  </header>
+
+  @if (cargandoInicial) {
+    <section class="state" role="status"><span class="spinner"></span><strong>Cargando filtros de informes</strong></section>
+  } @else if (errorInicial) {
+    <section class="state error" role="alert"><strong>{{ errorInicial }}</strong><button type="button" (click)="cargarCatalogos()">Reintentar</button></section>
+  } @else {
+    <form class="filters" [formGroup]="form" (ngSubmit)="consultar()">
+      <div class="filters-heading">
+        <div><span>Paso 1</span><h2>Define el alcance</h2></div>
+        @if (metadata) {<small>Máximo {{ metadata.maximoDiasRango }} días y {{ metadata.maximoRegistros | number }} registros por archivo.</small>}
+      </div>
+      <div class="filter-grid">
+        <label>Desde <input type="date" formControlName="desde"></label>
+        <label>Hasta <input type="date" formControlName="hasta"></label>
+        <label>Reunión
+          <select formControlName="reunionId"><option value="">Todas</option>@for (item of opciones.reuniones; track item.id) {<option [value]="item.id">{{ item.nombre || 'Reunión #' + item.id }}</option>}</select>
+        </label>
+        <label>Consolidador
+          <select formControlName="usuarioAsignadoId"><option value="">Todos</option>@for (item of opciones.usuarios; track item.id) {<option [value]="item.id">{{ etiquetaUsuario(item.id, item.username, item.nombreCompleto) }}</option>}</select>
+        </label>
+        <label>Comuna
+          <select formControlName="comunaId"><option value="">Todas</option>@for (item of opciones.comunas; track item.id) {<option [value]="item.id">{{ item.nombre || 'Comuna #' + item.id }}</option>}</select>
+        </label>
+      </div>
+      <details>
+        <summary>Filtros exclusivos del histórico de cierres</summary>
+        <div class="filter-grid history-filters">
+          <label>Tipo de cierre <select formControlName="tipoCierre"><option value="">Todos</option><option value="GDC">Con GDC</option><option value="CERRADO">Sin GDC</option></select></label>
+          <label>Motivo contiene <input type="text" formControlName="motivo" maxlength="100"></label>
+          <label>GDC contiene <input type="text" formControlName="gdc" maxlength="100"></label>
+        </div>
+      </details>
+      <button type="submit" class="primary" [disabled]="cargandoPreview">{{ cargandoPreview ? 'Calculando…' : 'Actualizar vista previa' }}</button>
+    </form>
+
+    @if (errorPreview) {<div class="banner error" role="alert">{{ errorPreview }}</div>}
+    @if (errorDescarga) {<div class="banner error" role="alert">{{ errorDescarga }}</div>}
+
+    <section aria-labelledby="reports-title">
+      <div class="reports-heading"><span>Paso 2</span><h2 id="reports-title">Selecciona el informe</h2></div>
+      <div class="reports-grid">
+        @for (reporte of reportes; track reporte.tipo; let index = $index) {
+          <article class="report-card">
+            <div class="report-number">0{{ index + 1 }}</div>
+            <div class="report-copy"><h3>{{ reporte.titulo }}</h3><p>{{ reporte.descripcion }}</p><small>{{ reporte.contenido }}</small></div>
+            <div class="preview" [class.preview-loading]="cargandoPreview">
+              @if (previews[reporte.tipo]; as preview) {
+                <strong>{{ preview.registros | number }}</strong><span>registros encontrados</span><small>{{ preview.fechaAplicada === 'fecha_cierre' ? 'Por fecha de cierre' : 'Por fecha de ingreso' }}</small>
+              } @else {<strong>—</strong><span>Sin vista previa</span>}
+            </div>
+            <button type="button" class="download" [disabled]="descargando !== null || cargandoPreview || !previews[reporte.tipo]" (click)="descargar(reporte.tipo)">
+              {{ descargando === reporte.tipo ? 'Generando Excel…' : 'Descargar Excel' }}
+            </button>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</main>
