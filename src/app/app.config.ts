@@ -27,9 +27,17 @@ export const appConfig: ApplicationConfig = {
 
       updates.versionUpdates
         .pipe(filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'))
-        .subscribe(() => notifications.info('Hay una actualización disponible. Recarga la página cuando termines.'));
+        .subscribe(() => {
+          notifications.info('Actualizando la aplicación...');
+          void updates.activateUpdate()
+            .then(() => window.location.reload())
+            .catch(() => logger.operationError('service-worker.activate-update'));
+        });
       updates.unrecoverable
-        .subscribe(() => notifications.error('La versión almacenada ya no está disponible. Recarga la página para continuar.'));
+        .subscribe(() => {
+          notifications.error('La versión almacenada ya no está disponible. Recargando...');
+          window.location.reload();
+        });
 
       window.setTimeout(() => {
         void updates.checkForUpdate()

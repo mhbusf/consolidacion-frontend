@@ -12,6 +12,25 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://consolidaci-n-production.up.railway.app" crossorigin>
   <link rel="dns-prefetch" href="https://consolidaci-n-production.up.railway.app">
+  <script>
+    window.addEventListener('error', function (event) {
+      var source = event.target;
+      if (!(source instanceof HTMLScriptElement) || !source.src || sessionStorage.getItem('asset-recovery')) return;
+      sessionStorage.setItem('asset-recovery', '1');
+      var unregister = 'serviceWorker' in navigator
+        ? navigator.serviceWorker.getRegistrations().then(function (registrations) {
+            return Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
+          })
+        : Promise.resolve();
+      var clearCaches = 'caches' in window
+        ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (key) { return caches.delete(key); })); })
+        : Promise.resolve();
+      Promise.all([unregister, clearCaches]).finally(function () {
+        window.location.replace('/index.html?recover=' + Date.now());
+      });
+    }, true);
+    window.setTimeout(function () { sessionStorage.removeItem('asset-recovery'); }, 10000);
+  </script>
 </head>
 <body>
   <app-root></app-root>

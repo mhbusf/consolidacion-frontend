@@ -5,6 +5,9 @@ services:
     buildCommand: npm ci && npm run build -- --configuration production
     staticPublishPath: ./dist/consolidacion-frontend/browser
     headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
       - path: /main-*.js
         name: Cache-Control
         value: public, max-age=31536000, immutable
@@ -19,7 +22,7 @@ services:
         value: public, max-age=31536000, immutable
       - path: /index.html
         name: Cache-Control
-        value: no-cache
+        value: no-cache, no-store, must-revalidate
       - path: /ngsw.json
         name: Cache-Control
         value: no-cache
