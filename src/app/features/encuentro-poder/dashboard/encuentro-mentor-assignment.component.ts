@@ -115,6 +115,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
 })
 export class EncuentroMentorAssignmentComponent {
   private readonly service = inject(EncuentroMentoriaService);
+  private loadSequence = 0;
 
   readonly cicloId = input.required<number>();
   readonly asignaciones = signal<EncuentroAsignacionMentor[]>([]);
@@ -155,6 +156,7 @@ export class EncuentroMentorAssignmentComponent {
   constructor() {
     effect(onCleanup => {
       const cicloId = this.cicloId();
+      const sequence = ++this.loadSequence;
       this.filtro.set('TODOS');
       this.busqueda.set('');
       this.cargando.set(true);
@@ -162,12 +164,15 @@ export class EncuentroMentorAssignmentComponent {
       const subscription = forkJoin({
         asignaciones: this.service.asignaciones(cicloId),
         mentores: this.service.mentoresHabilitados(),
-      }).pipe(finalize(() => this.cargando.set(false))).subscribe({
+      }).pipe(finalize(() => { if (sequence === this.loadSequence) this.cargando.set(false); })).subscribe({
         next: ({ asignaciones, mentores }) => {
+          if (sequence !== this.loadSequence || this.cicloId() !== cicloId) return;
           this.asignaciones.set(asignaciones);
           this.mentores.set(mentores);
         },
-        error: error => this.error.set(this.mensajeError(error, 'No fue posible cargar las asignaciones de mentoría.')),
+        error: error => {
+          if (sequence === this.loadSequence) this.error.set(this.mensajeError(error, 'No fue posible cargar las asignaciones de mentoría.'));
+        },
       });
       onCleanup(() => subscription.unsubscribe());
     });
@@ -175,18 +180,21 @@ export class EncuentroMentorAssignmentComponent {
 
   cargar(): void {
     const cicloId = this.cicloId();
+    const sequence = ++this.loadSequence;
     this.cargando.set(true);
     this.error.set('');
     forkJoin({
       asignaciones: this.service.asignaciones(cicloId),
       mentores: this.service.mentoresHabilitados(),
-    }).pipe(finalize(() => this.cargando.set(false))).subscribe({
+    }).pipe(finalize(() => { if (sequence === this.loadSequence) this.cargando.set(false); })).subscribe({
       next: ({ asignaciones, mentores }) => {
-        if (this.cicloId() !== cicloId) return;
+        if (sequence !== this.loadSequence || this.cicloId() !== cicloId) return;
         this.asignaciones.set(asignaciones);
         this.mentores.set(mentores);
       },
-      error: error => this.error.set(this.mensajeError(error, 'No fue posible cargar las asignaciones de mentoría.')),
+      error: error => {
+        if (sequence === this.loadSequence) this.error.set(this.mensajeError(error, 'No fue posible cargar las asignaciones de mentoría.'));
+      },
     });
   }
 
@@ -208,7 +216,7 @@ export class EncuentroMentorAssignmentComponent {
       next: response => {
         if (this.cicloId() !== cicloId) return;
         this.asignaciones.update(actual => actual.map(asignacion => asignacion.inscripcionId === item.inscripcionId
-          ? (response ?? { ...asignacion, mentor: null })
+          ? { ...asignacion, mentor: response?.mentor ?? null }
           : asignacion));
       },
       error: error => this.error.set(this.mensajeError(error, 'No fue posible actualizar la asignación.')),

@@ -27,8 +27,6 @@ export interface EncuentroPersona {
   nombreCompleto: string;
   telefono: string;
   comuna?: string;
-  invitadoPor?: string;
-  tiempoCatedral?: string;
 }
 
 export interface EncuentroInscripcion {
@@ -37,6 +35,18 @@ export interface EncuentroInscripcion {
   cicloId: number;
   fechaInscripcion: string;
   estadoParticipacion: EncuentroEstadoParticipacion;
+  invitadoPor?: string | null;
+  tiempoCatedral?: string | null;
+  personaRevision: string;
+}
+
+export interface ActualizarEncuentroInscripcion {
+  nombreCompleto: string;
+  telefono: string;
+  comuna: string;
+  invitadoPor: string;
+  tiempoCatedral: string;
+  personaRevision: string;
 }
 
 export interface EncuentroInscripcionPublica {

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { EncuentroAsignacionMentor } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignment.component';
 
@@ -88,5 +89,18 @@ describe('EncuentroMentorAssignmentComponent', () => {
     component.filtro.set('TODOS');
     component.busqueda.set('persona inexistente');
     expect(component.asignacionesFiltradas()).toEqual([]);
+  });
+
+  it('conserva datos recién recargados al completar una asignación anterior', () => {
+    const respuesta = new Subject<EncuentroAsignacionMentor>();
+    service.asignarMentor.and.returnValue(respuesta);
+    component.cambiarMentor(asignacion, '9');
+    service.asignaciones.and.returnValue(of([{ ...asignacion, nombreCompleto: 'Ana Actualizada' }]));
+
+    component.cargar();
+    respuesta.next({ ...asignacion, mentor });
+
+    expect(component.asignaciones()[0].nombreCompleto).toBe('Ana Actualizada');
+    expect(component.asignaciones()[0].mentor).toEqual(mentor);
   });
 });

@@ -7,7 +7,7 @@ import {
   EncuentroParticipante, EncuentroPersona, EncuentroAsistenciaPublica, EncuentroImportacion,
   EncuentroTipoReporte,
   EncuentroContinuidadPreview, EncuentroContinuidadResultado, EncuentroNoContinuidad,
-  EncuentroInscripcionPublica,
+  EncuentroInscripcionPublica, ActualizarEncuentroInscripcion,
 } from '../models/encuentro-poder.model';
 
 @Injectable({ providedIn: 'root' })
@@ -27,6 +27,7 @@ export class EncuentroPoderService {
   }
   dashboard(cicloId: number): Observable<EncuentroDashboard> { return this.http.get<EncuentroDashboard>(`${this.api}/dashboard`, { params: { cicloId } }); }
   inscritos(cicloId: number): Observable<EncuentroInscripcion[]> { return this.http.get<EncuentroInscripcion[]>(`${this.api}/ciclos/${cicloId}/inscritos`); }
+  actualizarInscripcion(inscripcionId: number, request: ActualizarEncuentroInscripcion): Observable<EncuentroInscripcion> { return this.http.put<EncuentroInscripcion>(`${this.api}/inscripciones/${inscripcionId}`, request); }
   buscarPersonas(texto: string): Observable<EncuentroPersona[]> { return this.http.get<EncuentroPersona[]>(`${this.api}/personas`, { params: { texto } }); }
   historial(id: number): Observable<EncuentroParticipante> { return this.http.get<EncuentroParticipante>(`${this.api}/personas/${id}/historial`); }
   registrarAsistencia(personaId: number, claseId: number): Observable<EncuentroAsistencia> { return this.http.post<EncuentroAsistencia>(`${this.api}/asistencias`, { personaId, claseId }); }

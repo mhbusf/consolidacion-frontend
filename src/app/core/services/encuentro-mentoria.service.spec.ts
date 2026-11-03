@@ -17,9 +17,9 @@ describe('EncuentroMentoriaService', () => {
       nombreCompleto: 'Ana Pérez',
       telefono: '+56911111111',
       comuna: 'Santiago',
-      invitadoPor: 'Pedro',
-      tiempoCatedral: '1 año',
     },
+    invitadoPor: 'Pedro',
+    tiempoCatedral: '1 año',
     ciclo: { id: 7, nombre: 'Octubre 2026', fechaInicio: '2026-10-01', fechaCierre: null, estado: 'ABIERTO' },
     mentor: null,
     progreso: {

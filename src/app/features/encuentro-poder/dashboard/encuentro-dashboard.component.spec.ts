@@ -4,6 +4,7 @@ import { of, Subject } from 'rxjs';
 import { EncuentroAsistencia, EncuentroCiclo, EncuentroDashboard } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
+import { ComunaService } from '../../../core/services/comuna.service';
 import { EncuentroDashboardComponent } from './encuentro-dashboard.component';
 
 const clases = [
@@ -58,19 +59,23 @@ describe('EncuentroDashboardComponent', () => {
   let component: EncuentroDashboardComponent;
   let service: jasmine.SpyObj<EncuentroPoderService>;
   let mentoriaService: jasmine.SpyObj<EncuentroMentoriaService>;
+  let comunaService: jasmine.SpyObj<ComunaService>;
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
       'ciclos', 'dashboard', 'registrarAsistencia', 'historial', 'exportar', 'importar',
-      'previewContinuidad', 'confirmarContinuidad',
+      'previewContinuidad', 'confirmarContinuidad', 'inscritos', 'actualizarInscripcion',
     ]);
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.callFake(() => of(dashboard()));
+    service.inscritos.and.returnValue(of([]));
     mentoriaService = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', [
       'asignaciones', 'mentoresHabilitados', 'asignarMentor', 'desasignarMentor',
     ]);
     mentoriaService.asignaciones.and.returnValue(of([]));
     mentoriaService.mentoresHabilitados.and.returnValue(of([]));
+    comunaService = jasmine.createSpyObj<ComunaService>('ComunaService', ['listarTodas']);
+    comunaService.listarTodas.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [EncuentroDashboardComponent],
@@ -78,6 +83,7 @@ describe('EncuentroDashboardComponent', () => {
         provideRouter([]),
         { provide: EncuentroPoderService, useValue: service },
         { provide: EncuentroMentoriaService, useValue: mentoriaService },
+        { provide: ComunaService, useValue: comunaService },
       ],
     }).compileComponents();
 

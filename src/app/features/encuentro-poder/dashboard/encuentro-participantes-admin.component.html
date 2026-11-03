@@ -1,0 +1,86 @@
+<section class="participants-panel">
+  <header>
+    <div><span>Administración</span><h2>Participantes del ciclo</h2></div>
+    <strong>{{ inscripciones().length }}</strong>
+  </header>
+
+  @if (errorCarga()) {
+    <p class="error" role="alert">{{ errorCarga() }} <button type="button" (click)="cargar()">Reintentar</button></p>
+  }
+  @if (cargando()) {
+    <p class="state">Cargando participantes...</p>
+  } @else if (!errorCarga()) {
+    <label class="search-label">Buscar participante
+      <input type="search" placeholder="Nombre, teléfono, comuna o invitado por" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)">
+    </label>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Participante</th><th>Teléfono</th><th>Comuna</th><th>Invitado por / servidor de GDC</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          @for (item of filtradas(); track item.id) {
+            <tr>
+              <td data-label="Participante"><strong>{{ item.persona.nombreCompleto }}</strong></td>
+              <td data-label="Teléfono">{{ item.persona.telefono }}</td>
+              <td data-label="Comuna">{{ item.persona.comuna || '—' }}</td>
+              <td data-label="Invitado por">{{ item.invitadoPor || '—' }}</td>
+              <td data-label="Estado"><span class="status" [class.inactive]="item.estadoParticipacion === 'NO_CONTINUA'">{{ item.estadoParticipacion === 'ACTIVO' ? 'Activo' : 'No continúa' }}</span></td>
+              <td class="actions"><button type="button" (click)="abrir(item)">Editar datos</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="state">No hay participantes que coincidan con la búsqueda.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (editando(); as inscripcion) {
+  <div class="modal-backdrop" (click)="cerrar()" (keydown.escape)="cerrar()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-participant-title" [attr.aria-busy]="guardando() || recargandoRevision()" (click)="$event.stopPropagation()">
+      <button class="close" type="button" aria-label="Cerrar" [disabled]="guardando()" (click)="cerrar()">×</button>
+      <span class="eyebrow">{{ cicloNombre() }}</span>
+      <h2 id="edit-participant-title">Editar participante</h2>
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <fieldset>
+          <legend>Datos globales de la persona</legend>
+          <p>Estos cambios se reflejarán en todos los ciclos donde participe.</p>
+          <label>Nombre completo *
+            <input formControlName="nombreCompleto" autocomplete="name" maxlength="180">
+            @if (form.controls.nombreCompleto.touched && form.controls.nombreCompleto.invalid) {<small>Ingresa un nombre de al menos 3 caracteres.</small>}
+          </label>
+          <label>Teléfono *
+            <input type="tel" inputmode="tel" formControlName="telefono" autocomplete="tel" placeholder="56912345678" maxlength="30">
+            @if (form.controls.telefono.touched && form.controls.telefono.invalid) {<small>Ingresa 11 dígitos incluyendo 56.</small>}
+          </label>
+          <label>Comuna
+            <select formControlName="comuna">
+              <option value="">Sin comuna</option>
+              @if (comunaFueraDelCatalogo(); as comunaActual) {<option [value]="comunaActual">{{ comunaActual }} · valor actual</option>}
+              @for (grupo of comunasPorProvincia(); track grupo.provincia) {
+                <optgroup [label]="grupo.provincia">
+                  @for (comuna of grupo.comunas; track comuna.id) {<option [value]="comuna.nombre">{{ comuna.nombre }}</option>}
+                </optgroup>
+              }
+            </select>
+          </label>
+          @if (errorComunas()) {<small class="catalog-warning">{{ errorComunas() }}</small>}
+        </fieldset>
+        <fieldset>
+          <legend>Datos de este ciclo</legend>
+          <label>Invitado por / servidor de GDC
+            <input formControlName="invitadoPor" maxlength="180">
+          </label>
+          <label>Tiempo en Catedral
+            <input formControlName="tiempoCatedral" maxlength="100">
+          </label>
+        </fieldset>
+        @if (errorEdicion()) {<p class="error" role="alert">{{ errorEdicion() }}</p>}
+        <div class="modal-actions">
+          <button class="cancel" type="button" [disabled]="guardando()" (click)="cerrar()">Cancelar</button>
+          <button class="save" type="submit" [disabled]="guardando() || recargandoRevision()">{{ guardando() ? 'Guardando...' : recargandoRevision() ? 'Recargando...' : 'Guardar cambios' }}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

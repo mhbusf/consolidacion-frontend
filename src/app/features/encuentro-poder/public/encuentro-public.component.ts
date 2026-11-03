@@ -17,11 +17,11 @@ import { HttpErrorMapperService } from '../../../core/services/http-error-mapper
     @if (cargandoCiclo()) {<p class="cycle-state">Identificando ciclo...</p>}
     <p class="muted">Completa tus datos para participar en este ciclo.</p>
     <form [formGroup]="form" (ngSubmit)="enviar()">
-      <label>Nombre y apellido *<input formControlName="nombreCompleto" autocomplete="name"></label>
-      <label>Teléfono *<input type="tel" inputmode="tel" formControlName="telefono" placeholder="56912345678" autocomplete="tel">@if (form.controls.telefono.touched && form.controls.telefono.hasError('required')) {<small class="field-error">El teléfono es obligatorio.</small>} @else if (form.controls.telefono.touched && form.controls.telefono.hasError('telefonoChileno11Digitos')) {<small class="field-error">Ingresa 11 dígitos incluyendo 56. Ejemplo: 56912345678.</small>}</label>
+      <label>Nombre y apellido *<input formControlName="nombreCompleto" autocomplete="name" maxlength="180"></label>
+      <label>Teléfono *<input type="tel" inputmode="tel" formControlName="telefono" placeholder="56912345678" autocomplete="tel" maxlength="30">@if (form.controls.telefono.touched && form.controls.telefono.hasError('required')) {<small class="field-error">El teléfono es obligatorio.</small>} @else if (form.controls.telefono.touched && form.controls.telefono.hasError('telefonoChileno11Digitos')) {<small class="field-error">Ingresa 11 dígitos incluyendo 56. Ejemplo: 56912345678.</small>}</label>
       <label>Comuna<select formControlName="comuna"><option value="">{{ cargandoComunas() ? 'Cargando comunas...' : 'Selecciona una comuna' }}</option>@for (grupo of comunasPorProvincia(); track grupo.provincia) {<optgroup [label]="grupo.provincia">@for (comuna of grupo.comunas; track comuna.id) {<option [value]="comuna.nombre">{{ comuna.nombre }}</option>}</optgroup>}</select></label>
-      <label>Invitado por / servidor de GDC<input formControlName="invitadoPor"></label>
-      <label>Tiempo en Catedral<input formControlName="tiempoCatedral"></label>
+      <label>Invitado por / servidor de GDC<input formControlName="invitadoPor" maxlength="180"></label>
+      <label>Tiempo en Catedral<input formControlName="tiempoCatedral" maxlength="100"></label>
       <button [disabled]="form.invalid || enviando() || (cargandoCiclo() && !cicloNombre())">{{ enviando() ? 'Enviando...' : 'Inscribirme' }}</button>
     </form>
     @if (mensaje()) { <div class="success">{{ mensaje() }}</div> }
@@ -40,7 +40,7 @@ export class EncuentroPublicComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly errorMapper = inject(HttpErrorMapperService);
   private readonly token = this.route.snapshot.paramMap.get('token') ?? '';
-  readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3)]], telefono: ['', [Validators.required, TelefonoChilenoValidator.validarConCodigoPais()]], comuna: [{ value: '', disabled: true }], invitadoPor: [''], tiempoCatedral: [''] });
+  readonly form = this.fb.nonNullable.group({ nombreCompleto: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(180)]], telefono: ['', [Validators.required, Validators.maxLength(30), TelefonoChilenoValidator.validarConCodigoPais()]], comuna: [{ value: '', disabled: true }], invitadoPor: ['', Validators.maxLength(180)], tiempoCatedral: ['', Validators.maxLength(100)] });
   readonly comunasPorProvincia = signal<{ provincia: string; comunas: Comuna[] }[]>([]);
   readonly cargandoComunas = signal(true);
   readonly cargandoCiclo = signal(true);

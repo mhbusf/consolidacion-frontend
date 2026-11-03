@@ -8,9 +8,10 @@ import { finalize, Subscription } from 'rxjs';
 import { EncuentroAsistencia, EncuentroCiclo, EncuentroContinuidadPreview, EncuentroDashboard, EncuentroEstadoClase, EncuentroParticipante } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignment.component';
+import { EncuentroParticipantesAdminComponent } from './encuentro-participantes-admin.component';
 
 @Component({
-  selector: 'app-encuentro-dashboard', standalone: true, imports: [CommonModule, FormsModule, RouterLink, EncuentroMentorAssignmentComponent],
+  selector: 'app-encuentro-dashboard', standalone: true, imports: [CommonModule, FormsModule, RouterLink, EncuentroMentorAssignmentComponent, EncuentroParticipantesAdminComponent],
   template: `<div class="page">
     <header class="heading">
       <div><span class="eyebrow">Módulo operativo</span><h1>Encuentro de Poder</h1></div>
@@ -99,6 +100,8 @@ import { EncuentroMentorAssignmentComponent } from './encuentro-mentor-assignmen
           </div>
         </article>
       </section>
+
+      <app-encuentro-participantes-admin [cicloId]="data.ciclo.id" [cicloNombre]="data.ciclo.nombre" (actualizada)="participanteActualizado()" />
 
       <app-encuentro-mentor-assignment [cicloId]="data.ciclo.id" />
 
@@ -335,6 +338,12 @@ export class EncuentroDashboardComponent implements OnInit {
   }
 
   cerrarHistorial(): void { this.historyRequest?.unsubscribe(); this.historial.set(null); }
+
+  participanteActualizado(): void {
+    this.dataRevision++;
+    this.cargar();
+    this.mentorAssignment()?.cargar();
+  }
 
   async generarQr(clases: EncuentroCiclo['clases'], claseId: number): Promise<void> {
     const clase = clases.find(item => item.id === claseId);

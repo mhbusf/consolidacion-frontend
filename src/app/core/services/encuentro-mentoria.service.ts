@@ -114,8 +114,8 @@ export class EncuentroMentoriaService {
     return {
       ...this.resumenParticipante(response),
       fechaInscripcion: response.fechaInscripcion,
-      invitadoPor: response.persona.invitadoPor,
-      tiempoCatedral: response.persona.tiempoCatedral,
+      invitadoPor: response.invitadoPor,
+      tiempoCatedral: response.tiempoCatedral,
       asistencias: response.progreso.asistencias
         .filter(asistencia => asistencia.obligatoria)
         .map(asistencia => ({
@@ -152,7 +152,7 @@ export class EncuentroMentoriaService {
       personaId: response.persona.id,
       nombreCompleto: response.persona.nombreCompleto,
       telefono: response.persona.telefono,
-      invitadoPor: response.persona.invitadoPor,
+      invitadoPor: response.invitadoPor,
       mentor: response.mentor ? this.mentorOpcion(response.mentor) : null,
     };
   }
@@ -182,9 +182,9 @@ interface ParticipanteMentorResponse {
     nombreCompleto: string;
     telefono: string;
     comuna: string | null;
-    invitadoPor: string | null;
-    tiempoCatedral: string | null;
   };
+  invitadoPor: string | null;
+  tiempoCatedral: string | null;
   ciclo: { id: number; nombre: string; fechaInicio: string; fechaCierre: string | null; estado: 'ABIERTO' | 'CERRADO' };
   mentor: MentorResponse | null;
   progreso: {
