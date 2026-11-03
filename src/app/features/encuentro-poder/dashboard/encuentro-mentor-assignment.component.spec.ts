@@ -8,7 +8,14 @@ describe('EncuentroMentorAssignmentComponent', () => {
   let component: EncuentroMentorAssignmentComponent;
   let service: jasmine.SpyObj<EncuentroMentoriaService>;
   const mentor = { id: 9, username: 'mentor', nombreCompleto: 'Mentor Uno', email: 'mentor@example.com', enabled: true };
-  const asignacion = { inscripcionId: 42, personaId: 10, nombreCompleto: 'Ana Pérez', telefono: '+56911111111', mentor: null };
+  const asignacion = {
+    inscripcionId: 42,
+    personaId: 10,
+    nombreCompleto: 'Ana Pérez',
+    telefono: '+56911111111',
+    invitadoPor: 'Pedro Servidor',
+    mentor: null,
+  };
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', [
@@ -33,6 +40,8 @@ describe('EncuentroMentorAssignmentComponent', () => {
     expect(service.asignaciones).toHaveBeenCalledOnceWith(7);
     expect(service.mentoresHabilitados).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.textContent).toContain('Ana Pérez');
+    expect(fixture.nativeElement.textContent).toContain('Invitado por / servidor de GDC');
+    expect(fixture.nativeElement.textContent).toContain('Pedro Servidor');
     expect(fixture.nativeElement.textContent).toContain('Sin mentor');
     expect(fixture.nativeElement.textContent).toContain('Mentor Uno');
   });

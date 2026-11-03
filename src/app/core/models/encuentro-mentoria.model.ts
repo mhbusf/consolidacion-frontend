@@ -69,6 +69,7 @@ export interface EncuentroAsignacionMentor {
   personaId: number;
   nombreCompleto: string;
   telefono: string;
+  invitadoPor?: string | null;
   mentor: EncuentroMentorOpcion | null;
 }
 

@@ -152,6 +152,7 @@ export class EncuentroMentoriaService {
       personaId: response.persona.id,
       nombreCompleto: response.persona.nombreCompleto,
       telefono: response.persona.telefono,
+      invitadoPor: response.persona.invitadoPor,
       mentor: response.mentor ? this.mentorOpcion(response.mentor) : null,
     };
   }

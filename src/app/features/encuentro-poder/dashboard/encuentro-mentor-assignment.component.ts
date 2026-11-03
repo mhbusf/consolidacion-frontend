@@ -62,12 +62,13 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Participante</th><th>Teléfono</th><th>Mentor actual</th><th>Asignar / reasignar</th></tr></thead>
+              <thead><tr><th>Participante</th><th>Teléfono</th><th>Invitado por / servidor de GDC</th><th>Mentor actual</th><th>Asignar / reasignar</th></tr></thead>
               <tbody>
                 @for (item of asignacionesFiltradas(); track item.inscripcionId) {
                   <tr>
                     <td><strong>{{ item.nombreCompleto }}</strong></td>
                     <td>{{ item.telefono }}</td>
+                    <td>{{ item.invitadoPor || '—' }}</td>
                     <td><span class="mentor-badge" [class.unassigned]="!item.mentor">{{ item.mentor?.nombreCompleto || 'Sin mentor' }}</span></td>
                     <td>
                       <select
@@ -82,7 +83,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="4" class="state">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
+                  <tr><td colspan="5" class="state">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
                 }
               </tbody>
             </table>

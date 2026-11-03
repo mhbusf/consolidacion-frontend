@@ -95,12 +95,14 @@ describe('EncuentroMentoriaService', () => {
   });
 
   it('usa los contratos administrativos del backend para asignar y desasignar', () => {
-    service.asignaciones(7).subscribe();
+    let asignaciones: { invitadoPor?: string | null }[] = [];
+    service.asignaciones(7).subscribe(response => asignaciones = response);
     service.mentoresHabilitados().subscribe();
     service.asignarMentor(42, 9).subscribe();
     service.desasignarMentor(42).subscribe();
 
-    http.expectOne(`${encuentroApi}/ciclos/7/mentorias`).flush([]);
+    http.expectOne(`${encuentroApi}/ciclos/7/mentorias`).flush([participante]);
+    expect(asignaciones[0].invitadoPor).toBe('Pedro');
     const mentors = http.expectOne(`${encuentroApi}/mentores`);
     mentors.flush([]);
     const updates = http.match(`${encuentroApi}/inscripciones/42/mentor`);
