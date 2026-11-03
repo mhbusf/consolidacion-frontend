@@ -11,6 +11,7 @@ import {
   RoleName,
 } from '../models/auth.model';
 import { environment } from '../../../environments/environment';
+import { SESSION_EXPIRED_REASON } from '../constants/auth-session.constants';
 
 @Injectable({
   providedIn: 'root',
@@ -118,7 +119,10 @@ export class AuthService {
       }
       this.expirationTimer = setTimeout(() => {
         this.logout();
-        void this.router.navigate(['/login']);
+        void this.router.navigate(['/login'], {
+          replaceUrl: true,
+          state: { reason: SESSION_EXPIRED_REASON },
+        });
       }, delay);
     } catch {
       this.logout();

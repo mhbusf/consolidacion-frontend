@@ -11,6 +11,16 @@ describe('WhatsAppUrlPipe', () => {
     expect(pipe.transform('9 1111 1111')).toBe('https://wa.me/56911111111');
   });
 
+  it('codifica de forma segura el mensaje opcional', () => {
+    expect(pipe.transform('9 1111 1111', 'Hola Ana & José, ¿cómo estás?')).toBe(
+      'https://wa.me/56911111111?text=Hola%20Ana%20%26%20Jos%C3%A9%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F'
+    );
+  });
+
+  it('mantiene la URL sin query string cuando el mensaje está vacío', () => {
+    expect(pipe.transform('9 1111 1111', '   ')).toBe('https://wa.me/56911111111');
+  });
+
   it('rechaza números que no tienen un formato chileno válido', () => {
     expect(pipe.transform('12345')).toBeNull();
     expect(pipe.transform(null)).toBeNull();

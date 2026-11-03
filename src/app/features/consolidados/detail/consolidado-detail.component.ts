@@ -12,11 +12,13 @@ import {
 } from '../../../core/models/consolidado.model';
 import { ComentarioResponse } from '../../../core/models/comentario.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
+import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
 
 @Component({
   selector: 'app-consolidado-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WhatsAppUrlPipe],
   templateUrl: './consolidado-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './consolidado-detail.component.css'
@@ -25,16 +27,18 @@ export class ConsolidadoDetailComponent implements OnInit {
   @ViewChild('modalDialog') modalDialog?: ElementRef<HTMLElement>;
 
   consolidado: ConsolidadoResponse | null = null;
+  consolidadoId = 0;
   comentarios: ComentarioResponse[] = [];
   nuevoComentario = '';
   isLoading = true;
+  errorCarga = '';
+  isLoadingComentarios = true;
+  errorComentarios = '';
   isLoadingComentario = false;
   isUpdatingHito = false;
   isAdmin = false;
-  origenHistorico = false;
-  tipoHistorico = '';
-  busquedaHistorico = '';
-  fechaHistorico = '';
+  origen = '';
+  private queryParamsRetorno: Record<string, string> = {};
 
   // Modal de cierre con GDC
   mostrarModalGDC = false;
@@ -61,39 +65,48 @@ export class ConsolidadoDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.origenHistorico = this.route.snapshot.queryParamMap.get('origen') === 'historico';
-    this.tipoHistorico = this.route.snapshot.queryParamMap.get('tipo') || '';
-    this.busquedaHistorico = this.route.snapshot.queryParamMap.get('busqueda') || '';
-    this.fechaHistorico = this.route.snapshot.queryParamMap.get('fecha') || '';
+    this.consolidadoId = id;
+    this.origen = this.route.snapshot.queryParamMap.get('origen') || '';
+    this.queryParamsRetorno = { ...this.route.snapshot.queryParams };
+    delete this.queryParamsRetorno['origen'];
+    delete this.queryParamsRetorno['returnUrl'];
     this.cargarDatos(id);
+    this.cargarComentarios(id);
   }
 
   cargarDatos(id: number): void {
     this.isLoading = true;
+    this.errorCarga = '';
     
     this.consolidadoService.obtenerPorId(id).subscribe({
       next: (data) => {
         this.consolidado = data;
-        this.cargarComentarios(id);
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al cargar consolidado', error);
-        this.notificationService.error(error?.error?.message || 'No fue posible cargar el consolidado');
+        this.errorCarga = error?.error?.message || 'No fue posible cargar el consolidado.';
         this.isLoading = false;
-        this.volver();
       }
     });
   }
 
+  reintentarDatos(): void {
+    this.cargarDatos(this.consolidadoId);
+  }
+
   cargarComentarios(id: number): void {
+    this.isLoadingComentarios = true;
+    this.errorComentarios = '';
     this.comentarioService.listar(id).subscribe({
       next: (data) => {
         this.comentarios = data;
-        this.isLoading = false;
+        this.isLoadingComentarios = false;
       },
       error: (error) => {
         console.error('Error al cargar comentarios', error);
-        this.isLoading = false;
+        this.errorComentarios = error?.error?.message || 'No fue posible cargar los comentarios.';
+        this.isLoadingComentarios = false;
       }
     });
   }
@@ -172,7 +185,6 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.notificationService.success('Consolidado cerrado con GDC exitosamente');
         this.isClosing = false;
         this.cerrarModalGDC();
-        // Recargar datos para ver el nuevo estado
         if (this.consolidado) {
           this.cargarDatos(this.consolidado.id);
         }
@@ -203,7 +215,9 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.isClosing = false;
         this.cerrarModalCierre();
         this.notificationService.success('Consolidado cerrado sin GDC exitosamente');
-        this.router.navigate(['/consolidados']);
+        if (this.consolidado) {
+          this.cargarDatos(this.consolidado.id);
+        }
       },
       error: (error) => {
         this.isClosing = false;
@@ -232,13 +246,11 @@ export class ConsolidadoDetailComponent implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/consolidados'], {
-      queryParams: this.origenHistorico ? {
-        vista: 'historico',
-        tipo: this.tipoHistorico || undefined,
-        busqueda: this.busquedaHistorico || undefined,
-        fecha: this.fechaHistorico || undefined,
-      } : undefined,
+    const destino = this.origen === 'atrasos' ? '/consolidados-atrasos' : '/consolidados';
+    this.router.navigate([destino], {
+      queryParams: this.origen === 'historico'
+        ? { vista: 'historico', ...this.queryParamsRetorno }
+        : this.queryParamsRetorno,
     });
   }
 
@@ -253,7 +265,17 @@ export class ConsolidadoDetailComponent implements OnInit {
   asignar(): void {
     if (!this.consolidado || !this.puedeSerAsignado()) return;
 
-    void this.router.navigate(['/consolidados', this.consolidado.id, 'asignar']);
+    void this.router.navigate(['/consolidados', this.consolidado.id, 'asignar'], {
+      queryParams: { returnUrl: this.router.url },
+    });
+  }
+
+  mensajeWhatsApp(): string {
+    if (!this.consolidado) return '';
+    return institutionalWhatsAppMessage(
+      this.consolidado.nombre,
+      this.consolidado.usuarioAsignado || ''
+    );
   }
 
   esTerminal(): boolean {

@@ -9,6 +9,8 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
+import { SESSION_EXPIRED_REASON } from '../../../core/constants/auth-session.constants';
 import { RoleName } from '../../../core/models/auth.model';
 
 @Component({
@@ -54,6 +56,8 @@ import { RoleName } from '../../../core/models/auth.model';
                   class="form-control"
                   autocomplete="username"
                   placeholder="Ingresa tu usuario"
+                  [attr.aria-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+                  [attr.aria-describedby]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched ? 'username-error' : null"
                 />
                 <span class="input-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -76,7 +80,7 @@ import { RoleName } from '../../../core/models/auth.model';
                 loginForm.get('username')?.invalid &&
                 loginForm.get('username')?.touched
                 ) {
-                <div class="error">Usuario requerido</div>
+                <div id="username-error" class="error" role="alert">Usuario requerido</div>
               }
             </div>
 
@@ -89,17 +93,25 @@ import { RoleName } from '../../../core/models/auth.model';
                 class="form-control"
                 autocomplete="current-password"
                 placeholder="Ingresa tu clave"
+                [attr.aria-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                [attr.aria-describedby]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? 'password-error' : null"
               />
               @if (
                 loginForm.get('password')?.invalid &&
                 loginForm.get('password')?.touched
                 ) {
-                <div class="error">Clave requerida</div>
+                <div id="password-error" class="error" role="alert">Clave requerida</div>
               }
             </div>
 
+            @if (sessionMessage) {
+              <div class="session-message" role="status" aria-live="polite" aria-atomic="true">
+                {{ sessionMessage }}
+              </div>
+            }
+
             @if (errorMessage) {
-              <div class="error error-message">
+              <div class="error error-message" role="alert" aria-live="assertive" aria-atomic="true">
                 {{ errorMessage }}
               </div>
             }
@@ -321,6 +333,18 @@ import { RoleName } from '../../../core/models/auth.model';
         border-radius: 14px;
       }
 
+      .session-message {
+        margin: 0 0 16px;
+        padding: 12px 14px;
+        color: #1e3a5f;
+        background: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
       .btn-primary {
         width: 100%;
         min-height: 60px;
@@ -432,12 +456,14 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  sessionMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private errorMapper: HttpErrorMapperService,
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -446,6 +472,11 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const navigationState = this.router.getCurrentNavigation()?.extras.state ?? window.history.state;
+    if (navigationState?.['reason'] === SESSION_EXPIRED_REASON) {
+      this.sessionMessage = 'Tu sesión venció. Inicia sesión nuevamente para continuar.';
+    }
+
     // Si ya está autenticado, redirigir
     if (this.authService.isAuthenticated()) {
       this.redirectUser();
@@ -459,30 +490,23 @@ export class LoginComponent implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.sessionMessage = '';
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.notificationService.success('Bienvenido');
         this.redirectUser(response.mustChangePassword);
       },
-      error: (error) => {
+      error: (error: unknown) => {
         this.isLoading = false;
-
-        // Manejo detallado de errores
-        if (error.status === 401) {
-          this.errorMessage = 'Usuario o contraseña incorrectos';
-        } else if (error.status === 0) {
-          this.errorMessage =
-            'No se pudo conectar con el servidor. Verifica tu conexión.';
-        } else if (error.status === 403) {
-          this.errorMessage = 'Acceso denegado';
-        } else if (error.status === 404) {
-          this.errorMessage = 'Servicio no disponible';
-        } else if (error.status === 500) {
-          this.errorMessage = 'Error en el servidor. Intenta nuevamente.';
-        } else {
-          this.errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
-        }
+        this.errorMessage = this.errorMapper.message(error, {
+          fallback: 'Error al iniciar sesión. Intenta nuevamente.',
+          statusMessages: {
+            401: 'Usuario o contraseña incorrectos.',
+            403: 'Acceso denegado.',
+            404: 'Servicio no disponible.',
+          },
+        });
       },
     });
   }

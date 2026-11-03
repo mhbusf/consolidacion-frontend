@@ -9,8 +9,30 @@
     </div>
   }
 
-  @if (!isLoading && consolidado) {
+  @if (!isLoading && errorCarga) {
+    <div class="error-state" role="alert">
+      <p>{{ errorCarga }}</p>
+      <button type="button" class="btn-secondary" (click)="reintentarDatos()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && !errorCarga && consolidado) {
     <div>
+      @if (!esTerminal() && (consolidado.telefono | whatsappUrl: mensajeWhatsApp()); as whatsappUrl) {
+        <div class="contact-action-bar">
+          <span>Contacto de seguimiento</span>
+          <a
+            class="btn-whatsapp"
+            [href]="whatsappUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.aria-label]="'Abrir WhatsApp con ' + consolidado.nombre">
+            Contactar por WhatsApp
+          </a>
+        </div>
+      }
       <div class="detail-card">
         <div class="card-header">
           <h2>{{ consolidado.nombre }}</h2>
@@ -59,6 +81,10 @@
                   No especificada
                 </span>
               }
+            </div>
+            <div class="info-item">
+              <strong>Reunión:</strong>
+              <span>{{ consolidado.reunion || 'No especificada' }}</span>
             </div>
             <div class="info-item">
               <strong>Invitado por:</strong>
@@ -171,12 +197,23 @@
           </div>
         }
         <div class="comentarios-list">
-          @if (comentarios.length === 0) {
+          @if (isLoadingComentarios) {
+            <div class="comments-status" aria-live="polite">Cargando comentarios...</div>
+          }
+          @if (!isLoadingComentarios && errorComentarios) {
+            <div class="comments-error" role="alert">
+              <p>{{ errorComentarios }}</p>
+              <button type="button" class="btn-secondary" (click)="cargarComentarios(consolidado.id)">
+                Reintentar comentarios
+              </button>
+            </div>
+          }
+          @if (!isLoadingComentarios && !errorComentarios && comentarios.length === 0) {
             <div class="empty-state">
               {{ esTerminal() ? 'No hay comentarios registrados.' : 'No hay comentarios aún. ¡Sé el primero en comentar!' }}
             </div>
           }
-          @for (com of comentarios; track com) {
+          @for (com of !isLoadingComentarios && !errorComentarios ? comentarios : []; track com) {
             <div class="comentario">
               <div class="comentario-header">
                 <strong>{{ com.username }}</strong>

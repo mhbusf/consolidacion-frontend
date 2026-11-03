@@ -3,11 +3,13 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { environment } from '../../../environments/environment';
+import { LoggerService } from '../services/logger.service';
+import { SESSION_EXPIRED_REASON } from '../constants/auth-session.constants';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const logger = inject(LoggerService);
   const apiUrl = environment.apiUrl.replace(/\/$/, '');
   const requestUrl = new URL(req.url, window.location.origin);
   const apiBaseUrl = new URL(apiUrl, window.location.origin);
@@ -21,7 +23,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const apiPath = requestUrl.pathname.startsWith(`${apiBasePath}/`)
     ? requestUrl.pathname.slice(apiBasePath.length)
     : requestUrl.pathname === apiBasePath ? '' : requestUrl.pathname;
-  const isPublicRequest = apiPath.startsWith('/public/')
+  const isPublicRequest = apiPath === '/public'
+    || apiPath.startsWith('/public/')
     || apiPath === '/comunas'
     || apiPath.startsWith('/comunas/')
     || apiPath === '/auth/login'
@@ -34,9 +37,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(modifiedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && router.url !== '/login') {
+      if (error.status === 401 && !isPublicRequest) {
         authService.logout();
-        router.navigate(['/login']);
+        if (router.url.split('?')[0] !== '/login') {
+          void router.navigate(['/login'], {
+            replaceUrl: true,
+            state: { reason: SESSION_EXPIRED_REASON },
+          });
+        }
       }
 
       if (error.status === 403 && error.error?.mustChangePassword === true && router.url !== '/change-password') {
@@ -44,14 +52,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/change-password']);
       }
 
-      if (!environment.production) {
-        console.error('HTTP Error:', {
-          status: error.status,
-          message: error.message,
-          url: error.url,
-          error: error.error,
-        });
-      }
+      logger.httpError(`api.${req.method.toLowerCase()}`, error);
 
       return throwError(() => error);
     })

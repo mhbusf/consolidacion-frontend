@@ -6,6 +6,7 @@ import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/auth.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 
 @Component({
   selector: 'app-asignar-consolidado',
@@ -14,9 +15,25 @@ import { NotificationService } from '../../../core/services/notification.service
   template: `
     <div class="container">
       <h2>Asignar Consolidado</h2>
-    
+
+      @if (isLoadingDatos) {
+        <div class="status" aria-live="polite">Cargando información de asignación...</div>
+      }
+
+      @if (!isLoadingDatos && errorCarga) {
+        <div class="status error-state" role="alert">
+          <p>{{ errorCarga }}</p>
+          <button type="button" class="btn-secondary" (click)="cargarDatos()">Reintentar</button>
+        </div>
+      }
+
+      @if (!isLoadingDatos && !errorCarga && consolidado) {
       <div class="card">
-        <p><strong>ID del Consolidado:</strong> {{ consolidadoId }}</p>
+        <div class="identity">
+          <p><strong>Persona:</strong> {{ consolidado.nombre }}</p>
+          <p><strong>Teléfono:</strong> {{ consolidado.telefono }}</p>
+          <p><strong>Asignación actual:</strong> {{ consolidado.usuarioAsignado || 'Sin asignar' }}</p>
+        </div>
     
         <div class="form-group">
           <label for="buscar-usuario">Buscar Usuario:</label>
@@ -72,6 +89,7 @@ import { NotificationService } from '../../../core/services/notification.service
           </button>
         </div>
       </div>
+      }
     </div>
     `,
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -89,6 +107,12 @@ import { NotificationService } from '../../../core/services/notification.service
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border-color);
     }
+
+    .status { text-align: center; padding: 28px; color: var(--text-secondary); }
+    .error-state { border: 1px solid var(--danger); border-radius: 8px; }
+    .error-state p { color: var(--danger); }
+    .identity { padding: 14px; border-radius: 8px; background: var(--bg-secondary); }
+    .identity p { margin: 6px 0; color: var(--text-primary); }
 
     .form-group {
       margin: 20px 0;
@@ -158,14 +182,26 @@ import { NotificationService } from '../../../core/services/notification.service
       opacity: 0.6;
       cursor: not-allowed;
     }
+
+
+    @media (max-width: 600px) {
+      .container { margin: 20px auto; padding: 12px; }
+      .card { padding: 20px 16px; }
+      .actions { flex-direction: column-reverse; }
+      .actions button { width: 100%; min-height: 44px; }
+    }
   `]
 })
 export class AsignarConsolidadoComponent implements OnInit {
   consolidadoId!: number;
+  consolidado: ConsolidadoResponse | null = null;
   usuarios: User[] = [];
   busquedaUsuario = '';
   usuarioSeleccionado = '';
   isLoading = false;
+  isLoadingDatos = true;
+  errorCarga = '';
+  private returnUrl = '';
 
   get usuariosFiltrados(): User[] {
     const termino = this.normalizarBusqueda(this.busquedaUsuario);
@@ -190,18 +226,47 @@ export class AsignarConsolidadoComponent implements OnInit {
 
   ngOnInit(): void {
     this.consolidadoId = Number(this.route.snapshot.paramMap.get('id'));
-    this.cargarUsuarios();
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '';
+    this.returnUrl = returnUrl.startsWith('/consolidados')
+      ? returnUrl
+      : `/consolidados/${this.consolidadoId}`;
+    this.cargarDatos();
   }
 
-  cargarUsuarios(): void {
+  cargarDatos(): void {
+    this.isLoadingDatos = true;
+    this.errorCarga = '';
+    let consolidadoCargado = false;
+    let usuariosCargados = false;
+    const completar = () => {
+      if (consolidadoCargado && usuariosCargados) this.isLoadingDatos = false;
+    };
+
+    this.consolidadoService.obtenerPorId(this.consolidadoId).subscribe({
+      next: consolidado => {
+        this.consolidado = consolidado;
+        consolidadoCargado = true;
+        completar();
+      },
+      error: (error) => {
+        console.error('Error al cargar consolidado', error);
+        this.errorCarga = error?.error?.message || 'No fue posible cargar el consolidado.';
+        this.isLoadingDatos = false;
+      },
+    });
+
     this.authService.getAllUsers().subscribe({
       next: (users) => {
         this.usuarios = users.filter(u =>
           u.roles.some(r => ['ROLE_USER', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'].includes(r.name))
         );
+        usuariosCargados = true;
+        completar();
       },
       error: (error) => {
         console.error('Error al cargar usuarios', error);
+        this.errorCarga = error?.error?.message || 'No fue posible cargar los usuarios disponibles.';
+        this.isLoadingDatos = false;
       }
     });
   }
@@ -213,7 +278,7 @@ export class AsignarConsolidadoComponent implements OnInit {
     this.consolidadoService.asignarUsuario(this.consolidadoId, this.usuarioSeleccionado).subscribe({
   next: () => {
     this.notificationService.success('Consolidado asignado correctamente');
-    this.router.navigate(['/consolidados']);
+    void this.router.navigateByUrl(this.returnUrl);
   },
   error: (error) => {
     this.notificationService.error('Error al asignar');
@@ -223,7 +288,7 @@ export class AsignarConsolidadoComponent implements OnInit {
   }
 
   cancelar(): void {
-    this.router.navigate(['/consolidados']);
+    void this.router.navigateByUrl(this.returnUrl);
   }
 
   private normalizarBusqueda(value: string): string {

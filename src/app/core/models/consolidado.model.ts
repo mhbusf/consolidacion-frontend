@@ -77,6 +77,7 @@ export interface ConsolidadoResponse {
   quienInvito: string;
   motivoOracion: string;
   comuna: Comuna | null;
+  reunion: string | null;
   usuarioReporta: string | null;
   usuarioAsignado: string | null;
   usuarioAsigno: string | null;

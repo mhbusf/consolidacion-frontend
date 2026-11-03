@@ -6,6 +6,7 @@ import { filter } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { NotificationService } from './core/services/notification.service';
+import { LoggerService } from './core/services/logger.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const updates = inject(SwUpdate);
       const notifications = inject(NotificationService);
+      const logger = inject(LoggerService);
       if (!updates.isEnabled) return;
 
       updates.versionUpdates
@@ -31,7 +33,7 @@ export const appConfig: ApplicationConfig = {
 
       window.setTimeout(() => {
         void updates.checkForUpdate()
-          .catch(error => console.error('Error al buscar actualizaciones', error));
+          .catch(() => logger.operationError('service-worker.check-update'));
       }, 30000);
     })
   ]

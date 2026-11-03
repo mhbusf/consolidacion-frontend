@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { User } from '../../../core/models/auth.model';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
+import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
 
 @Component({
   selector: 'app-consolidados-list',
@@ -160,7 +161,7 @@ import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 
           <div class="filter-actions">
             <div class="results-count">{{ consolidadosFiltrados.length }} de {{ consolidados.length }}</div>
-            <button class="btn-secondary" type="button" (click)="limpiarFiltrosAvanzados()">Limpiar</button>
+            <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar todos</button>
           </div>
         </div>
 
@@ -234,7 +235,7 @@ import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
                     <td data-label="Acciones" class="actions-cell">
                       <div class="row-actions">
                         <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
-                        @if (!vistaHistorico && (c.telefono | whatsappUrl); as whatsappUrl) {
+                        @if (puedeContactar(c) && (c.telefono | whatsappUrl: mensajeWhatsApp(c)); as whatsappUrl) {
                           <a
                             class="btn-whatsapp"
                             [href]="whatsappUrl"
@@ -818,6 +819,7 @@ export class ConsolidadosListComponent implements OnInit {
           return;
         }
 
+        this.restaurarFiltrosActivos(params);
         this.cargarDatos();
       });
   }
@@ -833,6 +835,7 @@ export class ConsolidadosListComponent implements OnInit {
         this.consolidados = data;
         this.totalConsolidados = data.length;
         this.sinAsignar = data.filter(c => !c.usuarioAsignado).length;
+        this.aplicarFiltro();
         this.isLoading = false;
       },
       error: (error) => {
@@ -856,7 +859,7 @@ export class ConsolidadosListComponent implements OnInit {
   }
 
   verHistorico(): void {
-    this.limpiarFiltrosAvanzados();
+    this.limpiarFiltros();
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { vista: 'historico', tipo: null, busqueda: null, fecha: null },
@@ -883,9 +886,7 @@ export class ConsolidadosListComponent implements OnInit {
   }
 
   volverActivos(): void {
-    this.filtroSeleccionado = 'todos';
-    this.usuarioFiltro = '';
-    this.limpiarFiltrosAvanzados();
+    this.limpiarFiltros();
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { vista: null, tipo: null, busqueda: null, fecha: null },
@@ -969,12 +970,15 @@ export class ConsolidadosListComponent implements OnInit {
     });
   }
 
-  limpiarFiltrosAvanzados(): void {
+  limpiarFiltros(): void {
+    this.filtroSeleccionado = 'todos';
+    this.usuarioFiltro = '';
     this.busqueda = '';
     this.estadoFiltro = 'todos';
     this.asignacionFiltro = 'todos';
     this.usuarioAvanzadoFiltro = 'todos';
     this.fechaFiltro = 'todos';
+    if (!this.vistaHistorico) this.aplicarFiltro();
   }
 
   getEstadoLabel(estado?: string): string {
@@ -1065,19 +1069,66 @@ export class ConsolidadosListComponent implements OnInit {
         tipo: this.estadoFiltro !== 'todos' ? this.estadoFiltro : undefined,
         busqueda: this.busqueda || undefined,
         fecha: this.fechaFiltro !== 'todos' ? this.fechaFiltro : undefined,
-      } : undefined,
+      } : {
+        origen: 'lista',
+        ...this.filtrosActivosQueryParams(),
+      },
     });
   }
 
   crearNuevo(): void {
-    this.router.navigate(['/consolidados/nuevo']);
+    this.router.navigate(['/consolidados/nuevo'], {
+      queryParams: { returnUrl: this.urlListaActual() },
+    });
   }
 
   asignar(id: number): void {
-    this.router.navigate(['/consolidados', id, 'asignar']);
+    this.navegarAAsignacion(id);
   }
 
   reasignar(id: number): void {
-    this.router.navigate(['/consolidados', id, 'asignar']);
+    this.navegarAAsignacion(id);
+  }
+
+  puedeContactar(consolidado: ConsolidadoResponse): boolean {
+    return !this.vistaHistorico && consolidado.estado !== 'GDC' && consolidado.estado !== 'CERRADO';
+  }
+
+  mensajeWhatsApp(consolidado: ConsolidadoResponse): string {
+    return institutionalWhatsAppMessage(consolidado.nombre, consolidado.usuarioAsignado || '');
+  }
+
+  private restaurarFiltrosActivos(params: import('@angular/router').ParamMap): void {
+    this.filtroSeleccionado = params.get('filtro') || 'todos';
+    this.usuarioFiltro = params.get('usuarioFiltro') || '';
+    this.busqueda = params.get('busqueda') || '';
+    this.estadoFiltro = params.get('estado') || 'todos';
+    this.asignacionFiltro = params.get('asignacion') || 'todos';
+    this.usuarioAvanzadoFiltro = params.get('usuario') || 'todos';
+    this.fechaFiltro = params.get('fecha') || 'todos';
+  }
+
+  private filtrosActivosQueryParams(): Record<string, string | undefined> {
+    return {
+      filtro: this.filtroSeleccionado !== 'todos' ? this.filtroSeleccionado : undefined,
+      usuarioFiltro: this.usuarioFiltro || undefined,
+      busqueda: this.busqueda || undefined,
+      estado: this.estadoFiltro !== 'todos' ? this.estadoFiltro : undefined,
+      asignacion: this.asignacionFiltro !== 'todos' ? this.asignacionFiltro : undefined,
+      usuario: this.usuarioAvanzadoFiltro !== 'todos' ? this.usuarioAvanzadoFiltro : undefined,
+      fecha: this.fechaFiltro !== 'todos' ? this.fechaFiltro : undefined,
+    };
+  }
+
+  private urlListaActual(): string {
+    return this.router.serializeUrl(this.router.createUrlTree(['/consolidados'], {
+      queryParams: this.filtrosActivosQueryParams(),
+    }));
+  }
+
+  private navegarAAsignacion(id: number): void {
+    void this.router.navigate(['/consolidados', id, 'asignar'], {
+      queryParams: { returnUrl: this.urlListaActual() },
+    });
   }
 }

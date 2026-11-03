@@ -6,10 +6,13 @@ import { Pipe, PipeTransform } from '@angular/core';
   pure: true,
 })
 export class WhatsAppUrlPipe implements PipeTransform {
-  transform(telefono: string | null | undefined): string | null {
+  transform(telefono: string | null | undefined, mensaje?: string | null): string | null {
     const digitos = telefono?.replace(/\D/g, '') ?? '';
     const numero = /^[2-9]\d{8}$/.test(digitos) ? `56${digitos}` : digitos;
 
-    return /^56[2-9]\d{8}$/.test(numero) ? `https://wa.me/${numero}` : null;
+    if (!/^56[2-9]\d{8}$/.test(numero)) return null;
+
+    const texto = mensaje?.trim();
+    return `https://wa.me/${numero}${texto ? `?text=${encodeURIComponent(texto)}` : ''}`;
   }
 }

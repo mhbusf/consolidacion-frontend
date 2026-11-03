@@ -6,7 +6,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { ComunaService } from '../../../core/services/comuna.service';
 import { ReunionService } from '../../../core/services/reunion.service'; // ← NUEVO
@@ -17,7 +17,7 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
 @Component({
   selector: 'app-consolidado-create',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterModule],
   template: `
     <div class="container">
       <div class="form-card">
@@ -134,6 +134,13 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
                 </optgroup>
               }
             </select>
+
+            @if (errorComunas) {
+              <div class="lookup-error" role="alert">
+                <span>{{ errorComunas }}</span>
+                <button type="button" (click)="cargarComunas()">Reintentar</button>
+              </div>
+            }
     
             @if (
               consolidadoForm.get('comunaId')?.invalid &&
@@ -168,6 +175,12 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
                 </option>
               }
             </select>
+            @if (errorReuniones) {
+              <div class="lookup-error" role="alert">
+                <span>{{ errorReuniones }}</span>
+                <button type="button" (click)="cargarReuniones()">Reintentar</button>
+              </div>
+            }
             @if (consolidadoForm.get('reunionId')?.invalid && consolidadoForm.get('reunionId')?.touched) {
               <div class="error">Debe seleccionar el culto/reunión donde llegó</div>
             }
@@ -216,7 +229,7 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
           </div>
     
           @if (errorMessage) {
-            <div class="error">
+            <div class="submission-error" role="alert">
               {{ errorMessage }}
             </div>
           }
@@ -234,6 +247,9 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
                     <span>{{ item.estado || '—' }}</span>
                     <span>{{ item.detalle || '—' }}</span>
                     <span class="duplicate-match">Coincidencia: {{ item.coincidencia }}</span>
+                    @if (esOrigenConsolidacion(item.origen)) {
+                      <a [routerLink]="['/consolidados', item.id]">Ver registro de Consolidación</a>
+                    }
                   </li>
                 }
               </ul>
@@ -252,7 +268,7 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="consolidadoForm.invalid || isLoading"
+              [disabled]="consolidadoForm.invalid || isLoading || !!errorComunas || !!errorReuniones"
               >
               {{ isLoading ? 'Guardando...' : 'Guardar' }}
             </button>
@@ -349,6 +365,37 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
         margin-top: 5px;
       }
 
+      .submission-error,
+      .lookup-error {
+        color: var(--danger);
+        font-size: 13px;
+      }
+
+      .submission-error {
+        padding: 12px;
+        margin: 16px 0;
+        border: 1px solid var(--danger);
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      .lookup-error {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .lookup-error button {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        padding: 6px 10px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+
       .duplicate-alert {
         background: rgba(245, 158, 11, 0.12);
         border: 1px solid rgba(245, 158, 11, 0.55);
@@ -424,6 +471,15 @@ import { Comuna, DuplicateValidationResponse, Reunion } from '../../../core/mode
         opacity: 0.6;
         cursor: not-allowed;
       }
+
+      @media (max-width: 640px) {
+        .container { margin: 16px auto; padding: 12px; }
+        .form-card { padding: 22px 16px; }
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+        .form-actions { flex-direction: column-reverse; }
+        .form-actions button { width: 100%; min-height: 44px; }
+        .lookup-error { align-items: stretch; flex-direction: column; }
+      }
     `,
   ],
 })
@@ -432,16 +488,20 @@ export class ConsolidadoCreateComponent implements OnInit {
   isLoading = false;
   isLoadingComunas = true;
   isLoadingReuniones = true; // ← NUEVO
+  errorComunas = '';
+  errorReuniones = '';
   errorMessage = '';
   duplicateWarning: DuplicateValidationResponse | null = null;
   comunas: Comuna[] = [];
   reuniones: Reunion[] = []; // ← NUEVO
+  private returnUrl = '/consolidados';
 
   constructor(
     private fb: FormBuilder,
     private consolidadoService: ConsolidadoService,
     private comunaService: ComunaService,
     private reunionService: ReunionService, // ← NUEVO
+    private route: ActivatedRoute,
     private router: Router,
     private notificationService: NotificationService
   ) {
@@ -471,11 +531,15 @@ export class ConsolidadoCreateComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '';
+    if (returnUrl.startsWith('/consolidados')) this.returnUrl = returnUrl;
     this.cargarComunas();
     this.cargarReuniones(); // ← NUEVO
   }
 
   cargarComunas(): void {
+    this.isLoadingComunas = true;
+    this.errorComunas = '';
     this.comunaService.listarTodas().subscribe({
       next: (data) => {
         this.comunas = data;
@@ -483,7 +547,7 @@ export class ConsolidadoCreateComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar comunas', error);
-        this.notificationService.error('Error al cargar comunas');
+        this.errorComunas = error?.error?.message || 'No fue posible cargar las comunas.';
         this.isLoadingComunas = false;
       },
     });
@@ -491,6 +555,8 @@ export class ConsolidadoCreateComponent implements OnInit {
 
   // ← NUEVO MÉTODO
   cargarReuniones(): void {
+    this.isLoadingReuniones = true;
+    this.errorReuniones = '';
     this.reunionService.listar().subscribe({
       next: (data) => {
         this.reuniones = data;
@@ -498,7 +564,7 @@ export class ConsolidadoCreateComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar reuniones', error);
-        this.notificationService.error('Error al cargar reuniones');
+        this.errorReuniones = error?.error?.message || 'No fue posible cargar las reuniones.';
         this.isLoadingReuniones = false;
       },
     });
@@ -536,7 +602,7 @@ export class ConsolidadoCreateComponent implements OnInit {
     this.consolidadoService.crear(requestPayload).subscribe({
       next: () => {
         this.notificationService.success('Consolidado creado correctamente');
-        this.router.navigate(['/consolidados']);
+        void this.router.navigateByUrl(this.returnUrl);
       },
       error: (error) => {
         console.error('Error Backend:', error);
@@ -550,12 +616,17 @@ export class ConsolidadoCreateComponent implements OnInit {
         this.notificationService.error(
           'Error al crear el consolidado. Verifique los datos.'
         );
+        this.errorMessage = error?.error?.message || 'Error al crear el consolidado. Verifique los datos.';
         this.isLoading = false;
       },
     });
   }
 
   cancelar(): void {
-    this.router.navigate(['/consolidados']);
+    void this.router.navigateByUrl(this.returnUrl);
+  }
+
+  esOrigenConsolidacion(origen: string): boolean {
+    return origen.trim().toLocaleLowerCase('es').startsWith('consolidaci');
   }
 }
