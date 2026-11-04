@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject } from '
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { TimeoutError, finalize, forkJoin } from 'rxjs';
 import {
   ReporteConsolidacionEspecialFiltros,
   ReporteConsolidacionEspecialMetadata,
@@ -89,7 +89,7 @@ export class CentroReportesConsolidacionComponent implements OnInit {
           this.opciones = opciones;
           this.consultar();
         },
-        error: () => this.errorInicial = 'No pudimos cargar los filtros de informes. Revisa tu conexión y vuelve a intentarlo.',
+        error: error => this.errorInicial = this.mensajeCargaInicial(error),
       });
   }
 
@@ -129,6 +129,16 @@ export class CentroReportesConsolidacionComponent implements OnInit {
   etiquetaUsuario(id: number, username: string | null, nombre: string | null): string {
     const visible = nombre?.trim() || username?.trim() || `Usuario #${id}`;
     return nombre && username && nombre !== username ? `${nombre} (${username})` : visible;
+  }
+
+  private mensajeCargaInicial(error: unknown): string {
+    const status = typeof error === 'object' && error !== null && 'status' in error
+      ? Number((error as { status?: unknown }).status)
+      : 0;
+    if (error instanceof TimeoutError || status === 503 || status === 504) {
+      return 'El servidor tardó demasiado en cargar los filtros. Vuelve a intentarlo en unos segundos.';
+    }
+    return 'No pudimos cargar los filtros de informes. Revisa tu conexión y vuelve a intentarlo.';
   }
 
   private filtros(): ReporteConsolidacionEspecialFiltros | null {

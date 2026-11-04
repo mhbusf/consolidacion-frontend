@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ReporteConsolidadoConsulta,
@@ -66,17 +66,22 @@ export function construirParametrosReporteConsolidado(
   providedIn: 'root',
 })
 export class ReporteConsolidadoService {
+  private static readonly REQUEST_TIMEOUT_MS = 15_000;
   private readonly apiUrl = `${environment.apiUrl}/reportes/consolidados`;
 
   constructor(private readonly http: HttpClient) {}
 
   consultar(consulta: ReporteConsolidadoConsulta): Observable<ReporteConsolidadoPagina> {
     const params = construirParametrosReporteConsolidado(consulta, consulta);
-    return this.http.get<ReporteConsolidadoPagina>(this.apiUrl, { params });
+    return this.http.get<ReporteConsolidadoPagina>(this.apiUrl, { params }).pipe(
+      timeout({ first: ReporteConsolidadoService.REQUEST_TIMEOUT_MS }),
+    );
   }
 
   obtenerOpciones(): Observable<ReporteConsolidadoOpciones> {
-    return this.http.get<ReporteConsolidadoOpciones>(`${this.apiUrl}/opciones`);
+    return this.http.get<ReporteConsolidadoOpciones>(`${this.apiUrl}/opciones`).pipe(
+      timeout({ first: ReporteConsolidadoService.REQUEST_TIMEOUT_MS }),
+    );
   }
 
   exportar(filtros: ReporteConsolidadoFiltros): Observable<HttpResponse<Blob>> {

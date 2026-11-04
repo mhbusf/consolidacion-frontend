@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ReporteConsolidacionEspecialFiltros,
@@ -32,12 +32,15 @@ export function parametrosReporteConsolidacionEspecial(
 
 @Injectable({ providedIn: 'root' })
 export class ReporteConsolidacionEspecialService {
+  private static readonly REQUEST_TIMEOUT_MS = 15_000;
   private readonly api = `${environment.apiUrl}/reportes/consolidados`;
 
   constructor(private readonly http: HttpClient) {}
 
   metadata(): Observable<ReporteConsolidacionEspecialMetadata> {
-    return this.http.get<ReporteConsolidacionEspecialMetadata>(`${this.api}/metadata`);
+    return this.http.get<ReporteConsolidacionEspecialMetadata>(`${this.api}/metadata`).pipe(
+      timeout({ first: ReporteConsolidacionEspecialService.REQUEST_TIMEOUT_MS }),
+    );
   }
 
   preview(
@@ -46,7 +49,7 @@ export class ReporteConsolidacionEspecialService {
   ): Observable<ReporteConsolidacionEspecialPreview> {
     return this.http.get<ReporteConsolidacionEspecialPreview>(`${this.api}/${tipo}/preview`, {
       params: parametrosReporteConsolidacionEspecial(filtros, tipo),
-    });
+    }).pipe(timeout({ first: ReporteConsolidacionEspecialService.REQUEST_TIMEOUT_MS }));
   }
 
   descargar(
