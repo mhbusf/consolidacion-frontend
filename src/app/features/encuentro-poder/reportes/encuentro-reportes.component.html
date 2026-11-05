@@ -257,6 +257,54 @@
           </article>
         </div>
 
+        @if (informeFeedbackPorMentor().length) {
+          <div class="mentor-report-heading">
+            <h3>Informe por mentor</h3>
+            <p>Indica si cada mentor realizó todos los feedbacks requeridos en cada semana cerrada.</p>
+          </div>
+          <div class="mentor-report table-wrap" tabindex="0">
+            <table>
+              <caption class="sr-only">Informe semanal de feedback por mentor</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Mentor</th>
+                  @for (periodo of cumplimiento.periodos; track periodo.semana) {
+                    <th scope="col">Semana {{ periodo.semana }}</th>
+                  }
+                  <th scope="col">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (informe of informeFeedbackPorMentor(); track informe.mentor.id) {
+                  <tr>
+                    <th scope="row">
+                      {{ nombreMentor(informe.mentor) }}
+                      <small>{{ informe.mentor.email }}</small>
+                    </th>
+                    @for (periodo of informe.periodos; track periodo.semana) {
+                      <td>
+                        <span class="mentor-week-status"
+                          [class.complete]="estadoCumplimiento(periodo.cumplimiento) === 'Sí'"
+                          [class.partial]="estadoCumplimiento(periodo.cumplimiento) === 'Parcial'"
+                          [class.na]="estadoCumplimiento(periodo.cumplimiento) === 'No aplica'">
+                          {{ estadoCumplimiento(periodo.cumplimiento) }}
+                        </span>
+                        @if (periodo.cumplimiento) {
+                          <small>{{ periodo.cumplimiento.cumplidos }} / {{ periodo.cumplimiento.requeridos }} feedbacks</small>
+                        }
+                      </td>
+                    }
+                    <td>
+                      <strong>{{ informe.cumplidos }} / {{ informe.requeridos }}</strong>
+                      <small>{{ informe.porcentaje }}% de cumplimiento</small>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
         @if (cumplimiento.periodos.length) {
           <div class="feedback-periods">
             @for (periodo of cumplimiento.periodos; track periodo.semana) {
@@ -287,7 +335,7 @@
                         @for (mentor of periodo.mentores; track mentor.mentor.id) {
                           <tr>
                             <th scope="row" data-label="Mentor">
-                              {{ nombreMentor(mentor) }}<small>{{ mentor.mentor.email }}</small>
+                              {{ nombreMentor(mentor.mentor) }}<small>{{ mentor.mentor.email }}</small>
                             </th>
                             <td data-label="Cumplidos">{{ mentor.cumplidos }} / {{ mentor.requeridos }}</td>
                             <td data-label="Avance">

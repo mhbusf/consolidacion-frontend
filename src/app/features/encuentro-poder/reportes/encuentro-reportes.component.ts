@@ -17,6 +17,17 @@ import {
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 
+interface InformeFeedbackMentor {
+  mentor: EncuentroMentorCumplimientoFeedback['mentor'];
+  requeridos: number;
+  cumplidos: number;
+  porcentaje: number;
+  periodos: Array<{
+    semana: number;
+    cumplimiento: EncuentroMentorCumplimientoFeedback | null;
+  }>;
+}
+
 @Component({
   selector: 'app-encuentro-reportes',
   standalone: true,
@@ -87,6 +98,43 @@ export class EncuentroReportesComponent {
 
   readonly noGraduados = computed(() =>
     this.dashboard()?.participantes.filter(participante => participante.estado !== 'COMPLETO') ?? []);
+
+  readonly informeFeedbackPorMentor = computed<InformeFeedbackMentor[]>(() => {
+    const data = this.cumplimientoFeedback();
+    if (!data) return [];
+    const mentores = new Map<number, {
+      mentor: EncuentroMentorCumplimientoFeedback['mentor'];
+      requeridos: number;
+      cumplidos: number;
+      semanas: Map<number, EncuentroMentorCumplimientoFeedback>;
+    }>();
+    for (const periodo of data.periodos) {
+      for (const cumplimiento of periodo.mentores) {
+        const actual = mentores.get(cumplimiento.mentor.id) ?? {
+          mentor: cumplimiento.mentor,
+          requeridos: 0,
+          cumplidos: 0,
+          semanas: new Map<number, EncuentroMentorCumplimientoFeedback>(),
+        };
+        actual.requeridos += cumplimiento.requeridos;
+        actual.cumplidos += cumplimiento.cumplidos;
+        actual.semanas.set(periodo.semana, cumplimiento);
+        mentores.set(cumplimiento.mentor.id, actual);
+      }
+    }
+    return [...mentores.values()]
+      .map(item => ({
+        mentor: item.mentor,
+        requeridos: item.requeridos,
+        cumplidos: item.cumplidos,
+        porcentaje: item.requeridos ? Math.round(item.cumplidos * 100 / item.requeridos) : 0,
+        periodos: data.periodos.map(periodo => ({
+          semana: periodo.semana,
+          cumplimiento: item.semanas.get(periodo.semana) ?? null,
+        })),
+      }))
+      .sort((a, b) => this.nombrePersonaMentor(a.mentor).localeCompare(this.nombrePersonaMentor(b.mentor), 'es'));
+  });
 
   constructor() {
     this.cargarCiclos();
@@ -160,8 +208,14 @@ export class EncuentroReportesComponent {
     return registro.motivo === 'INASISTENCIA_CLASE_1' ? 'Inasistencia a Clase 1' : registro.motivo;
   }
 
-  nombreMentor(item: EncuentroMentorCumplimientoFeedback): string {
-    return [item.mentor.nombre, item.mentor.apellido].filter(Boolean).join(' ') || item.mentor.username;
+  nombreMentor(mentor: EncuentroMentorCumplimientoFeedback['mentor']): string {
+    return this.nombrePersonaMentor(mentor);
+  }
+
+  estadoCumplimiento(item: { requeridos: number; cumplidos: number } | null): 'Sí' | 'No' | 'Parcial' | 'No aplica' {
+    if (!item || item.requeridos === 0) return 'No aplica';
+    if (item.cumplidos === 0) return 'No';
+    return item.cumplidos === item.requeridos ? 'Sí' : 'Parcial';
   }
 
   recargarCumplimiento(): void {
@@ -260,6 +314,10 @@ export class EncuentroReportesComponent {
           'No fue posible cargar el cumplimiento semanal de feedback.'));
       },
     });
+  }
+
+  private nombrePersonaMentor(mentor: EncuentroMentorCumplimientoFeedback['mentor']): string {
+    return [mentor.nombre, mentor.apellido].filter(Boolean).join(' ') || mentor.username;
   }
 
   private descargar(blob: Blob, nombre: string): void {

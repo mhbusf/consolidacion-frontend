@@ -188,6 +188,20 @@ describe('EncuentroReportesComponent', () => {
     expect(progress.getAttribute('aria-valuenow')).toBe('67');
   });
 
+  it('presenta un informe por mentor que indica si realizó los feedbacks de cada semana', () => {
+    const text = fixture.nativeElement.textContent;
+    const informe = component.informeFeedbackPorMentor();
+
+    expect(text).toContain('Informe por mentor');
+    expect(text).toContain('Parcial');
+    expect(informe.length).toBe(1);
+    expect(informe[0].cumplidos).toBe(2);
+    expect(informe[0].requeridos).toBe(3);
+    expect(component.estadoCumplimiento({ cumplidos: 3, requeridos: 3 })).toBe('Sí');
+    expect(component.estadoCumplimiento({ cumplidos: 0, requeridos: 3 })).toBe('No');
+    expect(component.estadoCumplimiento(null)).toBe('No aplica');
+  });
+
   it('mantiene los demás resultados si falla solo el cumplimiento de feedback', () => {
     fixture.destroy();
     mentoriaService.cumplimientoFeedback.and.returnValue(throwError(() => new Error('sin conexión')));
