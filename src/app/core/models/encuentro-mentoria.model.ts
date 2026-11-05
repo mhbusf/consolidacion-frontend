@@ -116,3 +116,58 @@ export interface EncuentroMentorRegistroAsistencia {
   metodo: string;
   fechaHora: string;
 }
+
+export interface EncuentroCumplimientoFeedback {
+  ciclo: {
+    id: number;
+    nombre: string;
+    fechaInicio: string;
+    fechaCierre: string | null;
+    estado: string;
+  };
+  fechaCorte: string;
+  requeridos: number;
+  cumplidos: number;
+  porcentaje: number;
+  periodos: EncuentroPeriodoCumplimientoFeedback[];
+}
+
+export interface EncuentroPeriodoCumplimientoFeedback {
+  semana: number;
+  claseDesde: string;
+  claseHasta: string;
+  desde: string;
+  hasta: string;
+  requeridos: number;
+  cumplidos: number;
+  porcentaje: number;
+  mentores: EncuentroMentorCumplimientoFeedback[];
+}
+
+export interface EncuentroMentorCumplimientoFeedback {
+  mentor: {
+    id: number;
+    username: string;
+    nombre: string | null;
+    apellido: string | null;
+    email: string;
+  };
+  requeridos: number;
+  cumplidos: number;
+  porcentaje: number;
+  participantes: EncuentroParticipanteCumplimientoFeedback[];
+}
+
+export interface EncuentroParticipanteCumplimientoFeedback {
+  inscripcionId: number;
+  persona: {
+    id: number;
+    nombreCompleto: string;
+    telefono: string;
+    comuna: string | null;
+  };
+  fechaAsignacion: string;
+  cumplido: boolean;
+  feedbackId: number | null;
+  fechaFeedback: string | null;
+}

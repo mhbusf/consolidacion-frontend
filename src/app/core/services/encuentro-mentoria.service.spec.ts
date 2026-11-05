@@ -144,6 +144,21 @@ describe('EncuentroMentoriaService', () => {
     unassign.flush(participante);
   });
 
+  it('consulta el cumplimiento semanal de feedback del ciclo', () => {
+    service.cumplimientoFeedback(7).subscribe();
+
+    const request = http.expectOne(`${encuentroApi}/ciclos/7/mentorias/cumplimiento-feedback`);
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      ciclo: participante.ciclo,
+      fechaCorte: '2026-10-09',
+      requeridos: 2,
+      cumplidos: 1,
+      porcentaje: 50,
+      periodos: [],
+    });
+  });
+
   it('usa los contratos de ciclos y asistencia del mentor', () => {
     service.ciclosAsistencia().subscribe();
     service.asistenciaClase(7, 3).subscribe();

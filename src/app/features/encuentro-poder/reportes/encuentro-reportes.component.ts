@@ -4,6 +4,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import {
+  EncuentroCumplimientoFeedback,
+  EncuentroMentorCumplimientoFeedback,
+} from '../../../core/models/encuentro-mentoria.model';
+import {
   EncuentroCiclo,
   EncuentroDashboard,
   EncuentroParticipante,
@@ -11,6 +15,7 @@ import {
   EncuentroTipoReporte,
 } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
+import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 
 @Component({
   selector: 'app-encuentro-reportes',
@@ -22,21 +27,26 @@ import { EncuentroPoderService } from '../../../core/services/encuentro-poder.se
 })
 export class EncuentroReportesComponent {
   private readonly service = inject(EncuentroPoderService);
+  private readonly mentoriaService = inject(EncuentroMentoriaService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
   private requestSequence = 0;
+  private complianceRequestSequence = 0;
   private exportSequence = 0;
 
   readonly ciclos = signal<EncuentroCiclo[]>([]);
   readonly cicloSeleccionado = signal<number | null>(null);
   readonly dashboard = signal<EncuentroDashboard | null>(null);
+  readonly cumplimientoFeedback = signal<EncuentroCumplimientoFeedback | null>(null);
   readonly cargandoCiclos = signal(true);
   readonly cargando = signal(false);
+  readonly cargandoCumplimiento = signal(false);
   readonly exportando = signal<EncuentroTipoReporte | null>(null);
   readonly error = signal('');
   readonly accionError = signal<'CICLOS' | 'DASHBOARD' | null>(null);
   readonly reintegrando = signal<number | null>(null);
   readonly mensaje = signal('');
+  readonly errorCumplimiento = signal('');
 
   readonly clasesObligatorias = computed(() => {
     const data = this.dashboard();
@@ -90,6 +100,7 @@ export class EncuentroReportesComponent {
     this.cicloSeleccionado.set(cicloId);
     this.mensaje.set('');
     this.cargarDashboard(cicloId);
+    this.cargarCumplimientoFeedback(cicloId);
   }
 
   recargar(): void {
@@ -149,6 +160,15 @@ export class EncuentroReportesComponent {
     return registro.motivo === 'INASISTENCIA_CLASE_1' ? 'Inasistencia a Clase 1' : registro.motivo;
   }
 
+  nombreMentor(item: EncuentroMentorCumplimientoFeedback): string {
+    return [item.mentor.nombre, item.mentor.apellido].filter(Boolean).join(' ') || item.mentor.username;
+  }
+
+  recargarCumplimiento(): void {
+    const cicloId = this.cicloSeleccionado();
+    if (cicloId) this.cargarCumplimientoFeedback(cicloId);
+  }
+
   reintegrar(registro: EncuentroNoContinuidad): void {
     const cicloId = this.cicloSeleccionado();
     if (!cicloId || this.reintegrando() !== null || registro.estadoActual !== 'NO_CONTINUA') return;
@@ -187,6 +207,7 @@ export class EncuentroReportesComponent {
         if (ciclos.length) {
           this.cicloSeleccionado.set(ciclos[0].id);
           this.cargarDashboard(ciclos[0].id);
+          this.cargarCumplimientoFeedback(ciclos[0].id);
         }
       },
       error: error => {
@@ -215,6 +236,28 @@ export class EncuentroReportesComponent {
         this.dashboard.set(null);
         this.accionError.set('DASHBOARD');
         this.error.set(this.mensajeError(error, 'No fue posible cargar el dashboard del ciclo.'));
+      },
+    });
+  }
+
+  private cargarCumplimientoFeedback(cicloId: number): void {
+    const sequence = ++this.complianceRequestSequence;
+    this.cargandoCumplimiento.set(true);
+    this.errorCumplimiento.set('');
+    this.mentoriaService.cumplimientoFeedback(cicloId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (sequence === this.complianceRequestSequence) this.cargandoCumplimiento.set(false);
+      }),
+    ).subscribe({
+      next: data => {
+        if (sequence === this.complianceRequestSequence) this.cumplimientoFeedback.set(data);
+      },
+      error: error => {
+        if (sequence !== this.complianceRequestSequence) return;
+        this.cumplimientoFeedback.set(null);
+        this.errorCumplimiento.set(this.mensajeError(error,
+          'No fue posible cargar el cumplimiento semanal de feedback.'));
       },
     });
   }

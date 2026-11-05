@@ -231,6 +231,92 @@
         <p class="empty history-empty">No hay exclusiones registradas para este ciclo.</p>
       }
     </section>
+
+    <section class="section" aria-labelledby="feedback-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">05</p>
+          <h2 id="feedback-title">Cumplimiento semanal de feedback</h2>
+          <p>Cada periodo se cierra el miércoles y exige un feedback por participante asignado.</p>
+        </div>
+      </div>
+
+      @if (cargandoCumplimiento()) {
+        <div class="loading" aria-live="polite">Calculando cumplimiento de mentorías...</div>
+      } @else if (errorCumplimiento()) {
+        <div class="alert compliance-alert" role="alert">
+          <span>{{ errorCumplimiento() }}</span>
+          <button type="button" (click)="recargarCumplimiento()">Reintentar</button>
+        </div>
+      } @else if (cumplimientoFeedback(); as cumplimiento) {
+        <div class="feedback-summary">
+          <article class="metric primary"><span>Feedbacks requeridos</span><strong>{{ cumplimiento.requeridos }}</strong></article>
+          <article class="metric success"><span>Completados a tiempo</span><strong>{{ cumplimiento.cumplidos }}</strong></article>
+          <article class="metric" [class.danger]="cumplimiento.porcentaje < 100">
+            <span>Cumplimiento total</span><strong>{{ cumplimiento.porcentaje }}%</strong>
+          </article>
+        </div>
+
+        @if (cumplimiento.periodos.length) {
+          <div class="feedback-periods">
+            @for (periodo of cumplimiento.periodos; track periodo.semana) {
+              <article class="feedback-period">
+                <header class="feedback-period-head">
+                  <div>
+                    <span>Semana {{ periodo.semana }}</span>
+                    <h3>{{ periodo.claseDesde }} → {{ periodo.claseHasta }}</h3>
+                    <p>{{ periodo.desde | date:'dd/MM/yyyy' }} al {{ periodo.hasta | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                  <div class="period-rate">
+                    <strong>{{ periodo.porcentaje }}%</strong>
+                    <span>{{ periodo.cumplidos }} de {{ periodo.requeridos }}</span>
+                  </div>
+                </header>
+                <div class="progress" role="progressbar" [attr.aria-valuenow]="periodo.porcentaje"
+                  aria-valuemin="0" aria-valuemax="100"
+                  [attr.aria-label]="'Cumplimiento de feedback de la semana ' + periodo.semana">
+                  <span [style.width.%]="periodo.porcentaje"></span>
+                </div>
+
+                @if (periodo.mentores.length) {
+                  <div class="compliance-panel table-wrap" tabindex="0">
+                    <table>
+                      <caption class="sr-only">Cumplimiento de feedback por mentor para la semana {{ periodo.semana }}</caption>
+                      <thead><tr><th scope="col">Mentor</th><th scope="col">Cumplidos</th><th scope="col">Avance</th><th scope="col">Pendientes</th></tr></thead>
+                      <tbody>
+                        @for (mentor of periodo.mentores; track mentor.mentor.id) {
+                          <tr>
+                            <th scope="row" data-label="Mentor">
+                              {{ nombreMentor(mentor) }}<small>{{ mentor.mentor.email }}</small>
+                            </th>
+                            <td data-label="Cumplidos">{{ mentor.cumplidos }} / {{ mentor.requeridos }}</td>
+                            <td data-label="Avance">
+                              <span class="compliance-status" [class.complete]="mentor.porcentaje === 100">{{ mentor.porcentaje }}%</span>
+                            </td>
+                            <td data-label="Pendientes">
+                              <div class="pending-people">
+                                @for (participante of mentor.participantes; track participante.inscripcionId) {
+                                  @if (!participante.cumplido) { <span>{{ participante.persona.nombreCompleto }}</span> }
+                                } @empty { <small>Sin participantes requeridos</small> }
+                                @if (mentor.cumplidos === mentor.requeridos) { <small>Sin pendientes</small> }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                } @else {
+                  <p class="empty">No había participantes asignados para este periodo.</p>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="empty history-empty">Aún no hay semanas cerradas para evaluar.</p>
+        }
+      }
+    </section>
   } @else if (!error() && !ciclos().length) {
     <div class="empty-page">No hay ciclos disponibles para generar reportes.</div>
   }

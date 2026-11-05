@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   CrearEncuentroMentorFeedback,
   EncuentroAsignacionMentor,
+  EncuentroCumplimientoFeedback,
   EncuentroMentorFeedback,
   EncuentroMentorAsistencia,
   EncuentroMentorAsistenciaClase,
@@ -62,6 +63,12 @@ export class EncuentroMentoriaService {
   asignaciones(cicloId: number): Observable<EncuentroAsignacionMentor[]> {
     return this.http.get<ParticipanteMentorResponse[]>(`${this.encuentroApi}/ciclos/${cicloId}/mentorias`).pipe(
       map(asignaciones => asignaciones.map(asignacion => this.asignacion(asignacion))),
+    );
+  }
+
+  cumplimientoFeedback(cicloId: number): Observable<EncuentroCumplimientoFeedback> {
+    return this.http.get<EncuentroCumplimientoFeedback>(
+      `${this.encuentroApi}/ciclos/${cicloId}/mentorias/cumplimiento-feedback`,
     );
   }
 

@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
+import { EncuentroCumplimientoFeedback } from '../../../core/models/encuentro-mentoria.model';
 import { EncuentroCiclo, EncuentroDashboard } from '../../../core/models/encuentro-poder.model';
+import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroReportesComponent } from './encuentro-reportes.component';
 
@@ -84,10 +86,45 @@ function dashboard(): EncuentroDashboard {
   };
 }
 
+function cumplimientoFeedback(): EncuentroCumplimientoFeedback {
+  return {
+    ciclo: { id: 7, nombre: 'Octubre 2026', fechaInicio: '2026-10-01', fechaCierre: null, estado: 'ABIERTO' },
+    fechaCorte: '2026-10-09',
+    requeridos: 3,
+    cumplidos: 2,
+    porcentaje: 67,
+    periodos: [{
+      semana: 1,
+      claseDesde: 'Clase 0 - Informativa',
+      claseHasta: 'Clase 1',
+      desde: '2026-10-01',
+      hasta: '2026-10-07',
+      requeridos: 3,
+      cumplidos: 2,
+      porcentaje: 67,
+      mentores: [{
+        mentor: { id: 9, username: 'mentor', nombre: 'Mentor', apellido: 'Uno', email: 'mentor@example.test' },
+        requeridos: 3,
+        cumplidos: 2,
+        porcentaje: 67,
+        participantes: [{
+          inscripcionId: 42,
+          persona: { id: 2, nombreCompleto: 'Persona Pendiente', telefono: '56922222222', comuna: 'Maipú' },
+          fechaAsignacion: '2026-10-01T10:00:00',
+          cumplido: false,
+          feedbackId: null,
+          fechaFeedback: null,
+        }],
+      }],
+    }],
+  };
+}
+
 describe('EncuentroReportesComponent', () => {
   let fixture: ComponentFixture<EncuentroReportesComponent>;
   let component: EncuentroReportesComponent;
   let service: jasmine.SpyObj<EncuentroPoderService>;
+  let mentoriaService: jasmine.SpyObj<EncuentroMentoriaService>;
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
@@ -98,10 +135,17 @@ describe('EncuentroReportesComponent', () => {
     service.dashboard.and.returnValue(of(dashboard()));
     service.exportarReporte.and.returnValue(of(new Blob()));
     service.reintegrar.and.returnValue(of(dashboard().historialNoContinuaron[0]));
+    mentoriaService = jasmine.createSpyObj<EncuentroMentoriaService>('EncuentroMentoriaService', [
+      'cumplimientoFeedback',
+    ]);
+    mentoriaService.cumplimientoFeedback.and.returnValue(of(cumplimientoFeedback()));
 
     await TestBed.configureTestingModule({
       imports: [EncuentroReportesComponent],
-      providers: [{ provide: EncuentroPoderService, useValue: service }],
+      providers: [
+        { provide: EncuentroPoderService, useValue: service },
+        { provide: EncuentroMentoriaService, useValue: mentoriaService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EncuentroReportesComponent);
@@ -113,6 +157,7 @@ describe('EncuentroReportesComponent', () => {
     const text = fixture.nativeElement.textContent;
 
     expect(service.dashboard).toHaveBeenCalledOnceWith(7);
+    expect(mentoriaService.cumplimientoFeedback).toHaveBeenCalledOnceWith(7);
     expect(text).toContain('Números totales');
     expect(text).toContain('Asistencia por clase');
     expect(text).toContain('Persona Ausente');
@@ -130,6 +175,29 @@ describe('EncuentroReportesComponent', () => {
       { clase: 'Clase 2', personas: [2] },
     ]);
     expect(component.clasesAusentesFinalizadas(failed)).toEqual(['Clase 1', 'Clase 2']);
+  });
+
+  it('muestra el cumplimiento semanal por mentor y sus participantes pendientes', () => {
+    const text = fixture.nativeElement.textContent;
+    const progress = fixture.nativeElement.querySelector('[aria-label="Cumplimiento de feedback de la semana 1"]');
+
+    expect(text).toContain('Cumplimiento semanal de feedback');
+    expect(text).toContain('Clase 0 - Informativa');
+    expect(text).toContain('Mentor Uno');
+    expect(text).toContain('Persona Pendiente');
+    expect(progress.getAttribute('aria-valuenow')).toBe('67');
+  });
+
+  it('mantiene los demás resultados si falla solo el cumplimiento de feedback', () => {
+    fixture.destroy();
+    mentoriaService.cumplimientoFeedback.and.returnValue(throwError(() => new Error('sin conexión')));
+    const failedFixture = TestBed.createComponent(EncuentroReportesComponent);
+    failedFixture.detectChanges();
+
+    expect(failedFixture.nativeElement.textContent).toContain('Números totales');
+    expect(failedFixture.nativeElement.textContent).toContain('No fue posible cargar el cumplimiento semanal');
+    expect(failedFixture.nativeElement.querySelector('.compliance-alert button')).not.toBeNull();
+    failedFixture.destroy();
   });
 
   it('solicita el Excel correspondiente y bloquea descargas simultáneas', () => {
