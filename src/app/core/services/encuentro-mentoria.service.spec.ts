@@ -51,13 +51,18 @@ describe('EncuentroMentoriaService', () => {
 
   afterEach(() => http.verify());
 
-  it('consulta los participantes propios sin username ni mentorId', () => {
-    service.misParticipantes().subscribe();
+  it('consulta los participantes propios y conserva la asistencia desde clase 0', () => {
+    let resultado: Array<{ asistencias: Array<{ orden: number; obligatoria: boolean }> }> = [];
+    service.misParticipantes().subscribe(participantes => resultado = participantes);
 
     const request = http.expectOne(`${mentorApi}/participantes`);
     expect(request.request.method).toBe('GET');
     expect(request.request.params.keys()).toEqual([]);
-    request.flush([]);
+    request.flush([participante]);
+    expect(resultado[0].asistencias).toEqual([
+      jasmine.objectContaining({ orden: 0, obligatoria: false }),
+      jasmine.objectContaining({ orden: 1, obligatoria: true }),
+    ]);
   });
 
   it('consulta el resumen del ciclo abierto del mentor', () => {

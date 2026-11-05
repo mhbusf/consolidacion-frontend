@@ -316,6 +316,52 @@
   border-radius: inherit;
   background: var(--success);
 }
+.attendance-summary {
+  margin-top: 18px;
+}
+.attendance-summary > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.attendance-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+.attendance-chip {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0 5px;
+  min-width: 92px;
+  padding: 7px 9px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}
+.attendance-chip strong {
+  color: inherit;
+  font-size: 12px;
+}
+.attendance-chip small {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  font-size: 10px;
+}
+.attendance-chip.present {
+  border-color: color-mix(in srgb, var(--success) 28%, var(--border-color));
+  background: color-mix(in srgb, var(--success) 10%, var(--bg-card));
+  color: var(--success);
+}
+.attendance-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+}
 .feedback-preview {
   margin-top: 20px;
   padding: 15px;

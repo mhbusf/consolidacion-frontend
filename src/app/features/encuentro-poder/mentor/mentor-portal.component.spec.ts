@@ -27,6 +27,10 @@ describe('MentorPortalComponent', () => {
       clasesCompletadas: 2,
       totalClases: 3,
       porcentajeProgreso: 67,
+      asistencias: [
+        { claseId: 10, claseNombre: 'Clase 0 - Informativa', orden: 0, fecha: '2026-09-24', obligatoria: false, asistio: true },
+        { claseId: 11, claseNombre: 'Clase 1', orden: 1, fecha: '2026-10-01', obligatoria: true, asistio: false },
+      ],
       cicloEstado: 'ABIERTO',
       etapaMentoria: 'ACTIVA',
       cierreHasta: '2026-10-22',
@@ -55,7 +59,13 @@ describe('MentorPortalComponent', () => {
     expect(service.resumenPortal).toHaveBeenCalledWith(2);
     expect(fixture.nativeElement.querySelector('#mentor-cycle')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Ana Pérez');
+    expect(fixture.nativeElement.textContent).toContain('Progreso obligatorio');
     expect(fixture.nativeElement.textContent).toContain('2 de 3 clases');
+    expect(fixture.nativeElement.textContent).toContain('Asistencia por clase');
+    expect(fixture.nativeElement.textContent).toContain('C0');
+    expect(fixture.nativeElement.textContent).toContain('Registrada');
+    expect(fixture.nativeElement.textContent).toContain('C1');
+    expect(fixture.nativeElement.textContent).toContain('Sin registro');
     expect(fixture.nativeElement.textContent).toContain('Conversación inicial');
     expect(fixture.nativeElement.querySelector('a[href="/encuentro-poder/mentor/42"]')).not.toBeNull();
     const whatsapp: HTMLAnchorElement = fixture.nativeElement.querySelector('.whatsapp-link');

@@ -106,6 +106,7 @@ export class EncuentroMentoriaService {
       clasesCompletadas,
       totalClases,
       porcentajeProgreso: totalClases ? Math.round(clasesCompletadas / totalClases * 100) : 0,
+      asistencias: this.asistencias(response),
       cicloEstado: response.ciclo.estado,
       etapaMentoria: response.etapaMentoria,
       cierreHasta: response.cierreHasta,
@@ -119,7 +120,6 @@ export class EncuentroMentoriaService {
       fechaInscripcion: response.fechaInscripcion,
       invitadoPor: response.invitadoPor,
       tiempoCatedral: response.tiempoCatedral,
-      asistencias: this.asistencias(response),
     };
   }
 

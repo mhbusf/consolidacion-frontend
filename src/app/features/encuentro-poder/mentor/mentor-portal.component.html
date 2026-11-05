@@ -107,11 +107,28 @@
             </div>
 
             <div class="progress-copy">
-              <span>Progreso</span>
+              <span>Progreso obligatorio</span>
               <strong>{{ participante.clasesCompletadas }} de {{ participante.totalClases }} clases</strong>
             </div>
             <div class="progress" role="progressbar" [attr.aria-valuenow]="progreso(participante)" aria-valuemin="0" aria-valuemax="100">
               <span [style.width.%]="progreso(participante)"></span>
+            </div>
+
+            <div class="attendance-summary">
+              <span>Asistencia por clase</span>
+              <div class="attendance-chips" [attr.aria-label]="'Asistencia de ' + participante.nombreCompleto">
+                @for (clase of participante.asistencias; track clase.claseId) {
+                  <span class="attendance-chip" [class.present]="clase.asistio"
+                    [attr.title]="clase.claseNombre + ' · ' + (clase.asistio ? 'Registrada' : 'Sin registro')"
+                    [attr.aria-label]="clase.claseNombre + ': ' + (clase.asistio ? 'asistencia registrada' : 'sin registro de asistencia')">
+                    <strong>C{{ clase.orden }}</strong>
+                    <span aria-hidden="true">{{ clase.asistio ? '✓' : '—' }}</span>
+                    <small>{{ clase.asistio ? 'Registrada' : 'Sin registro' }}</small>
+                  </span>
+                } @empty {
+                  <span class="attendance-empty">El ciclo aún no tiene clases informadas.</span>
+                }
+              </div>
             </div>
 
             <div class="feedback-preview">

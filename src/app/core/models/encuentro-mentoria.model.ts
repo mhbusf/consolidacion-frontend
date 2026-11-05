@@ -16,6 +16,7 @@ export interface EncuentroMentorParticipante {
   clasesCompletadas: number;
   totalClases: number;
   porcentajeProgreso: number;
+  asistencias: EncuentroMentorAsistencia[];
   cicloEstado: 'ABIERTO' | 'CERRADO';
   etapaMentoria: 'ACTIVA' | 'CIERRE' | 'HISTORICA';
   cierreHasta: string | null;
@@ -51,7 +52,6 @@ export interface EncuentroMentorParticipanteDetalle extends EncuentroMentorParti
   fechaInscripcion: string;
   invitadoPor?: string | null;
   tiempoCatedral?: string | null;
-  asistencias: EncuentroMentorAsistencia[];
 }
 
 export interface CrearEncuentroMentorFeedback {
