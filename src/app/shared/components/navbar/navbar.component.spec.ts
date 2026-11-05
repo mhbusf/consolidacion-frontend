@@ -56,6 +56,23 @@ describe('NavbarComponent', () => {
     expect(fixture.nativeElement.querySelector('.logout').tagName).toBe('BUTTON');
   });
 
+  it('abre el panel principal completo desde el control del menú móvil', () => {
+    currentUser.next(userWithRole('ROLE_SUPER_ADMIN'));
+    fixture.detectChanges();
+    const toggle = fixture.nativeElement.querySelector('.mobile-menu-toggle') as HTMLButtonElement;
+    const menu = fixture.nativeElement.querySelector('#main-navigation') as HTMLElement;
+
+    expect(toggle.getAttribute('aria-controls')).toBe('main-navigation');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(menu.classList).not.toContain('mobile-open');
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(menu.classList).toContain('mobile-open');
+  });
+
   it('muestra al mentor independiente sus opciones de mentoría y cambio de contraseña', () => {
     currentUser.next(userWithRole('ROLE_MENTOR'));
     fixture.detectChanges();

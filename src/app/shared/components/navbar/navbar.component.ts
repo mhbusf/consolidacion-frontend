@@ -21,12 +21,13 @@ import { filter, map, startWith } from 'rxjs';
             </a>
           </div>
           <button class="mobile-menu-toggle" type="button" (click)="toggleMobileMenu($event)"
-            [attr.aria-expanded]="mobileMenuOpen" [attr.aria-label]="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'">
+            [attr.aria-expanded]="mobileMenuOpen" aria-controls="main-navigation"
+            [attr.aria-label]="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'">
             <span></span>
             <span></span>
             <span></span>
            </button>
-           <ul class="nav-menu" [class.mobile-open]="mobileMenuOpen">
+           <ul class="nav-menu" id="main-navigation" [class.mobile-open]="mobileMenuOpen">
              @if (isMentorOnly()) {
                 <li>
                   <a routerLink="/encuentro-poder/mentor" routerLinkActive="active" (click)="closeMenus()">
@@ -511,9 +512,15 @@ import { filter, map, startWith } from 'rxjs';
       /* Responsive */
       @media (max-width: 768px) {
         .nav-container {
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          gap: 10px;
           padding: 12px 16px;
           min-height: 64px;
+        }
+
+        .nav-brand {
+          min-width: 0;
         }
 
         .brand-text {
@@ -522,22 +529,25 @@ import { filter, map, startWith } from 'rxjs';
 
         .mobile-menu-toggle {
           display: flex;
-          margin-left: auto;
         }
 
         .nav-menu {
-          order: 3;
+          grid-column: 1 / -1;
+          grid-row: 2;
+          flex: none;
+          min-width: 0;
           width: 100%;
-          margin-top: 12px;
+          margin-top: 2px;
           justify-content: flex-start;
           overflow: visible;
           gap: 8px;
           display: none;
           flex-direction: column;
-          background: rgba(17, 24, 39, 0.96);
-          border: 1px solid rgba(148, 163, 184, 0.18);
+          background: rgba(15, 23, 42, 0.98);
+          border: 1px solid rgba(148, 163, 184, 0.24);
           border-radius: 16px;
           padding: 10px;
+          box-shadow: 0 22px 45px -24px rgba(2, 6, 23, 0.9);
         }
 
         .nav-menu.mobile-open {
@@ -549,8 +559,11 @@ import { filter, map, startWith } from 'rxjs';
 
         .nav-menu a {
           flex-shrink: 0;
+          min-height: 48px;
+          min-width: 0;
           width: 100%;
           justify-content: flex-start;
+          white-space: normal;
         }
 
         .nav-group {
@@ -559,8 +572,16 @@ import { filter, map, startWith } from 'rxjs';
         }
 
         .nav-group-toggle {
+          min-height: 48px;
+          min-width: 0;
           width: 100%;
-          justify-content: space-between;
+          justify-content: flex-start;
+          text-align: left;
+          white-space: normal;
+        }
+
+        .nav-group-toggle .dropdown-arrow {
+          margin-left: auto;
         }
 
         .nav-submenu {
@@ -598,11 +619,12 @@ import { filter, map, startWith } from 'rxjs';
         }
 
         .nav-user {
-          margin-left: 8px;
+          min-width: 0;
         }
 
         .dropdown-toggle {
           width: auto;
+          min-height: 42px;
         }
 
         .dropdown-menu {
