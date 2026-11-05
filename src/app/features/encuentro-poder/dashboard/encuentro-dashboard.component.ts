@@ -101,30 +101,23 @@ import { EncuentroParticipantesAdminComponent } from './encuentro-participantes-
         </article>
       </section>
 
-      <app-encuentro-participantes-admin [cicloId]="data.ciclo.id" [cicloNombre]="data.ciclo.nombre" (actualizada)="participanteActualizado()" />
-
       <app-encuentro-mentor-assignment [cicloId]="data.ciclo.id" />
 
-      <section class="panel">
-        <h2>Graduados del ciclo ({{ data.graduados.length }})</h2>
-        @if (data.graduados.length) {
-          <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Clases completadas</th><th>Comuna</th><th></th></tr></thead><tbody>
-            @for (participante of data.graduados; track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / {{ totalClasesObligatorias() }}</td><td>{{ participante.persona.comuna || '—' }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
-          </tbody></table></div>
-        } @else {<p class="muted">Todavía no hay personas graduadas en este ciclo.</p>}
+      <section class="panel graduation-access" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+        <div>
+          <span class="eyebrow">Seguimiento académico</span>
+          <h2 style="margin:4px 0">Estado de graduación</h2>
+          <p class="muted" style="margin:0">Consulta pendientes y graduados en una vista dedicada, con búsqueda y paginación.</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <span style="padding:10px;border-radius:10px;background:var(--bg-secondary)"><strong>{{ data.pendientes }}</strong> pendientes</span>
+          <span style="padding:10px;border-radius:10px;background:var(--bg-secondary)"><strong>{{ data.completos }}</strong> graduados</span>
+        </div>
+        <a class="button" routerLink="/encuentro-poder/graduacion" [queryParams]="{ cicloId: data.ciclo.id }">Abrir estado de graduación</a>
       </section>
 
-      <section class="panel pending-graduation">
-        <h2>Pendientes de graduación ({{ participantesPendientes().length }})</h2>
-        @if (participantesPendientes().length) {
-          <div class="table-wrap"><table><thead><tr><th>Persona</th><th>Teléfono</th><th>Progreso</th><th>Clases que faltan</th><th></th></tr></thead><tbody>
-            @for (participante of pendientesPagina(); track participante.persona.id) {<tr><td>{{ participante.persona.nombreCompleto }}</td><td>{{ participante.persona.telefono }}</td><td>{{ participante.clasesCompletadas }} / {{ totalClasesObligatorias() }}</td><td class="missing-classes"><strong>{{ participante.clasesFaltantes.length }}</strong> · {{ participante.clasesFaltantes.join(', ') }}</td><td><button class="link" (click)="verHistorial(participante)">Historial</button></td></tr>}
-          </tbody></table></div>
-          @if (totalPaginas() > 1) {<div><button class="button secondary" [disabled]="paginaEstado() === 0" (click)="cambiarPagina(-1)">Anterior</button> Página {{ paginaEstado() + 1 }} de {{ totalPaginas() }} <button class="button secondary" [disabled]="paginaEstado() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button></div>}
-        } @else {<p class="muted">Todas las personas inscritas completaron las clases obligatorias.</p>}
-      </section>
+      <app-encuentro-participantes-admin [cicloId]="data.ciclo.id" [cicloNombre]="data.ciclo.nombre" (actualizada)="participanteActualizado()" />
 
-      @if (historial(); as detalle) {<div class="modal-backdrop" (click)="cerrarHistorial()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarHistorial()">×</button><h2>{{ detalle.persona.nombreCompleto }}</h2><p>{{ detalle.persona.telefono }} · {{ detalle.persona.comuna || 'Sin comuna' }}</p><h3>{{ detalle.estado }}</h3>@for (asistencia of detalle.asistencias; track asistencia.id) {<div class="history-row"><span>{{ asistencia.clase }}</span><span>{{ asistencia.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span></div>} @if (!detalle.asistencias.length) {<p>No registra asistencias.</p>}</article></div>}
       @if (qr(); as codigo) {<div class="modal-backdrop" (click)="cerrarQr()"><article class="modal qr-modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarQr()">×</button><h2>QR {{ codigo.nombre }}</h2><p>{{ codigo.fecha | date:'dd/MM/yyyy' }}</p><img [src]="codigo.imagen" [alt]="'QR para ' + codigo.nombre"><button class="button" (click)="descargarQr()">Descargar QR</button><small>{{ codigo.url }}</small></article></div>}
       @if (continuidad(); as preview) {<div class="modal-backdrop" (click)="cerrarContinuidad()"><article class="modal" (click)="$event.stopPropagation()"><button class="close" (click)="cerrarContinuidad()" [disabled]="confirmandoContinuidad()">×</button><h2>Continuidad · {{ preview.claseNombre }}</h2>@if (preview.procesada) {<p>Este cierre ya fue procesado el {{ preview.procesadaEn | date:'dd/MM/yyyy HH:mm' }}.</p>} @else if (!preview.disponible) {<p>La primera clase obligatoria debe estar finalizada antes de procesar la continuidad.</p>} @else {<p><strong>{{ preview.candidatos.length }}</strong> persona{{ preview.candidatos.length === 1 ? '' : 's' }} quedará{{ preview.candidatos.length === 1 ? '' : 'n' }} fuera del ciclo.</p><p class="error">Esta acción desasignará sus mentores. La reincorporación posterior será manual y no restaurará el mentor.</p><div class="attendees">@for (candidato of preview.candidatos; track candidato.inscripcionId) {<div class="attendee"><div><strong>{{ candidato.persona.nombreCompleto }}</strong><small>{{ candidato.persona.telefono }}</small></div><span>{{ candidato.mentorNombre || 'Sin mentor' }}</span></div>} @empty {<p class="muted">No hay personas ausentes. Confirma para dejar registrado el cierre.</p>}</div><button class="button" type="button" (click)="confirmarContinuidad()" [disabled]="confirmandoContinuidad() || !preview.previewToken">{{ confirmandoContinuidad() ? 'Procesando...' : 'Confirmar cierre' }}</button>}</article></div>}
     } @else if (!cargando() && !errorDashboard()) {<div class="empty">Selecciona un ciclo para comenzar.</div>}
@@ -137,19 +130,16 @@ export class EncuentroDashboardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly mentorAssignment = viewChild(EncuentroMentorAssignmentComponent);
   private dashboardRequest?: Subscription;
-  private historyRequest?: Subscription;
   private dashboardSequence = 0;
   private dataRevision = 0;
   private qrSequence = 0;
   private continuidadSequence = 0;
   private copyTimer?: ReturnType<typeof setTimeout>;
-  private readonly pageSize = 25;
 
   readonly ciclos = signal<EncuentroCiclo[]>([]);
   readonly cicloSeleccionado = signal<number | null>(null);
   readonly claseSeleccionada = signal<number | null>(null);
   readonly dashboard = signal<EncuentroDashboard | null>(null);
-  readonly historial = signal<EncuentroParticipante | null>(null);
   readonly busqueda = signal('');
   readonly cargandoCiclos = signal(true);
   readonly cargando = signal(false);
@@ -165,7 +155,6 @@ export class EncuentroDashboardComponent implements OnInit {
   readonly errorAccion = signal('');
   readonly errorCiclos = signal('');
   readonly errorDashboard = signal('');
-  readonly paginaEstado = signal(0);
   readonly qr = signal<{ nombre: string; fecha: string; url: string; imagen: string } | null>(null);
   readonly continuidad = signal<EncuentroContinuidadPreview | null>(null);
   readonly cargandoContinuidad = signal(false);
@@ -190,16 +179,6 @@ export class EncuentroDashboardComponent implements OnInit {
     const claseId = this.claseSeleccionada();
     return this.dashboard()?.clases.find(clase => clase.claseId === claseId)?.estado ?? null;
   });
-  readonly totalClasesObligatorias = computed(() => this.dashboard()?.ciclo.clases.filter(clase => clase.obligatoria).length ?? 0);
-  readonly participantesPendientes = computed(() => (this.dashboard()?.participantes ?? [])
-    .filter(participante => participante.estado === 'PENDIENTE')
-    .sort((a, b) => a.clasesFaltantes.length - b.clasesFaltantes.length
-      || a.persona.nombreCompleto.localeCompare(b.persona.nombreCompleto, 'es', { sensitivity: 'base' })));
-  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.participantesPendientes().length / this.pageSize)));
-  readonly pendientesPagina = computed(() => {
-    const inicio = this.paginaEstado() * this.pageSize;
-    return this.participantesPendientes().slice(inicio, inicio + this.pageSize);
-  });
 
   ngOnInit(): void {
     this.destroyRef.onDestroy(() => this.copyTimer && clearTimeout(this.copyTimer));
@@ -219,9 +198,6 @@ export class EncuentroDashboardComponent implements OnInit {
     this.cicloSeleccionado.set(cicloId);
     this.claseSeleccionada.set(null);
     this.busqueda.set('');
-    this.paginaEstado.set(0);
-    this.historyRequest?.unsubscribe();
-    this.historial.set(null);
     this.qrSequence++;
     this.generandoQr.set(null);
     this.qr.set(null);
@@ -267,8 +243,6 @@ export class EncuentroDashboardComponent implements OnInit {
           ?? clases[0];
         this.dashboard.set(data);
         this.claseSeleccionada.set(conservaClase ? claseActual : clasePreferida?.id ?? null);
-        const pendientes = data.participantes.filter(participante => participante.estado === 'PENDIENTE').length;
-        this.paginaEstado.set(Math.min(this.paginaEstado(), Math.max(0, Math.ceil(pendientes / this.pageSize) - 1)));
       },
       error: error => {
         if (sequence === this.dashboardSequence) this.errorDashboard.set(this.mensajeError(error, 'No fue posible cargar los datos del ciclo.'));
@@ -327,17 +301,6 @@ export class EncuentroDashboardComponent implements OnInit {
       error: error => this.errorAsistencia.set(this.mensajeError(error, `No fue posible registrar la asistencia de ${participante.persona.nombreCompleto}.`)),
     });
   }
-
-  verHistorial(participante: EncuentroParticipante): void {
-    this.historyRequest?.unsubscribe();
-    this.errorAccion.set('');
-    this.historyRequest = this.service.historial(participante.persona.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: historial => this.historial.set(historial),
-      error: error => this.errorAccion.set(this.mensajeError(error, 'No fue posible cargar el historial.')),
-    });
-  }
-
-  cerrarHistorial(): void { this.historyRequest?.unsubscribe(); this.historial.set(null); }
 
   participanteActualizado(): void {
     this.dataRevision++;
@@ -498,10 +461,6 @@ export class EncuentroDashboardComponent implements OnInit {
     this.cargandoContinuidad.set(false);
   }
 
-  cambiarPagina(delta: number): void {
-    this.paginaEstado.update(actual => Math.min(Math.max(actual + delta, 0), this.totalPaginas() - 1));
-  }
-
   private aplicarAsistencia(asistencia: EncuentroAsistencia): void {
     const data = this.dashboard();
     if (!data) return;
@@ -515,8 +474,6 @@ export class EncuentroDashboardComponent implements OnInit {
       const faltantes = obligatorias.filter(clase => !presentes.has(clase.id)).map(clase => clase.nombre);
       return { ...participante, asistencias, clasesCompletadas: obligatorias.length - faltantes.length, clasesFaltantes: faltantes, estado: faltantes.length ? 'PENDIENTE' as const : 'COMPLETO' as const };
     });
-    const pendientes = participantes.filter(participante => participante.estado === 'PENDIENTE').length;
-    this.paginaEstado.update(actual => Math.min(actual, Math.max(0, Math.ceil(pendientes / this.pageSize) - 1)));
     const graduados = participantes.filter(participante => participante.estado === 'COMPLETO');
     this.dashboard.set({
       ...data,

@@ -97,6 +97,25 @@ describe('EncuentroMentorAssignmentComponent', () => {
     expect(component.asignacionesFiltradas()).toEqual([]);
   });
 
+  it('renderiza como máximo 25 asignaciones y reinicia la página al filtrar', () => {
+    component.asignaciones.set(Array.from({ length: 26 }, (_, index) => ({
+      ...asignacion,
+      inscripcionId: index + 1,
+      personaId: index + 1,
+      nombreCompleto: `Participante ${index + 1}`,
+    })));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(25);
+    component.cambiarPagina(1);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Participante 26');
+
+    component.actualizarBusqueda('Participante 1');
+    expect(component.pagina()).toBe(0);
+  });
+
   it('conserva datos recién recargados al completar una asignación anterior', () => {
     const respuesta = new Subject<EncuentroAsignacionMentor>();
     service.asignarMentor.and.returnValue(respuesta);

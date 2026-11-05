@@ -48,11 +48,11 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
                 type="search"
                 placeholder="Nombre o teléfono"
                 [ngModel]="busqueda()"
-                (ngModelChange)="busqueda.set($event)">
+                (ngModelChange)="actualizarBusqueda($event)">
             </div>
             <div class="filter-control">
               <label for="filtroMentor">Filtrar asignaciones</label>
-              <select id="filtroMentor" [ngModel]="filtro()" (ngModelChange)="filtro.set($event)">
+              <select id="filtroMentor" [ngModel]="filtro()" (ngModelChange)="actualizarFiltro($event)">
                 <option value="TODOS">Todos los participantes</option>
                 <option value="SIN_MENTOR">Sin mentor</option>
                 @for (mentor of mentores(); track mentor.id) {<option [value]="mentor.id.toString()">{{ mentor.nombreCompleto }}</option>}
@@ -64,7 +64,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
             <table>
               <thead><tr><th>Participante</th><th>Teléfono</th><th>Invitado por / servidor de GDC</th><th>Asistencia</th><th>Mentor actual</th><th>Asignar / reasignar</th></tr></thead>
               <tbody>
-                @for (item of asignacionesFiltradas(); track item.inscripcionId) {
+                @for (item of asignacionesPagina(); track item.inscripcionId) {
                   <tr>
                     <td><strong>{{ item.nombreCompleto }}</strong></td>
                     <td>{{ item.telefono }}</td>
@@ -101,6 +101,13 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
               </tbody>
             </table>
           </div>
+          @if (totalPaginas() > 1) {
+            <nav class="pagination" aria-label="Paginación de asignaciones">
+              <button type="button" [disabled]="pagina() === 0" (click)="cambiarPagina(-1)">Anterior</button>
+              <span>Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ asignacionesFiltradas().length }} resultados</span>
+              <button type="button" [disabled]="pagina() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button>
+            </nav>
+          }
         }
       }
     </section>
@@ -127,6 +134,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
     .attendance-badge.present{background:color-mix(in srgb,var(--success) 13%,var(--bg-card));color:var(--success)}
     .attendance-badge strong{color:inherit;font-size:10px}
     .no-attendance{color:var(--text-muted);font-size:11px}
+    .pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:14px}.pagination button{padding:8px 11px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);font-weight:700}.pagination button:disabled{opacity:.5}.pagination span{color:var(--text-muted);font-size:12px}
     @media(max-width:650px){.mentor-summary-grid{grid-template-columns:1fr 1fr}.filter-control,.filter-control input{width:100%;min-width:0}.search-control{max-width:none}}
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -134,6 +142,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
 export class EncuentroMentorAssignmentComponent {
   private readonly service = inject(EncuentroMentoriaService);
   private loadSequence = 0;
+  private readonly pageSize = 25;
 
   readonly cicloId = input.required<number>();
   readonly asignaciones = signal<EncuentroAsignacionMentor[]>([]);
@@ -142,6 +151,7 @@ export class EncuentroMentorAssignmentComponent {
   readonly error = signal('');
   readonly filtro = signal('TODOS');
   readonly busqueda = signal('');
+  readonly pagina = signal(0);
   readonly guardando = signal<ReadonlySet<number>>(new Set());
   readonly sinMentor = computed(() => this.asignaciones().filter(item => !item.mentor).length);
   readonly resumenMentores = computed(() => {
@@ -170,6 +180,11 @@ export class EncuentroMentorAssignmentComponent {
     return asignaciones.filter(item => `${item.nombreCompleto} ${item.telefono}`
       .toLocaleLowerCase('es').includes(termino));
   });
+  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.asignacionesFiltradas().length / this.pageSize)));
+  readonly asignacionesPagina = computed(() => {
+    const inicio = this.pagina() * this.pageSize;
+    return this.asignacionesFiltradas().slice(inicio, inicio + this.pageSize);
+  });
 
   constructor() {
     effect(onCleanup => {
@@ -177,6 +192,7 @@ export class EncuentroMentorAssignmentComponent {
       const sequence = ++this.loadSequence;
       this.filtro.set('TODOS');
       this.busqueda.set('');
+      this.pagina.set(0);
       this.cargando.set(true);
       this.error.set('');
       const subscription = forkJoin({
@@ -216,6 +232,20 @@ export class EncuentroMentorAssignmentComponent {
     });
   }
 
+  actualizarBusqueda(value: string): void {
+    this.busqueda.set(value);
+    this.pagina.set(0);
+  }
+
+  actualizarFiltro(value: string): void {
+    this.filtro.set(value);
+    this.pagina.set(0);
+  }
+
+  cambiarPagina(delta: number): void {
+    this.pagina.update(actual => Math.min(Math.max(actual + delta, 0), this.totalPaginas() - 1));
+  }
+
   cambiarMentor(item: EncuentroAsignacionMentor, value: string): void {
     if (this.guardando().has(item.inscripcionId)) return;
     const mentorId = value ? Number(value) : null;
@@ -236,9 +266,14 @@ export class EncuentroMentorAssignmentComponent {
         this.asignaciones.update(actual => actual.map(asignacion => asignacion.inscripcionId === item.inscripcionId
           ? { ...asignacion, mentor: response?.mentor ?? null }
           : asignacion));
+        this.ajustarPagina();
       },
       error: error => this.error.set(this.mensajeError(error, 'No fue posible actualizar la asignación.')),
     });
+  }
+
+  private ajustarPagina(): void {
+    this.pagina.update(actual => Math.min(actual, this.totalPaginas() - 1));
   }
 
   private mensajeError(error: unknown, fallback: string): string {

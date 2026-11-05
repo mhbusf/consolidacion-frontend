@@ -11,13 +11,13 @@
     <p class="state">Cargando participantes...</p>
   } @else if (!errorCarga()) {
     <label class="search-label">Buscar participante
-      <input type="search" placeholder="Nombre, teléfono, comuna o invitado por" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)">
+      <input type="search" placeholder="Nombre, teléfono, comuna o invitado por" [value]="busqueda()" (input)="actualizarBusqueda($any($event.target).value)">
     </label>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Participante</th><th>Teléfono</th><th>Comuna</th><th>Invitado por / servidor de GDC</th><th>Estado</th><th></th></tr></thead>
         <tbody>
-          @for (item of filtradas(); track item.id) {
+          @for (item of paginaFiltrada(); track item.id) {
             <tr>
               <td data-label="Participante"><strong>{{ item.persona.nombreCompleto }}</strong></td>
               <td data-label="Teléfono">{{ item.persona.telefono }}</td>
@@ -32,6 +32,13 @@
         </tbody>
       </table>
     </div>
+    @if (totalPaginas() > 1) {
+      <nav class="pagination" aria-label="Paginación de participantes">
+        <button type="button" [disabled]="pagina() === 0" (click)="cambiarPagina(-1)">Anterior</button>
+        <span>Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ filtradas().length }} resultados</span>
+        <button type="button" [disabled]="pagina() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button>
+      </nav>
+    }
   }
 </section>
 

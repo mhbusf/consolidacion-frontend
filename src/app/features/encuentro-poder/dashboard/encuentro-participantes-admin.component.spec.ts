@@ -63,6 +63,28 @@ describe('EncuentroParticipantesAdminComponent', () => {
     });
   });
 
+  it('renderiza como máximo 25 participantes y reinicia la página al buscar', () => {
+    component.inscripciones.set(Array.from({ length: 26 }, (_, index) => ({
+      ...inscripcion,
+      id: index + 1,
+      persona: {
+        ...inscripcion.persona,
+        id: index + 1,
+        nombreCompleto: `Participante ${index + 1}`,
+      },
+    })));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(25);
+    component.cambiarPagina(1);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Participante 26');
+
+    component.actualizarBusqueda('Participante 1');
+    expect(component.pagina()).toBe(0);
+  });
+
   it('guarda por id de inscripción y actualiza la fila', () => {
     const actualizada: EncuentroInscripcion = {
       ...inscripcion,

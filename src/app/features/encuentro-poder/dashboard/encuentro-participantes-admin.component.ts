@@ -29,12 +29,14 @@ export class EncuentroParticipantesAdminComponent {
   private saveRequest?: Subscription;
   private loadSequence = 0;
   private editSequence = 0;
+  private readonly pageSize = 25;
 
   readonly cicloId = input.required<number>();
   readonly cicloNombre = input.required<string>();
   readonly actualizada = output<void>();
   readonly inscripciones = signal<EncuentroInscripcion[]>([]);
   readonly busqueda = signal('');
+  readonly pagina = signal(0);
   readonly cargando = signal(true);
   readonly errorCarga = signal('');
   readonly editando = signal<EncuentroInscripcion | null>(null);
@@ -58,12 +60,18 @@ export class EncuentroParticipantesAdminComponent {
       `${item.persona.nombreCompleto} ${item.persona.telefono} ${item.persona.comuna ?? ''} ${item.invitadoPor ?? ''}`
         .toLocaleLowerCase('es').includes(termino));
   });
+  readonly totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtradas().length / this.pageSize)));
+  readonly paginaFiltrada = computed(() => {
+    const inicio = this.pagina() * this.pageSize;
+    return this.filtradas().slice(inicio, inicio + this.pageSize);
+  });
 
   constructor() {
     effect(onCleanup => {
       const cicloId = this.cicloId();
       const sequence = ++this.loadSequence;
       this.busqueda.set('');
+      this.pagina.set(0);
       this.saveRequest?.unsubscribe();
       ++this.editSequence;
       this.guardando.set(false);
@@ -108,6 +116,15 @@ export class EncuentroParticipantesAdminComponent {
     });
   }
 
+  actualizarBusqueda(value: string): void {
+    this.busqueda.set(value);
+    this.pagina.set(0);
+  }
+
+  cambiarPagina(delta: number): void {
+    this.pagina.update(actual => Math.min(Math.max(actual + delta, 0), this.totalPaginas() - 1));
+  }
+
   abrir(inscripcion: EncuentroInscripcion): void {
     ++this.editSequence;
     this.recargandoRevision.set(false);
@@ -147,6 +164,7 @@ export class EncuentroParticipantesAdminComponent {
       next: actualizada => {
         if (this.cicloId() !== cicloId) return;
         this.inscripciones.update(items => items.map(item => item.id === actualizada.id ? actualizada : item));
+        this.ajustarPagina();
         this.editando.set(null);
         this.actualizada.emit();
       },
@@ -205,6 +223,7 @@ export class EncuentroParticipantesAdminComponent {
       next: inscripciones => {
         if (sequence !== this.editSequence || this.cicloId() !== cicloId) return;
         this.inscripciones.set(inscripciones);
+        this.ajustarPagina();
         const actual = inscripciones.find(item => item.id === inscripcionId);
         if (!actual) {
           this.editando.set(null);
@@ -222,6 +241,10 @@ export class EncuentroParticipantesAdminComponent {
         }
       },
     });
+  }
+
+  private ajustarPagina(): void {
+    this.pagina.update(actual => Math.min(actual, this.totalPaginas() - 1));
   }
 
   private esRevisionObsoleta(error: unknown): boolean {

@@ -154,6 +154,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'encuentro-poder/graduacion',
+    loadComponent: () => import('./features/encuentro-poder/graduacion/encuentro-graduacion.component').then(m => m.EncuentroGraduacionComponent),
+    canActivate: [authGuard],
+    data: { roles: ['ROLE_SUPER_ADMIN'] }
+  },
+
+  {
     path: 'encuentro-poder/mentor',
     loadComponent: () => import('./features/encuentro-poder/mentor/mentor-portal.component').then(m => m.MentorPortalComponent),
     canActivate: [authGuard],

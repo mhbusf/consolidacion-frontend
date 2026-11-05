@@ -1,0 +1,101 @@
+<main class="graduation-page">
+  <header class="hero">
+    <div>
+      <a routerLink="/encuentro-poder" class="back">← Volver a Encuentro de Poder</a>
+      <p class="eyebrow">Seguimiento académico</p>
+      <h1>Estado de graduación</h1>
+      <p>Consulta el avance de las clases obligatorias sin mezclar la asistencia de Clase 0.</p>
+    </div>
+  </header>
+
+  <section class="toolbar">
+    <label for="graduation-cycle">Ciclo</label>
+    <select id="graduation-cycle" [value]="cicloId() ?? ''" (change)="seleccionarCiclo($any($event.target).value)" [disabled]="cargandoCiclos()">
+      <option value="">{{ cargandoCiclos() ? 'Cargando ciclos...' : 'Selecciona un ciclo' }}</option>
+      @for (ciclo of ciclos(); track ciclo.id) {
+        <option [value]="ciclo.id">{{ ciclo.nombre }} · {{ ciclo.estado }}</option>
+      }
+    </select>
+  </section>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }} <button type="button" (click)="cargar()">Reintentar</button></p>
+  }
+  @if (cargando()) {
+    <p class="state" aria-live="polite">Cargando estado de graduación...</p>
+  }
+
+  @if (dashboard(); as data) {
+    <section class="summary" aria-label="Resumen de graduación">
+      <button type="button" [class.active]="estado() === 'PENDIENTE'" (click)="seleccionarEstado('PENDIENTE')">
+        <strong>{{ data.pendientes }}</strong><span>Pendientes</span>
+      </button>
+      <button type="button" [class.active]="estado() === 'COMPLETO'" (click)="seleccionarEstado('COMPLETO')">
+        <strong>{{ data.completos }}</strong><span>Graduados</span>
+      </button>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">{{ data.ciclo.nombre }}</p>
+          <h2>{{ estado() === 'PENDIENTE' ? 'Pendientes de graduación' : 'Graduados del ciclo' }}</h2>
+        </div>
+        <label>Buscar
+          <input type="search" [ngModel]="busqueda()" (ngModelChange)="actualizarBusqueda($event)" placeholder="Nombre, teléfono o comuna">
+        </label>
+      </div>
+
+      @if (errorHistorial()) {<p class="error" role="alert">{{ errorHistorial() }}</p>}
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Persona</th><th>Teléfono</th><th>Comuna</th><th>Progreso obligatorio</th><th>{{ estado() === 'PENDIENTE' ? 'Clases que faltan' : 'Estado' }}</th><th></th></tr></thead>
+          <tbody>
+            @for (participante of participantesPagina(); track participante.persona.id) {
+              <tr>
+                <td data-label="Persona"><strong>{{ participante.persona.nombreCompleto }}</strong></td>
+                <td data-label="Teléfono">{{ participante.persona.telefono }}</td>
+                <td data-label="Comuna">{{ participante.persona.comuna || '—' }}</td>
+                <td data-label="Progreso">{{ participante.clasesCompletadas }} / {{ totalObligatorias() }}</td>
+                <td data-label="Estado">
+                  @if (participante.estado === 'PENDIENTE') {
+                    <span class="missing"><strong>{{ participante.clasesFaltantes.length }}</strong> · {{ participante.clasesFaltantes.join(', ') }}</span>
+                  } @else {
+                    <span class="complete">Graduado</span>
+                  }
+                </td>
+                <td><button class="link" type="button" (click)="verHistorial(participante)">Historial</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="state">{{ busqueda() ? 'No hay coincidencias.' : estado() === 'PENDIENTE' ? 'No hay personas pendientes.' : 'Todavía no hay personas graduadas.' }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPaginas() > 1) {
+        <nav class="pagination" aria-label="Paginación de graduación">
+          <button type="button" [disabled]="pagina() === 0" (click)="cambiarPagina(-1)">Anterior</button>
+          <span>Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ participantes().length }} resultados</span>
+          <button type="button" [disabled]="pagina() + 1 >= totalPaginas()" (click)="cambiarPagina(1)">Siguiente</button>
+        </nav>
+      }
+    </section>
+  }
+
+  @if (historial(); as detalle) {
+    <div class="modal-backdrop" (click)="cerrarHistorial()">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="graduation-history-title" (click)="$event.stopPropagation()">
+        <button class="close" type="button" aria-label="Cerrar historial" (click)="cerrarHistorial()">×</button>
+        <h2 id="graduation-history-title">{{ detalle.persona.nombreCompleto }}</h2>
+        <p>{{ detalle.persona.telefono }} · {{ detalle.persona.comuna || 'Sin comuna' }}</p>
+        @for (asistencia of detalle.asistencias; track asistencia.id) {
+          <div class="history-row"><span>{{ asistencia.clase }}</span><span>{{ asistencia.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        } @empty {
+          <p>No registra asistencias.</p>
+        }
+      </section>
+    </div>
+  }
+</main>
