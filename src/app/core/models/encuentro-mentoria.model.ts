@@ -138,6 +138,7 @@ export interface EncuentroPeriodoCumplimientoFeedback {
   claseHasta: string;
   desde: string;
   hasta: string;
+  cerrado: boolean;
   requeridos: number;
   cumplidos: number;
   porcentaje: number;

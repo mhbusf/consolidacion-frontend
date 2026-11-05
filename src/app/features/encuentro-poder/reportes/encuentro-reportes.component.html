@@ -237,7 +237,7 @@
         <div>
           <p class="section-number">05</p>
           <h2 id="feedback-title">Cumplimiento semanal de feedback</h2>
-          <p>Cada periodo se cierra el miércoles y exige un feedback por participante asignado.</p>
+          <p>Incluye la semana en curso y las semanas cerradas, con un feedback por participante asignado.</p>
         </div>
       </div>
 
@@ -251,7 +251,7 @@
       } @else if (cumplimientoFeedback(); as cumplimiento) {
         <div class="feedback-summary">
           <article class="metric primary"><span>Feedbacks requeridos</span><strong>{{ cumplimiento.requeridos }}</strong></article>
-          <article class="metric success"><span>Completados a tiempo</span><strong>{{ cumplimiento.cumplidos }}</strong></article>
+          <article class="metric success"><span>Feedbacks realizados</span><strong>{{ cumplimiento.cumplidos }}</strong></article>
           <article class="metric" [class.danger]="cumplimiento.porcentaje < 100">
             <span>Cumplimiento total</span><strong>{{ cumplimiento.porcentaje }}%</strong>
           </article>
@@ -260,7 +260,7 @@
         @if (informeFeedbackPorMentor().length) {
           <div class="mentor-report-heading">
             <h3>Informe por mentor</h3>
-            <p>Indica si cada mentor realizó todos los feedbacks requeridos en cada semana cerrada.</p>
+            <p>Indica si cada mentor realizó los feedbacks requeridos en cada semana iniciada.</p>
           </div>
           <div class="mentor-report table-wrap" tabindex="0">
             <table>
@@ -269,7 +269,7 @@
                 <tr>
                   <th scope="col">Mentor</th>
                   @for (periodo of cumplimiento.periodos; track periodo.semana) {
-                    <th scope="col">Semana {{ periodo.semana }}</th>
+                    <th scope="col">Semana {{ periodo.semana }}<small>{{ periodo.cerrado ? 'Cerrada' : 'En curso' }}</small></th>
                   }
                   <th scope="col">Total</th>
                 </tr>
@@ -311,7 +311,7 @@
               <article class="feedback-period">
                 <header class="feedback-period-head">
                   <div>
-                    <span>Semana {{ periodo.semana }}</span>
+                    <span>Semana {{ periodo.semana }} · {{ periodo.cerrado ? 'Cerrada' : 'En curso' }}</span>
                     <h3>{{ periodo.claseDesde }} → {{ periodo.claseHasta }}</h3>
                     <p>{{ periodo.desde | date:'dd/MM/yyyy' }} al {{ periodo.hasta | date:'dd/MM/yyyy' }}</p>
                   </div>
@@ -361,7 +361,7 @@
             }
           </div>
         } @else {
-          <p class="empty history-empty">Aún no hay semanas cerradas para evaluar.</p>
+          <p class="empty history-empty">Aún no ha comenzado el primer periodo de feedback.</p>
         }
       }
     </section>

@@ -99,6 +99,7 @@ function cumplimientoFeedback(): EncuentroCumplimientoFeedback {
       claseHasta: 'Clase 1',
       desde: '2026-10-01',
       hasta: '2026-10-07',
+      cerrado: false,
       requeridos: 3,
       cumplidos: 2,
       porcentaje: 67,
@@ -183,6 +184,7 @@ describe('EncuentroReportesComponent', () => {
 
     expect(text).toContain('Cumplimiento semanal de feedback');
     expect(text).toContain('Clase 0 - Informativa');
+    expect(text).toContain('En curso');
     expect(text).toContain('Mentor Uno');
     expect(text).toContain('Persona Pendiente');
     expect(progress.getAttribute('aria-valuenow')).toBe('67');
