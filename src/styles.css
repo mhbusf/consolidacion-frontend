@@ -432,3 +432,111 @@ h3 {
   color: #132033;
   letter-spacing: -0.04em;
 }
+
+/* Encuentro de Poder: protección transversal para pantallas pequeñas. */
+@media (max-width: 700px) {
+  app-encuentro-dashboard .page {
+    padding: 22px 12px 52px !important;
+    overflow-x: clip;
+  }
+
+  app-encuentro-dashboard .heading,
+  app-encuentro-dashboard .toolbar,
+  app-encuentro-dashboard .grid {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  app-encuentro-dashboard .heading .button,
+  app-encuentro-dashboard .toolbar .button,
+  app-encuentro-dashboard .toolbar label,
+  app-encuentro-dashboard select,
+  app-encuentro-dashboard .search,
+  app-encuentro-dashboard .attendance-actions .button {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  app-encuentro-dashboard .stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px !important;
+  }
+
+  app-encuentro-dashboard .stats article,
+  app-encuentro-dashboard .panel {
+    min-width: 0;
+    padding: 16px !important;
+  }
+
+  app-encuentro-dashboard .class-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  app-encuentro-dashboard .class-count {
+    text-align: left !important;
+  }
+
+  app-encuentro-dashboard .attendee,
+  app-encuentro-dashboard .attendee-action {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  app-encuentro-dashboard .attendee .mark {
+    width: 100%;
+  }
+
+  app-encuentro-dashboard .graduation-access {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  app-encuentro-dashboard .graduation-counts {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  app-encuentro-dashboard .modal-backdrop {
+    padding: 12px !important;
+  }
+
+  app-encuentro-dashboard .modal {
+    box-sizing: border-box;
+    width: min(560px, calc(100vw - 24px)) !important;
+    max-height: 90dvh !important;
+    overflow: auto !important;
+    padding: 24px 18px !important;
+  }
+
+  app-encuentro-dashboard .qr-modal img {
+    display: block;
+    width: min(360px, 100%) !important;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  app-encuentro-dashboard .qr-modal small {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  app-encuentro-dashboard .close {
+    display: grid !important;
+    place-items: center;
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  app-encuentro-dashboard .stats {
+    grid-template-columns: 1fr;
+  }
+
+  app-encuentro-dashboard h1 {
+    font-size: 30px !important;
+  }
+}

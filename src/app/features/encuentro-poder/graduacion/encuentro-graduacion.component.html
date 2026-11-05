@@ -65,10 +65,10 @@
                     <span class="complete">Graduado</span>
                   }
                 </td>
-                <td><button class="link" type="button" (click)="verHistorial(participante)">Historial</button></td>
+                <td class="action-cell" data-label="Acción"><button class="link" type="button" (click)="verHistorial(participante)">Historial</button></td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="state">{{ busqueda() ? 'No hay coincidencias.' : estado() === 'PENDIENTE' ? 'No hay personas pendientes.' : 'Todavía no hay personas graduadas.' }}</td></tr>
+              <tr><td colspan="6" class="state" data-label="">{{ busqueda() ? 'No hay coincidencias.' : estado() === 'PENDIENTE' ? 'No hay personas pendientes.' : 'Todavía no hay personas graduadas.' }}</td></tr>
             }
           </tbody>
         </table>

@@ -24,10 +24,10 @@
               <td data-label="Comuna">{{ item.persona.comuna || '—' }}</td>
               <td data-label="Invitado por">{{ item.invitadoPor || '—' }}</td>
               <td data-label="Estado"><span class="status" [class.inactive]="item.estadoParticipacion === 'NO_CONTINUA'">{{ item.estadoParticipacion === 'ACTIVO' ? 'Activo' : 'No continúa' }}</span></td>
-              <td class="actions"><button type="button" (click)="abrir(item)">Editar datos</button></td>
+              <td class="actions" data-label="Acción"><button type="button" (click)="abrir(item)">Editar datos</button></td>
             </tr>
           } @empty {
-            <tr><td colspan="6" class="state">No hay participantes que coincidan con la búsqueda.</td></tr>
+            <tr><td colspan="6" class="state" data-label="">No hay participantes que coincidan con la búsqueda.</td></tr>
           }
         </tbody>
       </table>

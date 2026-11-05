@@ -178,6 +178,17 @@ describe('EncuentroReportesComponent', () => {
     expect(component.clasesAusentesFinalizadas(failed)).toEqual(['Clase 1', 'Clase 2']);
   });
 
+  it('incluye etiquetas y foco para las tablas operativas en móvil', () => {
+    const mobileTables = fixture.nativeElement.querySelectorAll('.mobile-card-table');
+    const cells = fixture.nativeElement.querySelectorAll('.mobile-card-table td[data-label]') as NodeListOf<Element>;
+    const labels = Array.from(cells).map(cell => cell.getAttribute('data-label'));
+
+    expect(mobileTables.length).toBe(2);
+    expect(Array.from(mobileTables).every((table: unknown) => (table as HTMLElement).tabIndex === 0)).toBeTrue();
+    expect(labels).toContain('Participante');
+    expect(labels).toContain('Acción');
+  });
+
   it('muestra el cumplimiento semanal por mentor y sus participantes pendientes', () => {
     const text = fixture.nativeElement.textContent;
     const progress = fixture.nativeElement.querySelector('[aria-label="Cumplimiento de feedback de la semana 1"]');

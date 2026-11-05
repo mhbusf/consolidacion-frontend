@@ -14,7 +14,8 @@ import { filter, map, startWith } from 'rxjs';
       <nav class="navbar">
         <div class="nav-container">
           <div class="nav-brand">
-            <a [routerLink]="isMentorOnly() ? '/encuentro-poder/mentor' : '/consolidados'">
+            <a [routerLink]="isMentorOnly() ? '/encuentro-poder/mentor' : '/consolidados'"
+              aria-label="Ir al inicio del Sistema de Consolidación">
               <span class="brand-icon">{{ isMentorOnly() ? '⚡' : '📋' }}</span>
               <span class="brand-text">Sistema de Consolidación</span>
             </a>
@@ -181,10 +182,10 @@ import { filter, map, startWith } from 'rxjs';
                 </button>
                 @if (dropdownOpen) {
                   <div class="dropdown-menu" id="user-menu">
-                    <a (click)="logout()" class="logout">
+                    <button type="button" (click)="logout()" class="logout">
                       <span class="menu-icon">🚪</span>
                       Cerrar Sesión
-                    </a>
+                    </button>
                   </div>
                 }
               </div>
@@ -475,28 +476,35 @@ import { filter, map, startWith } from 'rxjs';
         overflow: hidden;
       }
 
-      .dropdown-menu a {
+      .dropdown-menu a,
+      .dropdown-menu button {
         display: flex;
         align-items: center;
         gap: 10px;
+        width: 100%;
         padding: 12px 16px;
+        border: 0;
+        background: transparent;
         color: #334155;
         text-decoration: none;
         transition: background 0.2s ease;
         font-size: 14px;
+        font-family: inherit;
+        text-align: left;
       }
 
-      .dropdown-menu a:hover {
+      .dropdown-menu a:hover,
+      .dropdown-menu button:hover {
         background: #eff6ff;
       }
 
-      .dropdown-menu a.logout {
+      .dropdown-menu .logout {
         color: #dc2626;
         border-top: 1px solid #e2e8f0;
         cursor: pointer;
       }
 
-      .dropdown-menu a.logout:hover {
+      .dropdown-menu .logout:hover {
         background: rgba(239, 68, 68, 0.1);
       }
 
@@ -534,6 +542,9 @@ import { filter, map, startWith } from 'rxjs';
 
         .nav-menu.mobile-open {
           display: flex;
+          max-height: calc(100dvh - 88px);
+          overflow-y: auto;
+          overscroll-behavior: contain;
         }
 
         .nav-menu a {

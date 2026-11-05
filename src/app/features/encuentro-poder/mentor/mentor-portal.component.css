@@ -241,6 +241,9 @@
   gap: 15px;
   align-items: start;
 }
+.card-top > div:last-child {
+  min-width: 0;
+}
 .avatar {
   display: grid;
   place-items: center;
@@ -292,6 +295,7 @@
   margin: 6px 0 0;
   color: var(--text-muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 .progress-copy {
   display: flex;
@@ -504,6 +508,6 @@
     align-items: center;
   }
   .hero h1 {
-    font-size: 40px;
+    font-size: 34px;
   }
 }

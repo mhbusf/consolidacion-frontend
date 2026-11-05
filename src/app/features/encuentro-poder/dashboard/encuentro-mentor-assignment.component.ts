@@ -66,10 +66,10 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
               <tbody>
                 @for (item of asignacionesPagina(); track item.inscripcionId) {
                   <tr>
-                    <td><strong>{{ item.nombreCompleto }}</strong></td>
-                    <td>{{ item.telefono }}</td>
-                    <td>{{ item.invitadoPor || '—' }}</td>
-                    <td>
+                    <td data-label="Participante"><strong>{{ item.nombreCompleto }}</strong></td>
+                    <td data-label="Teléfono">{{ item.telefono }}</td>
+                    <td data-label="Invitado por">{{ item.invitadoPor || '—' }}</td>
+                    <td data-label="Asistencia">
                       <div class="attendance-list" [attr.aria-label]="'Asistencia de ' + item.nombreCompleto">
                         @for (clase of item.asistencias; track clase.claseId) {
                           <span class="attendance-badge" [class.present]="clase.asistio"
@@ -82,8 +82,8 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
                         }
                       </div>
                     </td>
-                    <td><span class="mentor-badge" [class.unassigned]="!item.mentor">{{ item.mentor?.nombreCompleto || 'Sin mentor' }}</span></td>
-                    <td>
+                    <td data-label="Mentor actual"><span class="mentor-badge" [class.unassigned]="!item.mentor">{{ item.mentor?.nombreCompleto || 'Sin mentor' }}</span></td>
+                    <td data-label="Asignar mentor">
                       <select
                         aria-label="Mentor de {{ item.nombreCompleto }}"
                         [ngModel]="item.mentor?.id?.toString() || ''"
@@ -96,7 +96,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="state">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
+                  <tr><td colspan="6" class="state" data-label="">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
                 }
               </tbody>
             </table>
@@ -135,7 +135,8 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
     .attendance-badge strong{color:inherit;font-size:10px}
     .no-attendance{color:var(--text-muted);font-size:11px}
     .pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:14px}.pagination button{padding:8px 11px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);font-weight:700}.pagination button:disabled{opacity:.5}.pagination span{color:var(--text-muted);font-size:12px}
-    @media(max-width:650px){.mentor-summary-grid{grid-template-columns:1fr 1fr}.filter-control,.filter-control input{width:100%;min-width:0}.search-control{max-width:none}}
+    @media(max-width:650px){.assignment-panel{padding:16px}.mentor-summary-grid{grid-template-columns:1fr 1fr}.filter-row{align-items:stretch;flex-direction:column}.filter-control,.filter-control input,.filter-control select,.filter-row select{box-sizing:border-box;width:100%;min-width:0}.search-control{max-width:none}.table-wrap{overflow:visible;border:0}table,tbody,tr,td{display:block}thead{display:none}tr{margin-bottom:12px;padding:12px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-secondary)}td,td:nth-child(2){display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:7px;border:0;overflow-wrap:anywhere}td::before{content:attr(data-label);color:var(--text-muted);font-size:10px;font-weight:800;text-transform:uppercase}td select{box-sizing:border-box;width:100%;min-width:0}.state{display:block}.state::before{display:none}.pagination{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pagination span{grid-column:1/-1;grid-row:1;text-align:center}.pagination button{width:100%}}
+    @media(max-width:380px){.mentor-summary-grid{grid-template-columns:1fr}}
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

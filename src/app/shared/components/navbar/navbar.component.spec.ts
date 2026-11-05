@@ -44,6 +44,18 @@ describe('NavbarComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Tomar asistencia');
   });
 
+  it('mantiene accesibles el inicio y el cierre de sesión en el menú móvil', () => {
+    currentUser.next(userWithRole('ROLE_SUPER_ADMIN'));
+    fixture.detectChanges();
+    const brand = fixture.nativeElement.querySelector('.nav-brand a') as HTMLAnchorElement;
+    const userToggle = fixture.nativeElement.querySelector('.dropdown-toggle') as HTMLButtonElement;
+
+    expect(brand.getAttribute('aria-label')).toContain('Ir al inicio');
+    userToggle.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.logout').tagName).toBe('BUTTON');
+  });
+
   it('muestra al mentor independiente sus opciones de mentoría y cambio de contraseña', () => {
     currentUser.next(userWithRole('ROLE_MENTOR'));
     fixture.detectChanges();

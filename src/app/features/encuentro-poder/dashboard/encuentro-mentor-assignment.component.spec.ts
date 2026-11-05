@@ -53,6 +53,16 @@ describe('EncuentroMentorAssignmentComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Mentor Uno');
   });
 
+  it('incluye etiquetas para representar cada asignación como tarjeta en móvil', () => {
+    const cells = fixture.nativeElement.querySelectorAll('tbody td[data-label]') as NodeListOf<Element>;
+    const labels = Array.from(cells).map(cell => cell.getAttribute('data-label'));
+
+    expect(labels).toContain('Participante');
+    expect(labels).toContain('Teléfono');
+    expect(labels).toContain('Mentor actual');
+    expect(labels).toContain('Asignar mentor');
+  });
+
   it('muestra la cantidad asignada a cada mentor y la actualiza con los cambios', () => {
     expect(component.resumenMentores()).toEqual([{ mentor, cantidad: 0 }]);
 

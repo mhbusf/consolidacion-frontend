@@ -225,6 +225,7 @@
   font-weight: 800;
 }
 .feedback-form textarea {
+  box-sizing: border-box;
   width: 100%;
   padding: 13px;
   border: 1px solid var(--border-color);
@@ -282,6 +283,7 @@
   margin: 8px 0 0;
   color: var(--text-secondary);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .muted {
   color: var(--text-muted);

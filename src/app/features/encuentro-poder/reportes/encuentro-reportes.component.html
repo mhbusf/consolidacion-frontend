@@ -123,23 +123,24 @@
               <p>Se actualiza al finalizar cada clase y reúne todas las ausencias obligatorias.</p>
             </div>
           </div>
-          <div class="table-wrap">
+          <div class="table-wrap mobile-card-table" tabindex="0">
             <table>
+              <caption class="sr-only">Participantes con ausencias obligatorias</caption>
               <thead><tr><th>Participante</th><th>Teléfono</th><th>Ausencias</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
               <tbody>
                 @for (participante of noCumplen(); track participante.persona.id) {
                   <tr>
-                    <td><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.comuna || 'Sin comuna' }}</small></td>
-                    <td>{{ participante.persona.telefono }}</td>
-                    <td><span class="absence-count">{{ clasesAusentesFinalizadas(participante).length }}</span></td>
-                    <td>
+                    <td data-label="Participante"><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.comuna || 'Sin comuna' }}</small></td>
+                    <td data-label="Teléfono">{{ participante.persona.telefono }}</td>
+                    <td data-label="Ausencias"><span class="absence-count">{{ clasesAusentesFinalizadas(participante).length }}</span></td>
+                    <td data-label="Clases ausentes">
                       <div class="missing-tags">
                         @for (clase of clasesAusentesFinalizadas(participante); track clase) {
                           <span>{{ clase }}</span>
                         }
                       </div>
                     </td>
-                    <td>{{ participante.clasesCompletadas }} / {{ clasesObligatorias().length }}</td>
+                    <td data-label="Avance">{{ participante.clasesCompletadas }} / {{ clasesObligatorias().length }}</td>
                   </tr>
                 }
               </tbody>
@@ -201,21 +202,22 @@
       </div>
 
       @if (data.historialNoContinuaron.length) {
-        <div class="history-panel table-wrap">
+        <div class="history-panel table-wrap mobile-card-table" tabindex="0">
           <table>
+            <caption class="sr-only">Historial de continuidad del ciclo</caption>
             <thead><tr><th>Participante</th><th>Exclusión</th><th>Motivo</th><th>Mentor anterior</th><th>Estado</th><th>Acción</th></tr></thead>
             <tbody>
               @for (registro of data.historialNoContinuaron; track registro.id) {
                 <tr>
-                  <td><strong>{{ registro.persona.nombreCompleto }}</strong><small>{{ registro.persona.telefono }}</small></td>
-                  <td>{{ registro.fechaExclusion | date:'dd/MM/yyyy HH:mm' }}<small>Por {{ registro.excluidoPor || 'Sin registro' }}</small></td>
-                  <td>{{ motivoContinuidad(registro) }}</td>
-                  <td>{{ registro.mentorAnterior || 'Sin mentor' }}</td>
-                  <td>
+                  <td data-label="Participante"><strong>{{ registro.persona.nombreCompleto }}</strong><small>{{ registro.persona.telefono }}</small></td>
+                  <td data-label="Exclusión">{{ registro.fechaExclusion | date:'dd/MM/yyyy HH:mm' }}<small>Por {{ registro.excluidoPor || 'Sin registro' }}</small></td>
+                  <td data-label="Motivo">{{ motivoContinuidad(registro) }}</td>
+                  <td data-label="Mentor anterior">{{ registro.mentorAnterior || 'Sin mentor' }}</td>
+                  <td data-label="Estado">
                     <span class="status-pill" [class.active]="registro.estadoActual === 'ACTIVO'">{{ registro.estadoActual === 'ACTIVO' ? 'Reincorporado' : 'No continúa' }}</span>
                     @if (registro.fechaReintegracion) {<small>{{ registro.fechaReintegracion | date:'dd/MM/yyyy HH:mm' }} · {{ registro.reintegradoPor || 'Sin registro' }}</small>}
                   </td>
-                  <td>
+                  <td data-label="Acción">
                     @if (registro.estadoActual === 'NO_CONTINUA' && !registro.fechaReintegracion) {
                       <button class="reinstate-button" type="button" (click)="reintegrar(registro)" [disabled]="reintegrando() !== null">
                         {{ reintegrando() === registro.inscripcionId ? 'Reincorporando...' : 'Reincorporar' }}
@@ -261,6 +263,7 @@
           <div class="mentor-report-heading">
             <h3>Informe por mentor</h3>
             <p>Indica si cada mentor realizó los feedbacks requeridos en cada semana iniciada.</p>
+            <small class="scroll-hint">Desliza horizontalmente para revisar todas las semanas.</small>
           </div>
           <div class="mentor-report table-wrap" tabindex="0">
             <table>

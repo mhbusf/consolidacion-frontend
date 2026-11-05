@@ -97,6 +97,7 @@ td small, .outcome small { display: block; margin-top: 3px; color: var(--text-mu
 .mentor-report-heading { margin: 28px 0 12px; }
 .mentor-report-heading h3, .mentor-report-heading p { margin: 0; }
 .mentor-report-heading p { margin-top: 5px; color: var(--text-muted); }
+.scroll-hint { display: none; margin-top: 8px; color: var(--primary-light); font-weight: 700; }
 .mentor-report { border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); }
 .mentor-report.table-wrap { border-top: 1px solid var(--border-color); }
 .mentor-report:focus-visible { outline: 2px solid var(--primary-light); outline-offset: -2px; }
@@ -141,10 +142,26 @@ td small, .outcome small { display: block; margin-top: 3px; color: var(--text-mu
   .outcome-grid { grid-template-columns: 1fr; }
   .excel-button { width: 100%; }
   .outcome li { align-items: flex-start; }
-  .feedback-period-head { align-items: flex-start; }
+  .feedback-period-head { align-items: flex-start; flex-direction: column; }
+  .period-rate { text-align: left; }
+  .mobile-card-table { overflow: visible; border: 0; }
+  .history-panel.mobile-card-table { border: 0; background: transparent; }
+  .mobile-card-table table, .mobile-card-table tbody, .mobile-card-table tr, .mobile-card-table td { display: block; }
+  .mobile-card-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .mobile-card-table tr { margin-bottom: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); }
+  .mobile-card-table td { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 7px; border: 0; overflow-wrap: anywhere; }
+  .mobile-card-table td::before { content: attr(data-label); color: var(--text-muted); font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .mentor-report table { min-width: 620px; }
+  .scroll-hint { display: block; }
   .compliance-panel thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
   .compliance-panel tbody, .compliance-panel tr { display: block; }
   .compliance-panel tr { padding: 8px 0; border-bottom: 1px solid var(--border-color); }
   .compliance-panel th, .compliance-panel td { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 8px 14px; border: 0; }
   .compliance-panel [data-label]::before { content: attr(data-label); color: var(--text-muted); font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+}
+
+@media (max-width: 380px) {
+  .metrics { grid-template-columns: 1fr; }
+  .outcome li { align-items: flex-start; flex-direction: column; }
+  .feedback-period-head { padding: 16px; }
 }

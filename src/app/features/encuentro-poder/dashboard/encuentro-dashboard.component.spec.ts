@@ -264,6 +264,11 @@ describe('EncuentroDashboardComponent', () => {
     expect(component.qr()!.imagen.startsWith('data:image/png;base64,')).toBeTrue();
     expect(component.qr()?.nombre).toBe('Clase 0 - Informativa');
     expect(component.generandoQr()).toBeNull();
+    fixture.detectChanges();
+    const modal = fixture.nativeElement.querySelector('.qr-modal');
+    expect(modal.getAttribute('role')).toBe('dialog');
+    expect(modal.getAttribute('aria-modal')).toBe('true');
+    expect(modal.querySelector('.close').getAttribute('aria-label')).toBe('Cerrar código QR');
   });
 
   it('descarga el QR manteniendo el formato PNG', () => {
