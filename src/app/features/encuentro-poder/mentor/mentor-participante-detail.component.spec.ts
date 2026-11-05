@@ -29,7 +29,10 @@ describe('MentorParticipanteDetailComponent', () => {
       etapaMentoria: 'ACTIVA',
       cierreHasta: '2026-10-22',
       fechaInscripcion: '2026-09-20',
-      asistencias: [{ claseId: 1, claseNombre: 'Clase 1', fecha: '2026-10-01', asistio: true }],
+      asistencias: [
+        { claseId: 0, claseNombre: 'Clase 0 - Informativa', orden: 0, fecha: '2026-09-24', obligatoria: false, asistio: true },
+        { claseId: 1, claseNombre: 'Clase 1', orden: 1, fecha: '2026-10-01', obligatoria: true, asistio: true },
+      ],
     }));
     service.feedback.and.returnValue(of([]));
 
@@ -50,6 +53,8 @@ describe('MentorParticipanteDetailComponent', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Ana Pérez');
     expect(text).toContain('33%');
+    expect(text).toContain('Clase 0 - Informativa');
+    expect(text).toContain('No obligatoria');
     expect(text).toContain('Clase 1');
     expect(text).toContain('Todavía no hay feedback registrado');
     const whatsapp: HTMLAnchorElement = fixture.nativeElement.querySelector('.whatsapp-link');

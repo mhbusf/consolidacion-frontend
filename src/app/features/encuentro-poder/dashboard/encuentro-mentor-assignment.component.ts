@@ -62,13 +62,26 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Participante</th><th>Teléfono</th><th>Invitado por / servidor de GDC</th><th>Mentor actual</th><th>Asignar / reasignar</th></tr></thead>
+              <thead><tr><th>Participante</th><th>Teléfono</th><th>Invitado por / servidor de GDC</th><th>Asistencia</th><th>Mentor actual</th><th>Asignar / reasignar</th></tr></thead>
               <tbody>
                 @for (item of asignacionesFiltradas(); track item.inscripcionId) {
                   <tr>
                     <td><strong>{{ item.nombreCompleto }}</strong></td>
                     <td>{{ item.telefono }}</td>
                     <td>{{ item.invitadoPor || '—' }}</td>
+                    <td>
+                      <div class="attendance-list" [attr.aria-label]="'Asistencia de ' + item.nombreCompleto">
+                        @for (clase of item.asistencias; track clase.claseId) {
+                          <span class="attendance-badge" [class.present]="clase.asistio"
+                            [attr.aria-label]="clase.claseNombre + ': ' + (clase.asistio ? 'presente' : 'sin asistencia')"
+                            [attr.title]="clase.claseNombre + ' · ' + (clase.asistio ? 'Presente' : 'Sin asistencia')">
+                            <strong>C{{ clase.orden }}</strong>{{ clase.asistio ? '✓' : '—' }}
+                          </span>
+                        } @empty {
+                          <span class="no-attendance">Sin clases</span>
+                        }
+                      </div>
+                    </td>
                     <td><span class="mentor-badge" [class.unassigned]="!item.mentor">{{ item.mentor?.nombreCompleto || 'Sin mentor' }}</span></td>
                     <td>
                       <select
@@ -83,7 +96,7 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="state">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
+                  <tr><td colspan="6" class="state">No hay participantes que coincidan con la búsqueda y el filtro.</td></tr>
                 }
               </tbody>
             </table>
@@ -109,6 +122,11 @@ import { EncuentroMentoriaService } from '../../../core/services/encuentro-mento
     .filter-control input{min-width:280px;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary)}
     .search-control{flex:1;max-width:420px}
     .search-control input{width:100%}
+    .attendance-list{display:flex;min-width:150px;gap:5px;flex-wrap:wrap}
+    .attendance-badge{display:inline-flex;align-items:center;gap:3px;padding:4px 6px;border-radius:7px;background:var(--bg-secondary);color:var(--text-muted);font-size:11px;font-weight:800}
+    .attendance-badge.present{background:color-mix(in srgb,var(--success) 13%,var(--bg-card));color:var(--success)}
+    .attendance-badge strong{color:inherit;font-size:10px}
+    .no-attendance{color:var(--text-muted);font-size:11px}
     @media(max-width:650px){.mentor-summary-grid{grid-template-columns:1fr 1fr}.filter-control,.filter-control input{width:100%;min-width:0}.search-control{max-width:none}}
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

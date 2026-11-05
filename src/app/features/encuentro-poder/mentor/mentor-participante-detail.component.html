@@ -55,12 +55,12 @@
         </section>
 
         <section class="panel attendance">
-          <div class="section-title"><div><p class="eyebrow">Avance</p><h2>Asistencias</h2></div><span>{{ persona.clasesCompletadas }}/{{ persona.totalClases }}</span></div>
+          <div class="section-title"><div><p class="eyebrow">Avance</p><h2>Asistencias</h2></div><span [attr.aria-label]="persona.clasesCompletadas + ' de ' + persona.totalClases + ' clases obligatorias'">{{ persona.clasesCompletadas }}/{{ persona.totalClases }}</span></div>
           <div class="progress"><span [style.width.%]="porcentaje()"></span></div>
           @for (clase of persona.asistencias; track clase.claseId) {
             <div class="class-row">
               <span class="status" [class.present]="clase.asistio">{{ clase.asistio ? '✓' : '—' }}</span>
-              <div><strong>{{ clase.claseNombre }}</strong><small>{{ clase.fecha | date:'dd/MM/yyyy' }}</small></div>
+              <div><strong>{{ clase.claseNombre }}</strong><small>{{ clase.fecha | date:'dd/MM/yyyy' }}{{ clase.obligatoria ? '' : ' · No obligatoria' }}</small></div>
               <b [class.present-text]="clase.asistio">{{ clase.asistio ? 'Presente' : 'Sin asistencia' }}</b>
             </div>
           } @empty {

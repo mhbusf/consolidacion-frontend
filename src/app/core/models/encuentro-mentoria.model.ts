@@ -41,7 +41,9 @@ export interface EncuentroMentorResumenPortal {
 export interface EncuentroMentorAsistencia {
   claseId: number;
   claseNombre: string;
+  orden: number;
   fecha: string;
+  obligatoria: boolean;
   asistio: boolean;
 }
 
@@ -70,6 +72,7 @@ export interface EncuentroAsignacionMentor {
   nombreCompleto: string;
   telefono: string;
   invitadoPor?: string | null;
+  asistencias: EncuentroMentorAsistencia[];
   mentor: EncuentroMentorOpcion | null;
 }
 

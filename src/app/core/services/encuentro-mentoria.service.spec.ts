@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
+import { EncuentroAsignacionMentor } from '../models/encuentro-mentoria.model';
 import { EncuentroMentoriaService } from './encuentro-mentoria.service';
 
 describe('EncuentroMentoriaService', () => {
@@ -25,7 +26,10 @@ describe('EncuentroMentoriaService', () => {
     progreso: {
       clasesCompletadas: 1,
       totalClasesObligatorias: 3,
-      asistencias: [{ claseId: 1, clase: 'Clase 1', fecha: '2026-10-01', obligatoria: true, presente: true }],
+      asistencias: [
+        { claseId: 1, clase: 'Clase 1', orden: 1, fecha: '2026-10-08', obligatoria: true, presente: true },
+        { claseId: 0, clase: 'Clase 0 - Informativa', orden: 0, fecha: '2026-10-01', obligatoria: false, presente: true },
+      ],
     },
     ultimoFeedback: null,
     etapaMentoria: 'ACTIVA' as const,
@@ -82,8 +86,8 @@ describe('EncuentroMentoriaService', () => {
     });
   });
 
-  it('consulta detalle y feedback por inscripción', () => {
-    let detalle: { etapaMentoria: string; cierreHasta: string | null } | undefined;
+  it('consulta detalle y conserva la asistencia de clase 0', () => {
+    let detalle: { etapaMentoria: string; cierreHasta: string | null; asistencias: Array<{ orden: number; obligatoria: boolean }> } | undefined;
     service.participante(42).subscribe(response => detalle = response);
     service.feedback(42).subscribe();
 
@@ -95,6 +99,10 @@ describe('EncuentroMentoriaService', () => {
     feedback.flush([]);
     expect(detalle?.etapaMentoria).toBe('ACTIVA');
     expect(detalle?.cierreHasta).toBe('2026-10-22');
+    expect(detalle?.asistencias).toEqual([
+      jasmine.objectContaining({ orden: 0, obligatoria: false }),
+      jasmine.objectContaining({ orden: 1, obligatoria: true }),
+    ]);
   });
 
   it('adapta comentario al contrato contenido del backend', () => {
@@ -110,7 +118,7 @@ describe('EncuentroMentoriaService', () => {
   });
 
   it('usa los contratos administrativos del backend para asignar y desasignar', () => {
-    let asignaciones: { invitadoPor?: string | null }[] = [];
+    let asignaciones: EncuentroAsignacionMentor[] = [];
     service.asignaciones(7).subscribe(response => asignaciones = response);
     service.mentoresHabilitados().subscribe();
     service.asignarMentor(42, 9).subscribe();
@@ -118,6 +126,7 @@ describe('EncuentroMentoriaService', () => {
 
     http.expectOne(`${encuentroApi}/ciclos/7/mentorias`).flush([participante]);
     expect(asignaciones[0].invitadoPor).toBe('Pedro');
+    expect(asignaciones[0].asistencias.map(asistencia => asistencia.orden)).toEqual([0, 1]);
     const mentors = http.expectOne(`${encuentroApi}/mentores`);
     mentors.flush([]);
     const updates = http.match(`${encuentroApi}/inscripciones/42/mentor`);

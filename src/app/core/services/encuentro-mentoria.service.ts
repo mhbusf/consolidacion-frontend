@@ -6,6 +6,7 @@ import {
   CrearEncuentroMentorFeedback,
   EncuentroAsignacionMentor,
   EncuentroMentorFeedback,
+  EncuentroMentorAsistencia,
   EncuentroMentorAsistenciaClase,
   EncuentroMentorCiclo,
   EncuentroMentorRegistroAsistencia,
@@ -118,14 +119,7 @@ export class EncuentroMentoriaService {
       fechaInscripcion: response.fechaInscripcion,
       invitadoPor: response.invitadoPor,
       tiempoCatedral: response.tiempoCatedral,
-      asistencias: response.progreso.asistencias
-        .filter(asistencia => asistencia.obligatoria)
-        .map(asistencia => ({
-          claseId: asistencia.claseId,
-          claseNombre: asistencia.clase,
-          fecha: asistencia.fecha,
-          asistio: asistencia.presente,
-        })),
+      asistencias: this.asistencias(response),
     };
   }
 
@@ -155,8 +149,22 @@ export class EncuentroMentoriaService {
       nombreCompleto: response.persona.nombreCompleto,
       telefono: response.persona.telefono,
       invitadoPor: response.invitadoPor,
+      asistencias: this.asistencias(response),
       mentor: response.mentor ? this.mentorOpcion(response.mentor) : null,
     };
+  }
+
+  private asistencias(response: ParticipanteMentorResponse): EncuentroMentorAsistencia[] {
+    return [...response.progreso.asistencias]
+      .sort((a, b) => a.orden - b.orden)
+      .map(asistencia => ({
+        claseId: asistencia.claseId,
+        claseNombre: asistencia.clase,
+        orden: asistencia.orden,
+        fecha: asistencia.fecha,
+        obligatoria: asistencia.obligatoria,
+        asistio: asistencia.presente,
+      }));
   }
 }
 
@@ -195,6 +203,7 @@ interface ParticipanteMentorResponse {
     asistencias: Array<{
       claseId: number;
       clase: string;
+      orden: number;
       fecha: string;
       obligatoria: boolean;
       presente: boolean;

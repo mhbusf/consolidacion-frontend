@@ -15,6 +15,10 @@ describe('EncuentroMentorAssignmentComponent', () => {
     nombreCompleto: 'Ana Pérez',
     telefono: '+56911111111',
     invitadoPor: 'Pedro Servidor',
+    asistencias: [
+      { claseId: 10, claseNombre: 'Clase 0 - Informativa', orden: 0, fecha: '2026-10-01', obligatoria: false, asistio: true },
+      { claseId: 11, claseNombre: 'Clase 1', orden: 1, fecha: '2026-10-08', obligatoria: true, asistio: false },
+    ],
     mentor: null,
   };
 
@@ -43,6 +47,8 @@ describe('EncuentroMentorAssignmentComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ana Pérez');
     expect(fixture.nativeElement.textContent).toContain('Invitado por / servidor de GDC');
     expect(fixture.nativeElement.textContent).toContain('Pedro Servidor');
+    expect(fixture.nativeElement.textContent).toContain('C0✓');
+    expect(fixture.nativeElement.textContent).toContain('C1—');
     expect(fixture.nativeElement.textContent).toContain('Sin mentor');
     expect(fixture.nativeElement.textContent).toContain('Mentor Uno');
   });
