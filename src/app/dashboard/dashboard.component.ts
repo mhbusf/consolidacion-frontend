@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, defaultIfEmpty, finalize, map, of, switchMap, takeUntil, tap } from 'rxjs';
@@ -632,22 +632,34 @@ export class DashboardComponent implements OnInit {
   private readonly userRequests$ = new Subject<void>();
   private readonly selectedUserRequests$ = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private dashboardRequest?: Subscription;
   private dashboardSequence = 0;
+  private readonly dashboardState = signal<Dashboard | null>(null);
+  private readonly lastUpdatedState = signal<Date | null>(null);
+  private readonly initialLoadingState = signal(true);
+  private readonly refreshingState = signal(false);
+  private readonly mainErrorState = signal('');
 
-  dashboard: Dashboard | null = null;
   usuarios: User[] = [];
   usernameSeleccionado = '';
   resumenConsolidador: ConsolidadorResumen | null = null;
-  lastUpdated: Date | null = null;
-
-  isInitialLoading = true;
-  isRefreshing = false;
   isLoadingUsers = false;
   isLoadingResumen = false;
-  mainError = '';
   userListError = '';
   selectedSummaryError = '';
+
+  get dashboard(): Dashboard | null { return this.dashboardState(); }
+  set dashboard(value: Dashboard | null) { this.dashboardState.set(value); }
+  get lastUpdated(): Date | null { return this.lastUpdatedState(); }
+  private set lastUpdated(value: Date | null) { this.lastUpdatedState.set(value); }
+  get isInitialLoading(): boolean { return this.initialLoadingState(); }
+  private set isInitialLoading(value: boolean) { this.initialLoadingState.set(value); }
+  get isRefreshing(): boolean { return this.refreshingState(); }
+  private set isRefreshing(value: boolean) { this.refreshingState.set(value); }
+  get mainError(): string { return this.mainErrorState(); }
+  private set mainError(value: string) { this.mainErrorState.set(value); }
 
   constructor(
     private readonly dashboardService: DashboardService,
@@ -703,17 +715,22 @@ export class DashboardComponent implements OnInit {
       catchError(() => of({ data: null, error })),
       finalize(() => {
         if (sequence !== this.dashboardSequence) return;
-        this.isInitialLoading = false;
-        this.isRefreshing = false;
+        this.ngZone.run(() => {
+          this.isInitialLoading = false;
+          this.isRefreshing = false;
+          if (!this.destroyRef.destroyed) this.changeDetector.detectChanges();
+        });
       }),
       takeUntil(this.destroy$),
     ).subscribe(result => {
       if (sequence !== this.dashboardSequence) return;
-      this.mainError = result.error;
-      if (result.data) {
-        this.dashboard = result.data;
-        this.lastUpdated = new Date();
-      }
+      this.ngZone.run(() => {
+        this.mainError = result.error;
+        if (result.data) {
+          this.dashboard = result.data;
+          this.lastUpdated = new Date();
+        }
+      });
     });
   }
 
@@ -766,9 +783,11 @@ export class DashboardComponent implements OnInit {
       )),
       takeUntil(this.destroy$),
     ).subscribe(result => {
-      this.isLoadingUsers = false;
-      this.usuarios = result.users;
-      this.userListError = result.error;
+      this.ngZone.run(() => {
+        this.isLoadingUsers = false;
+        this.usuarios = result.users;
+        this.userListError = result.error;
+      });
     });
   }
 
@@ -788,9 +807,11 @@ export class DashboardComponent implements OnInit {
       }),
       takeUntil(this.destroy$),
     ).subscribe(result => {
-      this.isLoadingResumen = false;
-      this.resumenConsolidador = result.summary;
-      this.selectedSummaryError = result.error;
+      this.ngZone.run(() => {
+        this.isLoadingResumen = false;
+        this.resumenConsolidador = result.summary;
+        this.selectedSummaryError = result.error;
+      });
     });
   }
 }

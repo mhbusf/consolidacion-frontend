@@ -1,6 +1,7 @@
+import { NgZone } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { EMPTY, of, throwError, TimeoutError } from 'rxjs';
+import { EMPTY, of, Subject, throwError, TimeoutError } from 'rxjs';
 import { Dashboard } from '../core/models/consolidado.model';
 import { AuthService } from '../core/services/auth.service';
 import { DashboardService } from '../core/services/dashboard.service';
@@ -114,6 +115,23 @@ describe('DashboardComponent', () => {
 
     expect(fixture.componentInstance.isInitialLoading).toBeFalse();
     expect(fixture.nativeElement.querySelector('.state-error')).not.toBeNull();
+  });
+
+  it('actualiza la vista cuando la respuesta llega fuera de la zona de Angular', async () => {
+    const response = new Subject<Dashboard>();
+    dashboardService.getDashboard.and.returnValue(response);
+    fixture.componentInstance.dashboard = null;
+    fixture.componentInstance.cargarDashboard();
+    fixture.detectChanges();
+
+    TestBed.inject(NgZone).runOutsideAngular(() => {
+      response.next(dashboard);
+      response.complete();
+    });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.state-panel')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="attention-overdue"]')?.textContent).toContain('5');
   });
 
   it('muestra un estado vacío real cuando la carga correcta no contiene registros', () => {
