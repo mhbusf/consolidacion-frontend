@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject, catchError, map, of, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, Subscription, catchError, defaultIfEmpty, finalize, map, of, switchMap, takeUntil, tap } from 'rxjs';
 import { User } from '../core/models/auth.model';
 import { ConsolidadoEstado, Dashboard, UsuarioEstadistica } from '../core/models/consolidado.model';
 import { AuthService } from '../core/services/auth.service';
@@ -629,10 +629,11 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
 })
 export class DashboardComponent implements OnInit {
   private readonly destroy$ = new Subject<void>();
-  private readonly dashboardRequests$ = new Subject<void>();
   private readonly userRequests$ = new Subject<void>();
   private readonly selectedUserRequests$ = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
+  private dashboardRequest?: Subscription;
+  private dashboardSequence = 0;
 
   dashboard: Dashboard | null = null;
   usuarios: User[] = [];
@@ -659,7 +660,6 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.bindDashboardRequests();
     this.bindUserRequests();
     this.bindSelectedUserRequests();
     this.cargarDashboard();
@@ -691,7 +691,30 @@ export class DashboardComponent implements OnInit {
   }
 
   cargarDashboard(): void {
-    this.dashboardRequests$.next();
+    const sequence = ++this.dashboardSequence;
+    this.dashboardRequest?.unsubscribe();
+    this.mainError = '';
+    this.isInitialLoading = !this.dashboard;
+    this.isRefreshing = !!this.dashboard;
+    const error = 'No fue posible obtener la información del dashboard.';
+    this.dashboardRequest = this.dashboardService.getDashboard().pipe(
+      map(data => data ? { data, error: '' } : { data: null, error }),
+      defaultIfEmpty({ data: null, error }),
+      catchError(() => of({ data: null, error })),
+      finalize(() => {
+        if (sequence !== this.dashboardSequence) return;
+        this.isInitialLoading = false;
+        this.isRefreshing = false;
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe(result => {
+      if (sequence !== this.dashboardSequence) return;
+      this.mainError = result.error;
+      if (result.data) {
+        this.dashboard = result.data;
+        this.lastUpdated = new Date();
+      }
+    });
   }
 
   cargarUsuarios(): void {
@@ -729,29 +752,6 @@ export class DashboardComponent implements OnInit {
       CERRADO: 'Cerrado',
     };
     return labels[estado] ?? estado;
-  }
-
-  private bindDashboardRequests(): void {
-    this.dashboardRequests$.pipe(
-      tap(() => {
-        this.mainError = '';
-        this.isInitialLoading = !this.dashboard;
-        this.isRefreshing = !!this.dashboard;
-      }),
-      switchMap(() => this.dashboardService.getDashboard().pipe(
-        map(data => ({ data, error: '' })),
-        catchError(() => of({ data: null, error: 'No fue posible obtener la información del dashboard.' })),
-      )),
-      takeUntil(this.destroy$),
-    ).subscribe(result => {
-      this.isInitialLoading = false;
-      this.isRefreshing = false;
-      this.mainError = result.error;
-      if (result.data) {
-        this.dashboard = result.data;
-        this.lastUpdated = new Date();
-      }
-    });
   }
 
   private bindUserRequests(): void {

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError, TimeoutError } from 'rxjs';
+import { EMPTY, of, throwError, TimeoutError } from 'rxjs';
 import { Dashboard } from '../core/models/consolidado.model';
 import { AuthService } from '../core/services/auth.service';
 import { DashboardService } from '../core/services/dashboard.service';
@@ -96,6 +96,17 @@ describe('DashboardComponent', () => {
 
   it('abandona la carga inicial cuando el servicio agota su tiempo de espera', () => {
     dashboardService.getDashboard.and.returnValue(throwError(() => new TimeoutError()));
+    fixture.componentInstance.dashboard = null;
+
+    fixture.componentInstance.cargarDashboard();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.isInitialLoading).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.state-error')).not.toBeNull();
+  });
+
+  it('abandona la carga inicial si la petición termina sin emitir una respuesta', () => {
+    dashboardService.getDashboard.and.returnValue(EMPTY);
     fixture.componentInstance.dashboard = null;
 
     fixture.componentInstance.cargarDashboard();
