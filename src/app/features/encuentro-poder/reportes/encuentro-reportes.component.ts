@@ -13,6 +13,7 @@ import {
   EncuentroParticipante,
   EncuentroNoContinuidad,
   EncuentroTipoReporte,
+  EncuentroResumenGeneral,
 } from '../../../core/models/encuentro-poder.model';
 import { EncuentroPoderService } from '../../../core/services/encuentro-poder.service';
 import { EncuentroMentoriaService } from '../../../core/services/encuentro-mentoria.service';
@@ -48,12 +49,15 @@ export class EncuentroReportesComponent {
   readonly ciclos = signal<EncuentroCiclo[]>([]);
   readonly cicloSeleccionado = signal<number | null>(null);
   readonly dashboard = signal<EncuentroDashboard | null>(null);
+  readonly resumenGeneral = signal<EncuentroResumenGeneral | null>(null);
   readonly cumplimientoFeedback = signal<EncuentroCumplimientoFeedback | null>(null);
   readonly cargandoCiclos = signal(true);
   readonly cargando = signal(false);
+  readonly cargandoResumen = signal(true);
   readonly cargandoCumplimiento = signal(false);
   readonly exportando = signal<EncuentroTipoReporte | null>(null);
   readonly error = signal('');
+  readonly errorResumen = signal('');
   readonly accionError = signal<'CICLOS' | 'DASHBOARD' | null>(null);
   readonly reintegrando = signal<number | null>(null);
   readonly mensaje = signal('');
@@ -137,7 +141,12 @@ export class EncuentroReportesComponent {
   });
 
   constructor() {
+    this.cargarResumenGeneral();
     this.cargarCiclos();
+  }
+
+  recargarResumenGeneral(): void {
+    this.cargarResumenGeneral();
   }
 
   seleccionarCiclo(event: Event): void {
@@ -267,6 +276,21 @@ export class EncuentroReportesComponent {
       error: error => {
         this.accionError.set('CICLOS');
         this.error.set(this.mensajeError(error, 'No fue posible cargar los ciclos.'));
+      },
+    });
+  }
+
+  private cargarResumenGeneral(): void {
+    this.cargandoResumen.set(true);
+    this.errorResumen.set('');
+    this.service.resumenGeneral().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.cargandoResumen.set(false)),
+    ).subscribe({
+      next: resumen => this.resumenGeneral.set(resumen),
+      error: error => {
+        this.resumenGeneral.set(null);
+        this.errorResumen.set(this.mensajeError(error, 'No fue posible cargar el resumen general.'));
       },
     });
   }

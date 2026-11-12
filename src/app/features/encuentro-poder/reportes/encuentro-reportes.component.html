@@ -2,8 +2,54 @@
   <header class="hero">
     <div>
       <p class="eyebrow">Encuentro de Poder</p>
-      <h1>Resultados por ciclo</h1>
-      <p class="hero-copy">Asistencia, cumplimiento y graduación en una vista preparada para tomar decisiones.</p>
+      <h1>Resultados generales</h1>
+      <p class="hero-copy">Una visión consolidada de todos los procesos, sin duplicar personas entre ciclos.</p>
+    </div>
+  </header>
+
+  <section class="general-overview" aria-labelledby="general-title">
+    <div class="general-heading">
+      <div>
+        <p class="section-number">Todos los procesos</p>
+        <h2 id="general-title">Estado acumulado</h2>
+        @if (resumenGeneral(); as resumen) {
+          <p>{{ resumen.ciclos }} ciclo{{ resumen.ciclos === 1 ? '' : 's' }} · {{ resumen.personas }} personas únicas</p>
+        }
+      </div>
+    </div>
+    @if (cargandoResumen()) {
+      <div class="loading general-loading" aria-live="polite">Calculando resultados generales...</div>
+    } @else if (errorResumen()) {
+      <div class="alert general-alert" role="alert">
+        <span>{{ errorResumen() }}</span>
+        <button type="button" (click)="recargarResumenGeneral()">Reintentar</button>
+      </div>
+    } @else if (resumenGeneral(); as resumen) {
+      <div class="general-metrics">
+        <article class="general-metric graduated-total">
+          <span>Graduados únicos</span>
+          <strong>{{ resumen.graduados }}</strong>
+          <p>Completaron al menos un ciclo.</p>
+        </article>
+        <article class="general-metric repeated-total">
+          <span>Repitieron para graduarse</span>
+          <strong>{{ resumen.repitieronParaGraduarse }}</strong>
+          <p>Se graduaron después de participar en un ciclo anterior.</p>
+        </article>
+        <article class="general-metric pending-total">
+          <span>Aún no se gradúan</span>
+          <strong>{{ resumen.noGraduados }}</strong>
+          <p>No han completado ninguno de los ciclos.</p>
+        </article>
+      </div>
+    }
+  </section>
+
+  <section class="cycle-detail-header" aria-labelledby="cycle-detail-title">
+    <div>
+      <p class="eyebrow">Detalle mensual</p>
+      <h2 id="cycle-detail-title">Resultados por ciclo</h2>
+      <p>Selecciona un proceso para revisar asistencia, continuidad, graduación y mentorías.</p>
     </div>
     <div class="cycle-control">
       <label for="ciclo">Ciclo analizado</label>
@@ -14,7 +60,7 @@
         }
       </select>
     </div>
-  </header>
+  </section>
 
   @if (error()) {
     <div class="alert" role="alert">

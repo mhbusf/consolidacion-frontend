@@ -25,6 +25,14 @@ describe('EncuentroPoderService', () => {
     request.flush([]);
   });
 
+  it('consulta el resumen general de todos los ciclos', () => {
+    service.resumenGeneral().subscribe();
+
+    const request = http.expectOne(`${api}/resumen-general`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ ciclos: 3, personas: 180, graduados: 120, repitieronParaGraduarse: 20, noGraduados: 60 });
+  });
+
   it('actualiza datos globales y del ciclo usando la inscripción', () => {
     const body = {
       nombreCompleto: 'Ana Corregida',

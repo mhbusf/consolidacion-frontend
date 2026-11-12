@@ -8,6 +8,7 @@ import {
   EncuentroTipoReporte,
   EncuentroContinuidadPreview, EncuentroContinuidadResultado, EncuentroNoContinuidad,
   EncuentroInscripcionPublica, ActualizarEncuentroInscripcion,
+  EncuentroResumenGeneral,
 } from '../models/encuentro-poder.model';
 
 @Injectable({ providedIn: 'root' })
@@ -26,6 +27,7 @@ export class EncuentroPoderService {
     return this.ciclosCache$;
   }
   dashboard(cicloId: number): Observable<EncuentroDashboard> { return this.http.get<EncuentroDashboard>(`${this.api}/dashboard`, { params: { cicloId } }); }
+  resumenGeneral(): Observable<EncuentroResumenGeneral> { return this.http.get<EncuentroResumenGeneral>(`${this.api}/resumen-general`); }
   inscritos(cicloId: number): Observable<EncuentroInscripcion[]> { return this.http.get<EncuentroInscripcion[]>(`${this.api}/ciclos/${cicloId}/inscritos`); }
   actualizarInscripcion(inscripcionId: number, request: ActualizarEncuentroInscripcion): Observable<EncuentroInscripcion> { return this.http.put<EncuentroInscripcion>(`${this.api}/inscripciones/${inscripcionId}`, request); }
   buscarPersonas(texto: string): Observable<EncuentroPersona[]> { return this.http.get<EncuentroPersona[]>(`${this.api}/personas`, { params: { texto } }); }

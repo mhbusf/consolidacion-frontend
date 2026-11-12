@@ -140,3 +140,11 @@ export interface EncuentroDashboard {
   graduados: EncuentroParticipante[];
   historialNoContinuaron: EncuentroNoContinuidad[];
 }
+
+export interface EncuentroResumenGeneral {
+  ciclos: number;
+  personas: number;
+  graduados: number;
+  repitieronParaGraduarse: number;
+  noGraduados: number;
+}

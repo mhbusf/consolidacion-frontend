@@ -136,9 +136,16 @@ describe('EncuentroReportesComponent', () => {
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<EncuentroPoderService>('EncuentroPoderService', [
-      'ciclos', 'dashboard', 'exportarReporte',
+      'ciclos', 'dashboard', 'resumenGeneral', 'exportarReporte',
       'reintegrar',
     ]);
+    service.resumenGeneral.and.returnValue(of({
+      ciclos: 3,
+      personas: 180,
+      graduados: 120,
+      repitieronParaGraduarse: 20,
+      noGraduados: 60,
+    }));
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.returnValue(of(dashboard()));
     service.exportarReporte.and.returnValue(of(new Blob()));
@@ -165,6 +172,7 @@ describe('EncuentroReportesComponent', () => {
     const text = fixture.nativeElement.textContent;
 
     expect(service.dashboard).toHaveBeenCalledOnceWith(7);
+    expect(service.resumenGeneral).toHaveBeenCalledOnceWith();
     expect(mentoriaService.cumplimientoFeedback).toHaveBeenCalledOnceWith(7);
     expect(text).toContain('Números totales');
     expect(text).toContain('Asistencia por clase');
@@ -185,6 +193,23 @@ describe('EncuentroReportesComponent', () => {
       { clase: 'Clase 2', personas: [2] },
     ]);
     expect(component.clasesAusentesFinalizadas(failed)).toEqual(['Clase 1', 'Clase 2']);
+  });
+
+  it('muestra el resumen general antes del detalle por ciclo', () => {
+    const text = fixture.nativeElement.textContent;
+    const sections = Array.from(fixture.nativeElement.querySelectorAll(
+      '[aria-labelledby="general-title"], [aria-labelledby="cycle-detail-title"]',
+    )) as HTMLElement[];
+
+    expect(text).toContain('Graduados únicos');
+    expect(text).toContain('120');
+    expect(text).toContain('Repitieron para graduarse');
+    expect(text).toContain('20');
+    expect(text).toContain('Aún no se gradúan');
+    expect(text).toContain('60');
+    expect(text).toContain('3 ciclos · 180 personas únicas');
+    expect(sections[0].getAttribute('aria-labelledby')).toBe('general-title');
+    expect(sections[1].getAttribute('aria-labelledby')).toBe('cycle-detail-title');
   });
 
   it('incluye etiquetas y foco para las tablas operativas en móvil', () => {
