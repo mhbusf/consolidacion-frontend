@@ -23,6 +23,8 @@ const ciclo: EncuentroCiclo = {
 
 const graduate = {
   persona: { id: 1, nombreCompleto: 'Persona Graduada', telefono: '56911111111', comuna: 'Santiago' },
+  mentorNombre: 'Mentor Graduada',
+  invitadoPor: 'Líder Graduada',
   inscrito: true,
   clasesCompletadas: 3,
   clasesFaltantes: [],
@@ -32,6 +34,8 @@ const graduate = {
 
 const failed = {
   persona: { id: 2, nombreCompleto: 'Persona Ausente', telefono: '56922222222', comuna: 'Maipú' },
+  mentorNombre: 'Mentor Responsable',
+  invitadoPor: 'Líder Invitador',
   inscrito: true,
   clasesCompletadas: 0,
   clasesFaltantes: ['Clase 1', 'Clase 2', 'Clase 3'],
@@ -41,6 +45,8 @@ const failed = {
 
 const inProgress = {
   persona: { id: 3, nombreCompleto: 'Persona en Proceso', telefono: '56933333333', comuna: 'Ñuñoa' },
+  mentorNombre: null,
+  invitadoPor: null,
   inscrito: true,
   clasesCompletadas: 2,
   clasesFaltantes: ['Clase 3'],
@@ -70,6 +76,7 @@ function dashboard(): EncuentroDashboard {
       estado: clase.estado,
     })),
     participantes: [graduate, failed, inProgress],
+    participantesInactivos: [],
     graduados: [graduate],
     historialNoContinuaron: [{
       id: 50,
@@ -162,6 +169,8 @@ describe('EncuentroReportesComponent', () => {
     expect(text).toContain('Números totales');
     expect(text).toContain('Asistencia por clase');
     expect(text).toContain('Persona Ausente');
+    expect(text).toContain('Mentor Responsable');
+    expect(text).toContain('Líder Invitador');
     expect(text).toContain('Clase 1');
     expect(text).toContain('Persona Graduada');
     expect(text).toContain('Persona No Continúa');
@@ -186,6 +195,8 @@ describe('EncuentroReportesComponent', () => {
     expect(mobileTables.length).toBe(2);
     expect(Array.from(mobileTables).every((table: unknown) => (table as HTMLElement).tabIndex === 0)).toBeTrue();
     expect(labels).toContain('Participante');
+    expect(labels).toContain('Mentor');
+    expect(labels).toContain('Líder / invitó');
     expect(labels).toContain('Acción');
   });
 

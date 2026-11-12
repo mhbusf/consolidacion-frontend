@@ -43,12 +43,15 @@ function dashboard(): EncuentroDashboard {
     })),
     participantes: [{
       persona: { id: 21, nombreCompleto: 'Persona Prueba', telefono: '+56912345678', comuna: 'Santiago' },
+      mentorNombre: 'Mentor Prueba',
+      invitadoPor: 'Líder Prueba',
       inscrito: true,
       clasesCompletadas: 0,
       clasesFaltantes: ['Clase 1', 'Clase 2', 'Clase 3'],
       estado: 'PENDIENTE',
       asistencias: [],
     }],
+    participantesInactivos: [],
     graduados: [],
     historialNoContinuaron: [],
   };

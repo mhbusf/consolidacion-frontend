@@ -12,6 +12,8 @@ describe('EncuentroGraduacionComponent', () => {
 
   const pendiente = {
     persona: { id: 1, nombreCompleto: 'Ana Pendiente', telefono: '56911111111', comuna: 'Santiago' },
+    mentorNombre: null,
+    invitadoPor: null,
     inscrito: true,
     clasesCompletadas: 1,
     clasesFaltantes: ['Clase 2', 'Clase 3'],
@@ -47,6 +49,7 @@ describe('EncuentroGraduacionComponent', () => {
     pendientes: 1,
     clases: [],
     participantes: [pendiente, graduado],
+    participantesInactivos: [],
     graduados: [graduado],
     historialNoContinuaron: [],
   };

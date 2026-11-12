@@ -117,6 +117,8 @@ export interface EncuentroContinuidadResultado {
 
 export interface EncuentroParticipante {
   persona: EncuentroPersona;
+  mentorNombre: string | null;
+  invitadoPor: string | null;
   inscrito: boolean;
   clasesCompletadas: number;
   clasesFaltantes: string[];
@@ -134,6 +136,7 @@ export interface EncuentroDashboard {
   pendientes: number;
   clases: { claseId: number; nombre: string; fecha: string; presentes: number; inscritos: number; ausentes: number; estado: EncuentroEstadoClase }[];
   participantes: EncuentroParticipante[];
+  participantesInactivos: EncuentroParticipante[];
   graduados: EncuentroParticipante[];
   historialNoContinuaron: EncuentroNoContinuidad[];
 }

@@ -108,7 +108,10 @@
                 @if (seguimiento.participantes.length) {
                   <ul>
                     @for (participante of seguimiento.participantes; track participante.persona.id) {
-                      <li>{{ participante.persona.nombreCompleto }}</li>
+                      <li>
+                        <strong>{{ participante.persona.nombreCompleto }}</strong>
+                        <small>Mentor: {{ participante.mentorNombre || 'Sin mentor' }} · Líder / invitó: {{ participante.invitadoPor || 'Sin registro' }}</small>
+                      </li>
                     }
                   </ul>
                 } @else {
@@ -126,12 +129,14 @@
           <div class="table-wrap mobile-card-table" tabindex="0">
             <table>
               <caption class="sr-only">Participantes con ausencias obligatorias</caption>
-              <thead><tr><th>Participante</th><th>Teléfono</th><th>Ausencias</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
+              <thead><tr><th>Participante</th><th>Teléfono</th><th>Mentor</th><th>Líder / invitó</th><th>Ausencias</th><th>Clases ausentes</th><th>Avance</th></tr></thead>
               <tbody>
                 @for (participante of noCumplen(); track participante.persona.id) {
                   <tr>
                     <td data-label="Participante"><strong>{{ participante.persona.nombreCompleto }}</strong><small>{{ participante.persona.comuna || 'Sin comuna' }}</small></td>
                     <td data-label="Teléfono">{{ participante.persona.telefono }}</td>
+                    <td data-label="Mentor">{{ participante.mentorNombre || 'Sin mentor' }}</td>
+                    <td data-label="Líder / invitó">{{ participante.invitadoPor || 'Sin registro' }}</td>
                     <td data-label="Ausencias"><span class="absence-count">{{ clasesAusentesFinalizadas(participante).length }}</span></td>
                     <td data-label="Clases ausentes">
                       <div class="missing-tags">

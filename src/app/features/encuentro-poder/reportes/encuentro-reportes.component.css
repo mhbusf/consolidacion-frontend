@@ -54,7 +54,9 @@ h1 { margin: 0; font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: .95; letter-
 .risk-class h4 { margin: 3px 0 0; }
 .risk-class header strong { display: grid; place-items: center; min-width: 34px; height: 34px; border-radius: 50%; background: #fee2e2; color: #991b1b; }
 .risk-class ul { max-height: 180px; overflow: auto; margin: 0; padding: 8px 14px 12px 30px; }
-.risk-class li { padding: 4px 0; color: var(--text-secondary); font-size: .88rem; }
+.risk-class li { padding: 6px 0; color: var(--text-secondary); font-size: .88rem; }
+.risk-class li strong { display: block; }
+.risk-class li small { display: block; margin-top: 2px; color: var(--text-muted); font-size: .75rem; }
 .risk-class p { margin: 0; padding: 14px; color: #166534; font-size: .88rem; }
 .risk-list-heading { padding: 16px 20px; border-top: 1px solid rgba(239, 68, 68, .22); }
 .risk-list-heading h4, .risk-list-heading p { margin: 0; }
