@@ -23,6 +23,21 @@ h1 { margin: 0; font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: .95; letter-
 .general-metric.graduated-total::before { background: #16a34a; }
 .general-metric.repeated-total::before { background: #d97706; }
 .general-metric.pending-total::before { background: #dc2626; }
+.closed-cycles-heading { margin-top: 38px; }
+.closed-cycles-heading h3 { margin: 0; font-size: 1.4rem; }
+.closed-cycles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.closed-cycle-card { overflow: hidden; border: 1px solid var(--border-color); border-radius: 16px; background: var(--bg-card); box-shadow: var(--shadow-sm); }
+.closed-cycle-card header { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding: 20px 22px; border-bottom: 1px solid var(--border-color); }
+.closed-cycle-card header span { color: var(--primary-light); font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.closed-cycle-card h4 { margin: 5px 0 0; font-size: 1.25rem; }
+.closed-cycle-card time { color: var(--text-muted); font-size: .82rem; text-transform: capitalize; }
+.closed-cycle-card dl { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
+.closed-cycle-card dl div { padding: 18px 22px; border-right: 1px solid var(--border-color); }
+.closed-cycle-card dl div:last-child { border-right: 0; }
+.closed-cycle-card dt { color: var(--text-muted); font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.closed-cycle-card dd { margin: 8px 0 0; font-size: 2rem; font-weight: 850; }
+.closed-cycle-card .cycle-graduated dd { color: #15803d; }
+.closed-cycle-card .cycle-pending dd { color: #b91c1c; }
 .cycle-detail-header { display: flex; justify-content: space-between; align-items: end; gap: 32px; padding: 42px 0 28px; }
 .general-loading, .general-alert { margin-bottom: 0; }
 .cycle-control { min-width: 300px; padding: 16px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); box-shadow: var(--shadow-sm); }
@@ -145,6 +160,7 @@ td small, .outcome small { display: block; margin-top: 3px; color: var(--text-mu
 
 @media (max-width: 980px) {
   .general-metrics { grid-template-columns: 1fr; }
+  .closed-cycles { grid-template-columns: 1fr; }
   .metrics { grid-template-columns: repeat(3, 1fr); }
   .class-grid { grid-template-columns: 1fr; }
   .risk-breakdown { grid-template-columns: 1fr; }
@@ -160,6 +176,11 @@ td small, .outcome small { display: block; margin-top: 3px; color: var(--text-mu
   .excel-button { width: 100%; }
   .outcome li { align-items: flex-start; }
   .feedback-period-head { align-items: flex-start; flex-direction: column; }
+  .closed-cycle-card header { align-items: flex-start; flex-direction: column; }
+  .closed-cycle-card dl { grid-template-columns: 1fr; }
+  .closed-cycle-card dl div { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-right: 0; border-bottom: 1px solid var(--border-color); }
+  .closed-cycle-card dl div:last-child { border-bottom: 0; }
+  .closed-cycle-card dd { margin: 0; font-size: 1.65rem; }
   .period-rate { text-align: left; }
   .mobile-card-table { overflow: visible; border: 0; }
   .history-panel.mobile-card-table { border: 0; background: transparent; }

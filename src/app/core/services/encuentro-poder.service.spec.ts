@@ -30,7 +30,10 @@ describe('EncuentroPoderService', () => {
 
     const request = http.expectOne(`${api}/resumen-general`);
     expect(request.request.method).toBe('GET');
-    request.flush({ ciclos: 3, personas: 180, graduados: 120, repitieronParaGraduarse: 20, noGraduados: 60 });
+    request.flush({
+      ciclos: 2, personas: 150, graduados: 120, repitieronParaGraduarse: 20, noGraduados: 30,
+      ciclosCerrados: [],
+    });
   });
 
   it('actualiza datos globales y del ciclo usando la inscripción', () => {

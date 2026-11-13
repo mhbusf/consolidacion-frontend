@@ -140,11 +140,15 @@ describe('EncuentroReportesComponent', () => {
       'reintegrar',
     ]);
     service.resumenGeneral.and.returnValue(of({
-      ciclos: 3,
-      personas: 180,
+      ciclos: 2,
+      personas: 150,
       graduados: 120,
       repitieronParaGraduarse: 20,
-      noGraduados: 60,
+      noGraduados: 30,
+      ciclosCerrados: [
+        { cicloId: 5, nombre: 'Septiembre', fechaInicio: '2026-09-01', inscritos: 80, graduados: 50, noGraduados: 30 },
+        { cicloId: 6, nombre: 'Octubre', fechaInicio: '2026-10-01', inscritos: 90, graduados: 70, noGraduados: 20 },
+      ],
     }));
     service.ciclos.and.returnValue(of([{ ...ciclo, clases: [] }]));
     service.dashboard.and.returnValue(of(dashboard()));
@@ -205,9 +209,13 @@ describe('EncuentroReportesComponent', () => {
     expect(text).toContain('120');
     expect(text).toContain('Repitieron para graduarse');
     expect(text).toContain('20');
-    expect(text).toContain('Aún no se gradúan');
-    expect(text).toContain('60');
-    expect(text).toContain('3 ciclos · 180 personas únicas');
+    expect(text).toContain('Nunca se graduaron');
+    expect(text).toContain('30');
+    expect(text).toContain('2 ciclos cerrados · 150 personas únicas');
+    expect(text).toContain('Septiembre');
+    expect(text).toContain('Octubre');
+    expect(text).toContain('Inscritos');
+    expect(text).toContain('No graduados');
     expect(sections[0].getAttribute('aria-labelledby')).toBe('general-title');
     expect(sections[1].getAttribute('aria-labelledby')).toBe('cycle-detail-title');
   });

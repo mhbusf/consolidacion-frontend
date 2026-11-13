@@ -147,4 +147,14 @@ export interface EncuentroResumenGeneral {
   graduados: number;
   repitieronParaGraduarse: number;
   noGraduados: number;
+  ciclosCerrados: EncuentroResumenCicloCerrado[];
+}
+
+export interface EncuentroResumenCicloCerrado {
+  cicloId: number;
+  nombre: string;
+  fechaInicio: string;
+  inscritos: number;
+  graduados: number;
+  noGraduados: number;
 }

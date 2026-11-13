@@ -13,7 +13,7 @@
         <p class="section-number">Todos los procesos</p>
         <h2 id="general-title">Estado acumulado</h2>
         @if (resumenGeneral(); as resumen) {
-          <p>{{ resumen.ciclos }} ciclo{{ resumen.ciclos === 1 ? '' : 's' }} · {{ resumen.personas }} personas únicas</p>
+          <p>{{ resumen.ciclos }} ciclo{{ resumen.ciclos === 1 ? '' : 's' }} cerrado{{ resumen.ciclos === 1 ? '' : 's' }} · {{ resumen.personas }} personas únicas</p>
         }
       </div>
     </div>
@@ -29,7 +29,7 @@
         <article class="general-metric graduated-total">
           <span>Graduados únicos</span>
           <strong>{{ resumen.graduados }}</strong>
-          <p>Completaron al menos un ciclo.</p>
+          <p>Completaron al menos un ciclo cerrado.</p>
         </article>
         <article class="general-metric repeated-total">
           <span>Repitieron para graduarse</span>
@@ -37,10 +37,33 @@
           <p>Se graduaron después de participar en un ciclo anterior.</p>
         </article>
         <article class="general-metric pending-total">
-          <span>Aún no se gradúan</span>
+          <span>Nunca se graduaron</span>
           <strong>{{ resumen.noGraduados }}</strong>
-          <p>No han completado ninguno de los ciclos.</p>
+          <p>No completaron ninguno de los ciclos cerrados.</p>
         </article>
+      </div>
+
+      <div class="closed-cycles-heading">
+        <p class="section-number">Histórico cerrado</p>
+        <h3>Resultados por ciclo</h3>
+      </div>
+      <div class="closed-cycles">
+        @for (ciclo of resumen.ciclosCerrados; track ciclo.cicloId) {
+          <article class="closed-cycle-card">
+            <header>
+              <div>
+                <span>Ciclo cerrado</span>
+                <h4>{{ ciclo.nombre }}</h4>
+              </div>
+              <time [attr.datetime]="ciclo.fechaInicio">{{ ciclo.fechaInicio | date:'MM / yyyy' }}</time>
+            </header>
+            <dl>
+              <div><dt>Inscritos</dt><dd>{{ ciclo.inscritos }}</dd></div>
+              <div class="cycle-graduated"><dt>Graduados</dt><dd>{{ ciclo.graduados }}</dd></div>
+              <div class="cycle-pending"><dt>No graduados</dt><dd>{{ ciclo.noGraduados }}</dd></div>
+            </dl>
+          </article>
+        }
       </div>
     }
   </section>
