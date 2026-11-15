@@ -11,6 +11,7 @@ export interface ReporteConsolidadoUltimoComentario {
   readonly id: number;
   readonly contenido: string | null;
   readonly fechaCreacion: string | null;
+  readonly fechaEsperada: string | null;
   readonly usuario: string | null;
   readonly tipo: string | null;
   readonly numeroSemana: number | null;
@@ -25,6 +26,8 @@ export interface ReporteConsolidado {
   readonly quienInvito: string | null;
   readonly motivoOracion: string | null;
   readonly fechaIngreso: string | null;
+  readonly fechaIngresoDate: string | null;
+  readonly fechaActualizacion: string | null;
   readonly estado: ReporteConsolidadoEstado | null;
   readonly estadoDescripcion: string | null;
   readonly reunionId: number | null;
