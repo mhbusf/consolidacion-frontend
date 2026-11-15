@@ -27,4 +27,19 @@ describe('ReporteConsolidadoService', () => {
     expect(receivedError).toBeInstanceOf(TimeoutError);
     expect(request.cancelled).toBeTrue();
   }));
+
+  it('exporta todos los consolidados activos sin limitarse al mes actual', () => {
+    service.exportarActivos().subscribe(response => {
+      expect(response.body).toBeTruthy();
+    });
+
+    const request = http.expectOne(req =>
+      req.url === `${environment.apiUrl}/reportes/consolidados/xlsx`
+      && req.params.get('desde') === '0001-01-01'
+      && req.params.get('hasta') === '9999-12-30'
+      && req.params.get('alcance') === 'ACTIVOS'
+    );
+    expect(request.request.method).toBe('GET');
+    request.flush(new Blob(['excel']));
+  });
 });

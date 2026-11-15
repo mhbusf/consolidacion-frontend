@@ -67,6 +67,11 @@ export function construirParametrosReporteConsolidado(
 })
 export class ReporteConsolidadoService {
   private static readonly REQUEST_TIMEOUT_MS = 15_000;
+  private static readonly RANGO_COMPLETO_ACTIVOS: ReporteConsolidadoFiltros = Object.freeze({
+    desde: '0001-01-01',
+    hasta: '9999-12-30',
+    alcance: 'ACTIVOS',
+  });
   private readonly apiUrl = `${environment.apiUrl}/reportes/consolidados`;
 
   constructor(private readonly http: HttpClient) {}
@@ -91,5 +96,9 @@ export class ReporteConsolidadoService {
       observe: 'response',
       responseType: 'blob',
     });
+  }
+
+  exportarActivos(): Observable<HttpResponse<Blob>> {
+    return this.exportar(ReporteConsolidadoService.RANGO_COMPLETO_ACTIVOS);
   }
 }

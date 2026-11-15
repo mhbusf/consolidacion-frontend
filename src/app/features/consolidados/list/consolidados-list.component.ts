@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
@@ -11,6 +11,8 @@ import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
 import { LoggerService } from '../../../core/services/logger.service';
 import { HttpErrorMapperService } from '../../../core/services/http-error-mapper.service';
+import { ReporteConsolidadoService } from '../../../core/services/reporte-consolidado.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-consolidados-list',
@@ -25,10 +27,23 @@ import { HttpErrorMapperService } from '../../../core/services/http-error-mapper
             <button class="btn-secondary" (click)="volverActivos()">← Volver a Activos</button>
           }
           @if (!vistaHistorico) {
+            @if (isAdmin) {
+              <button
+                type="button"
+                class="btn-secondary"
+                [disabled]="exportandoExcel"
+                (click)="exportarExcel()">
+                {{ exportandoExcel ? 'Generando Excel...' : 'Exportar Excel' }}
+              </button>
+            }
             <button class="btn-primary" (click)="crearNuevo()">+ Nuevo Consolidado</button>
           }
         </div>
       </div>
+
+      @if (errorExportacion) {
+        <div class="export-error" role="alert">{{ errorExportacion }}</div>
+      }
     
       <!-- Filtros solo para Admin (vista activos) -->
       @if (isAdmin && !vistaHistorico) {
@@ -291,6 +306,16 @@ import { HttpErrorMapperService } from '../../../core/services/http-error-mapper
     .header-actions {
       display: flex;
       gap: 10px;
+    }
+
+    .export-error {
+      padding: 12px 16px;
+      margin: -14px 0 22px;
+      color: #b91c1c;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 14px;
+      font-weight: 750;
     }
 
     .filters {
@@ -597,6 +622,11 @@ import { HttpErrorMapperService } from '../../../core/services/http-error-mapper
       opacity: 0.9;
     }
 
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
     @media (max-width: 1100px) {
       .advanced-filters {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -772,6 +802,7 @@ import { HttpErrorMapperService } from '../../../core/services/http-error-mapper
 })
 export class ConsolidadosListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
   consolidados: ConsolidadoResponse[] = [];
   consolidadosTodos: ConsolidadoResponse[] = [];
   usuarios: User[] = [];
@@ -792,6 +823,8 @@ export class ConsolidadosListComponent implements OnInit {
   sinAsignar = 0;
   totalCerrados = 0;
   errorCarga = '';
+  exportandoExcel = false;
+  errorExportacion = '';
 
   constructor(
     private consolidadoService: ConsolidadoService,
@@ -799,7 +832,8 @@ export class ConsolidadosListComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private logger: LoggerService,
-    private errorMapper: HttpErrorMapperService
+    private errorMapper: HttpErrorMapperService,
+    private reporteConsolidadoService: ReporteConsolidadoService
   ) {
     this.authService.currentUser$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -896,6 +930,38 @@ export class ConsolidadosListComponent implements OnInit {
       queryParams: { vista: null, tipo: null, busqueda: null, fecha: null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  exportarExcel(): void {
+    if (!this.isAdmin || this.exportandoExcel) return;
+
+    this.exportandoExcel = true;
+    this.errorExportacion = '';
+    this.reporteConsolidadoService.exportarActivos()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => { this.exportandoExcel = false; }),
+      )
+      .subscribe({
+        next: response => {
+          if (!response.body || response.body.size === 0) {
+            this.errorExportacion = 'El archivo generado está vacío. Intenta nuevamente.';
+            return;
+          }
+
+          try {
+            this.descargarExcel(response.body);
+          } catch {
+            this.errorExportacion = 'No fue posible guardar el archivo Excel.';
+          }
+        },
+        error: error => {
+          this.logger.httpError('consolidados.list.export', error);
+          this.errorExportacion = this.errorMapper.message(error, {
+            fallback: 'No fue posible generar el archivo Excel.',
+          });
+        },
+      });
   }
 
   aplicarFiltro(): void {
@@ -1134,5 +1200,30 @@ export class ConsolidadosListComponent implements OnInit {
     void this.router.navigate(['/consolidados', id, 'asignar'], {
       queryParams: { returnUrl: this.urlListaActual() },
     });
+  }
+
+  private descargarExcel(blob: Blob): void {
+    const urlApi = this.document.defaultView?.URL;
+    if (!urlApi) throw new Error('La descarga no está disponible en este navegador.');
+
+    const hoy = new Date();
+    const fecha = [
+      hoy.getFullYear(),
+      String(hoy.getMonth() + 1).padStart(2, '0'),
+      String(hoy.getDate()).padStart(2, '0'),
+    ].join('-');
+    const url = urlApi.createObjectURL(blob);
+    const enlace = this.document.createElement('a');
+    enlace.href = url;
+    enlace.download = `consolidados-activos-${fecha}.xlsx`;
+    enlace.hidden = true;
+    this.document.body.append(enlace);
+
+    try {
+      enlace.click();
+    } finally {
+      enlace.remove();
+      urlApi.revokeObjectURL(url);
+    }
   }
 }

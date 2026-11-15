@@ -1,15 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
+import { HttpResponse } from '@angular/common/http';
 import { BehaviorSubject, of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConsolidadoResponse } from '../../../core/models/consolidado.model';
 import { ConsolidadoService } from '../../../core/services/consolidado.service';
 import { JwtResponse, RoleName } from '../../../core/models/auth.model';
 import { ConsolidadosListComponent } from './consolidados-list.component';
+import { ReporteConsolidadoService } from '../../../core/services/reporte-consolidado.service';
 
 describe('ConsolidadosListComponent WhatsApp', () => {
   let fixture: ComponentFixture<ConsolidadosListComponent>;
   let service: jasmine.SpyObj<ConsolidadoService>;
+  let reporteService: jasmine.SpyObj<ReporteConsolidadoService>;
   let queryParams: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
   const consolidado: ConsolidadoResponse = {
@@ -38,6 +41,8 @@ describe('ConsolidadosListComponent WhatsApp', () => {
     ]);
     service.obtenerTodos.and.returnValue(of([consolidado]));
     service.obtenerCerrados.and.returnValue(of([]));
+    reporteService = jasmine.createSpyObj<ReporteConsolidadoService>('ReporteConsolidadoService', ['exportarActivos']);
+    reporteService.exportarActivos.and.returnValue(of(new HttpResponse<Blob>({ body: null })));
     queryParams = new BehaviorSubject(convertToParamMap({}));
 
     const currentUser = new BehaviorSubject<JwtResponse | null>({
@@ -55,6 +60,7 @@ describe('ConsolidadosListComponent WhatsApp', () => {
       imports: [ConsolidadosListComponent],
       providers: [
         { provide: ConsolidadoService, useValue: service },
+        { provide: ReporteConsolidadoService, useValue: reporteService },
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate']) },
         { provide: ActivatedRoute, useValue: { queryParamMap: queryParams.asObservable() } },
@@ -87,5 +93,17 @@ describe('ConsolidadosListComponent WhatsApp', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.btn-whatsapp')).toBeNull();
+  });
+
+  it('permite al administrador exportar todos los consolidados activos', () => {
+    fixture.componentInstance.isAdmin = true;
+    fixture.detectChanges();
+
+    const button = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('.header-actions button'))
+      .find(item => item.textContent?.includes('Exportar Excel'));
+    button?.click();
+
+    expect(button).toBeDefined();
+    expect(reporteService.exportarActivos).toHaveBeenCalledTimes(1);
   });
 });
