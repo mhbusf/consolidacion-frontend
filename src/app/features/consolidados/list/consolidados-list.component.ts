@@ -1043,7 +1043,7 @@ export class ConsolidadosListComponent implements OnInit {
 
   getEstadoLabel(estado?: string): string {
     const labels: Record<string, string> = {
-      PENDIENTE: 'Pendiente',
+      PENDIENTE: 'Pendiente de asignación',
       ASIGNADO: 'Asignado',
       EN_PROCESO: 'En proceso',
       GDC: 'Cerrado con GDC',

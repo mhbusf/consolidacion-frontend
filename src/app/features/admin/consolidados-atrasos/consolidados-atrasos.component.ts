@@ -237,7 +237,7 @@ export class ConsolidadosAtrasosComponent implements OnInit {
 
   getEstadoLabel(estado: string): string {
     const labels: { [key: string]: string } = {
-      PENDIENTE: 'Pendiente',
+      PENDIENTE: 'Pendiente de asignación',
       ASIGNADO: 'Asignado',
       EN_PROCESO: 'En Proceso',
       GDC: 'Con GDC',

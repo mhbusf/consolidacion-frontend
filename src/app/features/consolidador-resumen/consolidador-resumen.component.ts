@@ -438,7 +438,7 @@ export class ConsolidadorResumenComponent implements OnInit {
     const map: Record<string, string> = {
       ASIGNADO: 'Asignado',
       EN_PROCESO: 'En proceso',
-      PENDIENTE: 'Pendiente',
+      PENDIENTE: 'Pendiente de asignación',
       GDC: 'En GDC',
       CERRADO: 'Cerrado'
     };

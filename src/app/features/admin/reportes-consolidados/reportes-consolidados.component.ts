@@ -58,7 +58,7 @@ const OPCIONES_VACIAS: ReporteConsolidadoOpciones = Object.freeze({
 });
 
 const ETIQUETAS_ESTADO: Readonly<Record<ReporteConsolidadoEstado, string>> = Object.freeze({
-  PENDIENTE: 'Pendiente',
+  PENDIENTE: 'Pendiente de asignación',
   ASIGNADO: 'Asignado',
   EN_PROCESO: 'En proceso',
   GDC: 'Con GDC',
