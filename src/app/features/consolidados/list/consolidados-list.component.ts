@@ -205,7 +205,6 @@ import { finalize } from 'rxjs';
                     <th>Asignado a</th>
                     <th>Estado</th>
                   }
-                  <th>3 semanas</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -244,11 +243,6 @@ import { finalize } from 'rxjs';
                         <span class="badge" [ngClass]="getEstadoClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
                       </td>
                     }
-                    <td data-label="3 semanas">
-                      <span class="badge" [ngClass]="c.hitoTresSemanasCumplido ? 'badge-success' : 'badge-secondary'">
-                        {{ c.hitoTresSemanasCumplido ? 'Cumplido' : 'Pendiente' }}
-                      </span>
-                    </td>
                     <td data-label="Acciones" class="actions-cell">
                       <div class="row-actions">
                         <button class="btn-secondary" (click)="verDetalle(c.id)">Ver</button>
@@ -756,10 +750,6 @@ import { finalize } from 'rxjs';
         order: -1;
         background: #f8fafc;
         border-bottom: 1px solid #e2e8f0;
-      }
-
-      .data-table td[data-label="3 semanas"] {
-        border-bottom: none;
       }
 
       .data-table td[data-label="Comentario de cierre"] {

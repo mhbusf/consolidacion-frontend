@@ -1,4 +1,9 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { ReporteConsolidado } from '../../../core/models/reporte-consolidado.model';
+import { ReporteConsolidadoService } from '../../../core/services/reporte-consolidado.service';
 import {
+  ReportesConsolidadosComponent,
   crearFiltrosPredeterminados,
   crearNombreArchivoPredeterminado,
   extraerNombreArchivoReporte,
@@ -34,5 +39,43 @@ describe('ReportesConsolidadosComponent helpers', () => {
   it('genera un nombre de archivo estable', () => {
     expect(crearNombreArchivoPredeterminado(new Date(2026, 7, 25)))
       .toBe('reporte-consolidados-2026-08-25.xlsx');
+  });
+});
+
+describe('ReportesConsolidadosComponent', () => {
+  let fixture: ComponentFixture<ReportesConsolidadosComponent>;
+
+  beforeEach(async () => {
+    const service = jasmine.createSpyObj<ReporteConsolidadoService>(
+      'ReporteConsolidadoService',
+      ['obtenerOpciones', 'consultar', 'exportar'],
+    );
+    service.obtenerOpciones.and.returnValue(of({ reuniones: [], comunas: [], usuarios: [] }));
+    service.consultar.and.returnValue(of({
+      content: [{ id: 1, nombre: 'Ana', estado: 'ASIGNADO' } as ReporteConsolidado],
+      page: 0,
+      size: 25,
+      totalElements: 1,
+      totalPages: 1,
+      first: true,
+      last: true,
+    }));
+
+    await TestBed.configureTestingModule({
+      imports: [ReportesConsolidadosComponent],
+      providers: [{ provide: ReporteConsolidadoService, useValue: service }],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ReportesConsolidadosComponent);
+    fixture.detectChanges();
+  });
+
+  it('no muestra el filtro ni la columna del hito de tres semanas', () => {
+    fixture.componentInstance.alternarFiltrosAvanzados();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#report-milestone')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('3 semanas');
+    expect(fixture.nativeElement.textContent).not.toContain('Hito de tres semanas');
   });
 });

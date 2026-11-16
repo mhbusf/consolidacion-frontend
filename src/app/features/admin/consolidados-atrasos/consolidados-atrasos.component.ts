@@ -3,7 +3,13 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../core/services/dashboard.service';
-import { ConsolidadoEstado, Dashboard } from '../../../core/models/consolidado.model';
+import {
+  ComentarioPendiente,
+  ConsolidadoEstado,
+  Dashboard,
+  esTipoSeguimientoDiario,
+  etiquetaSeguimientoDiario,
+} from '../../../core/models/consolidado.model';
 import { WhatsAppUrlPipe } from '../../../shared/pipes/whatsapp-url.pipe';
 import { institutionalWhatsAppMessage } from '../../../shared/utils/institutional-whatsapp-message';
 
@@ -14,7 +20,7 @@ import { institutionalWhatsAppMessage } from '../../../shared/utils/institutiona
   template: `
     <main class="page-container">
       <header class="page-header">
-        <div><p class="eyebrow">Operación diaria</p><h1 class="page-title">Seguimientos con atrasos</h1><p>Prioriza las obligaciones vencidas y contacta a cada persona desde esta bandeja.</p></div>
+        <div><p class="eyebrow">Operación diaria</p><h1 class="page-title">Seguimientos con atrasos</h1><p>Prioriza los seguimientos de día 1, 2 y 3 vencidos y contacta a cada persona desde esta bandeja.</p></div>
         <a routerLink="/reportes" class="report-link">Descargar informe Excel</a>
       </header>
 
@@ -90,10 +96,12 @@ import { institutionalWhatsAppMessage } from '../../../shared/utils/institutiona
                       </span>
                     </td>
                     <td class="comentario-cell" data-label="Pendientes">
-                      @if (consolidado.comentariosPendientes?.length) {
+                      @if (consolidado.comentariosPendientes.length) {
                         @for (pendiente of consolidado.comentariosPendientes; track pendiente) {
                           <span class="pendiente-inline">
-                            {{ pendiente.tipo }} ({{ pendiente.diasDeAtraso }} día{{ pendiente.diasDeAtraso !== 1 ? 's' : '' }})
+                            <strong>{{ etiquetaPendiente(pendiente) }}</strong>
+                            <span>Esperado: {{ pendiente.fechaEsperada | date:'dd/MM/yyyy' }}</span>
+                            <span>{{ pendiente.diasDeAtraso }} día{{ pendiente.diasDeAtraso !== 1 ? 's' : '' }} de atraso</span>
                           </span>
                         }
                       } @else {
@@ -136,7 +144,9 @@ import { institutionalWhatsAppMessage } from '../../../shared/utils/institutiona
     .fw-bold { font-weight: 600; color: var(--text-primary); }
     .text-muted-cell, .comentario-cell { color: var(--text-secondary); font-size: 14px; }
     .comentario-cell { max-width: 260px; }
-    .pendiente-inline { display: block; margin-bottom: 4px; }
+    .pendiente-inline { display: grid; gap: 2px; margin-bottom: 8px; }
+    .pendiente-inline strong { color: var(--text-primary); }
+    .pendiente-inline span { font-size: 12px; }
     .badge, .atraso-badge { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
     .badge-primary { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; }
     .badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; }
@@ -186,7 +196,18 @@ export class ConsolidadosAtrasosComponent implements OnInit {
   }
 
   get consolidadosConAtrasosFiltrados(): ConsolidadoEstado[] {
-    const consolidados = this.dashboard?.consolidadosConAtrasos || [];
+    const consolidados = (this.dashboard?.consolidadosConAtrasos || [])
+      .map(consolidado => {
+        const comentariosPendientes = consolidado.comentariosPendientes.filter(
+          pendiente => esTipoSeguimientoDiario(pendiente.tipo),
+        );
+        return {
+          ...consolidado,
+          comentariosPendientes,
+          diasDeAtraso: Math.max(0, ...comentariosPendientes.map(pendiente => pendiente.diasDeAtraso)),
+        };
+      })
+      .filter(consolidado => consolidado.comentariosPendientes.length > 0);
     const term = this.busquedaAtrasos.trim().toLowerCase();
     if (!term) return consolidados;
 
@@ -197,7 +218,12 @@ export class ConsolidadosAtrasosComponent implements OnInit {
       c.estado,
       c.fechaIngreso,
       c.diasDeAtraso?.toString(),
-      ...(c.comentariosPendientes || []).flatMap(p => [p.tipo, p.diasDeAtraso?.toString()]),
+      ...c.comentariosPendientes.flatMap(p => [
+        p.tipo,
+        etiquetaSeguimientoDiario(p.tipo),
+        p.fechaEsperada,
+        p.diasDeAtraso?.toString(),
+      ]),
     ].some(value => (value || '').toLowerCase().includes(term)));
   }
 
@@ -218,6 +244,10 @@ export class ConsolidadosAtrasosComponent implements OnInit {
       CERRADO: 'Cerrado',
     };
     return labels[estado] || estado;
+  }
+
+  etiquetaPendiente(pendiente: ComentarioPendiente): string {
+    return etiquetaSeguimientoDiario(pendiente.tipo);
   }
 
   verDetalle(id: number): void {

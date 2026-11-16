@@ -83,7 +83,6 @@ export interface ConsolidadoResponse {
   usuarioAsigno: string | null;
   fechaIngreso: string;
   estado?: string;
-  hitoTresSemanasCumplido: boolean;
   gdc: string | null;
   fechaCierre: string | null;
   comentarioCierre: string | null;
@@ -91,8 +90,23 @@ export interface ConsolidadoResponse {
 }
 
 // Para Dashboard
+export type TipoSeguimientoDiario = 'DIA_1' | 'DIA_2' | 'DIA_3';
+
+export function esTipoSeguimientoDiario(tipo: unknown): tipo is TipoSeguimientoDiario {
+  return tipo === 'DIA_1' || tipo === 'DIA_2' || tipo === 'DIA_3';
+}
+
+export function etiquetaSeguimientoDiario(tipo: TipoSeguimientoDiario): string {
+  const etiquetas: Record<TipoSeguimientoDiario, string> = {
+    DIA_1: 'Seguimiento día 1',
+    DIA_2: 'Seguimiento día 2',
+    DIA_3: 'Seguimiento día 3',
+  };
+  return etiquetas[tipo];
+}
+
 export interface ComentarioPendiente {
-  tipo: string;
+  tipo: TipoSeguimientoDiario;
   fechaEsperada: string;
   diasDeAtraso: number;
 }

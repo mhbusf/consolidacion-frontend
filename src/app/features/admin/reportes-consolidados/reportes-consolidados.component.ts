@@ -43,7 +43,6 @@ export interface ReporteConsolidadoFormulario {
   readonly usuarioReportaId: string;
   readonly comunaId: string;
   readonly origenCafeConJesus: FiltroBooleano;
-  readonly hitoTresSemanasCumplido: FiltroBooleano;
   readonly conGdc: FiltroBooleano;
   readonly texto: string;
 }
@@ -147,7 +146,6 @@ export function crearSnapshotFiltros(
   const comunaId = numeroOpcional(formulario.comunaId);
   const sinAsignar = booleanoOpcional(formulario.sinAsignar);
   const origenCafeConJesus = booleanoOpcional(formulario.origenCafeConJesus);
-  const hitoTresSemanasCumplido = booleanoOpcional(formulario.hitoTresSemanasCumplido);
   const conGdc = booleanoOpcional(formulario.conGdc);
   const texto = formulario.texto.trim();
 
@@ -162,7 +160,6 @@ export function crearSnapshotFiltros(
     ...(sinAsignar !== undefined ? { sinAsignar } : {}),
     ...(comunaId !== undefined ? { comunaId } : {}),
     ...(origenCafeConJesus !== undefined ? { origenCafeConJesus } : {}),
-    ...(hitoTresSemanasCumplido !== undefined ? { hitoTresSemanasCumplido } : {}),
     ...(conGdc !== undefined ? { conGdc } : {}),
     ...(texto !== '' ? { texto } : {}),
   });
@@ -228,7 +225,6 @@ function valoresFormulario(
     usuarioReportaId: '',
     comunaId: '',
     origenCafeConJesus: '',
-    hitoTresSemanasCumplido: '',
     conGdc: '',
     texto: '',
   };
@@ -307,7 +303,6 @@ export class ReportesConsolidadosComponent implements OnInit {
     usuarioReportaId: this.formBuilder.control(''),
     comunaId: this.formBuilder.control(''),
     origenCafeConJesus: this.formBuilder.control<FiltroBooleano>(''),
-    hitoTresSemanasCumplido: this.formBuilder.control<FiltroBooleano>(''),
     conGdc: this.formBuilder.control<FiltroBooleano>(''),
     texto: this.formBuilder.control(''),
   });
@@ -533,13 +528,6 @@ export class ReportesConsolidadosComponent implements OnInit {
       default:
         return 'estado-desconocido';
     }
-  }
-
-  etiquetaHito(cumplido: boolean | null): string {
-    if (cumplido === null) {
-      return 'Sin registro';
-    }
-    return cumplido ? 'Cumplido' : 'Pendiente';
   }
 
   telefonoHref(telefono: string): string {

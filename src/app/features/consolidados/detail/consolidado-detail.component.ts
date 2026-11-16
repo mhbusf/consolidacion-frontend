@@ -37,7 +37,6 @@ export class ConsolidadoDetailComponent implements OnInit {
   isLoadingComentarios = true;
   errorComentarios = '';
   isLoadingComentario = false;
-  isUpdatingHito = false;
   isAdmin = false;
   origen = '';
   private queryParamsRetorno: Record<string, string> = {};
@@ -228,24 +227,6 @@ export class ConsolidadoDetailComponent implements OnInit {
         this.isClosing = false;
         this.logger.httpError('consolidados.detail.close', error);
         this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos cerrar el seguimiento.' }));
-      }
-    });
-  }
-
-  actualizarHitoTresSemanas(cumplido: boolean): void {
-    if (!this.consolidado || this.esTerminal() || this.isUpdatingHito) return;
-
-    this.isUpdatingHito = true;
-    this.consolidadoService.actualizarHitoTresSemanas(this.consolidado.id, cumplido).subscribe({
-      next: (data) => {
-        this.consolidado = data;
-        this.isUpdatingHito = false;
-        this.notificationService.success(cumplido ? 'Hito de 3 semanas marcado' : 'Hito de 3 semanas desmarcado');
-      },
-      error: (error) => {
-        this.isUpdatingHito = false;
-        this.logger.httpError('consolidados.detail.update-milestone', error);
-        this.notificationService.error(this.errorMapper.message(error, { fallback: 'No pudimos actualizar el hito de tres semanas.' }));
       }
     });
   }

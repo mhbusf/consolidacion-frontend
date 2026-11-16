@@ -200,15 +200,6 @@
             </div>
 
             <div class="field-group">
-              <label for="report-milestone">Hito de tres semanas</label>
-              <select id="report-milestone" class="field-control" formControlName="hitoTresSemanasCumplido">
-                <option value="">Cualquier estado</option>
-                <option value="true">Cumplido</option>
-                <option value="false">Pendiente</option>
-              </select>
-            </div>
-
-            <div class="field-group">
               <label for="report-gdc">GDC</label>
               <select id="report-gdc" class="field-control" formControlName="conGdc">
                 <option value="">Cualquier registro</option>
@@ -318,7 +309,6 @@
               <th scope="col">Reportó</th>
               <th scope="col">Asignó</th>
               <th scope="col">Asignado</th>
-              <th scope="col">Hito 3 semanas</th>
               <th scope="col">Último comentario</th>
             </tr>
           </thead>
@@ -357,15 +347,6 @@
                   } @else {
                     <span class="unassigned-pill">Sin asignar</span>
                   }
-                </td>
-                <td data-label="Hito 3 semanas">
-                  <span
-                    class="milestone-pill"
-                    [class.milestone-complete]="registro.hitoTresSemanasCumplido === true"
-                    [class.milestone-pending]="registro.hitoTresSemanasCumplido === false"
-                  >
-                    {{ etiquetaHito(registro.hitoTresSemanasCumplido) }}
-                  </span>
                 </td>
                 <td data-label="Último comentario" class="comment-cell">
                   @if (registro.ultimoComentario; as comentario) {

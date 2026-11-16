@@ -5,7 +5,6 @@ export interface Comentario {
   fechaCreacion?: string;
   tipo?: TipoComentario;
   esObligatorio?: boolean;
-  numeroSemana?: number;
 }
 
 export enum TipoComentario {
@@ -13,7 +12,6 @@ export enum TipoComentario {
   DIA_1 = 'DIA_1',
   DIA_2 = 'DIA_2',
   DIA_3 = 'DIA_3',
-  SEMANAL = 'SEMANAL',
   CIERRE = 'CIERRE'
 }
 
@@ -30,5 +28,4 @@ export interface ComentarioResponse {
   fechaCreacion: string;
   tipo?: TipoComentario;
   esObligatorio?: boolean;
-  numeroSemana?: number;
 }

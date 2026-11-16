@@ -28,7 +28,11 @@ describe('DashboardComponent', () => {
       asignadoA: 'consolidador',
       estado: 'EN_PROCESO',
       diasDeAtraso: 8,
-      comentariosPendientes: [{ tipo: 'SEMANA_1', fechaEsperada: '2026-10-08', diasDeAtraso: 8 }],
+      comentariosPendientes: [
+        { tipo: 'DIA_1', fechaEsperada: '2026-10-02', diasDeAtraso: 8 },
+        { tipo: 'SEMANA_1' as 'DIA_1', fechaEsperada: '2026-10-08', diasDeAtraso: 8 },
+        { tipo: 'DESCONOCIDO' as 'DIA_1', fechaEsperada: '2026-10-09', diasDeAtraso: 7 },
+      ],
     }],
     estadisticasPorUsuario: [{
       username: 'consolidador',
@@ -74,7 +78,7 @@ describe('DashboardComponent', () => {
     const unassigned: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-testid="attention-unassigned"]');
     const active: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-testid="attention-active"]');
 
-    expect(overdue.textContent).toContain('5');
+    expect(overdue.textContent).toContain('1');
     expect(overdue.getAttribute('href')).toBe('/consolidados-atrasos');
     expect(unassigned.textContent).toContain('4');
     expect(unassigned.getAttribute('href')).toBe('/consolidados');
@@ -131,7 +135,7 @@ describe('DashboardComponent', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('.state-panel')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="attention-overdue"]')?.textContent).toContain('5');
+    expect(fixture.nativeElement.querySelector('[data-testid="attention-overdue"]')?.textContent).toContain('1');
   });
 
   it('muestra un estado vacío real cuando la carga correcta no contiene registros', () => {
@@ -164,5 +168,14 @@ describe('DashboardComponent', () => {
     expect(table.querySelectorAll('th[scope="col"]').length).toBe(6);
     expect(table.querySelector('tbody th[scope="row"]')?.textContent).toContain('consolidador');
     expect(progress.getAttribute('aria-valuenow')).toBe('80');
+  });
+
+  it('muestra solo alertas diarias con etiquetas amigables e ignora alertas legadas', () => {
+    const queue: HTMLElement = fixture.nativeElement.querySelector('.priority-list');
+
+    expect(queue.textContent).toContain('Seguimiento día 1');
+    expect(queue.textContent).not.toContain('SEMANA_1');
+    expect(queue.textContent).not.toContain('DESCONOCIDO');
+    expect(fixture.componentInstance.pendingCount(dashboard.consolidadosConAtrasos[0])).toBe(1);
   });
 });

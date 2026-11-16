@@ -42,4 +42,18 @@ describe('ReporteConsolidadoService', () => {
     expect(request.request.method).toBe('GET');
     request.flush(new Blob(['excel']));
   });
+
+  it('no envía el parámetro legado del hito de tres semanas', () => {
+    service.exportar({
+      desde: '2026-11-01',
+      hasta: '2026-11-16',
+      alcance: 'TODOS',
+      hitoTresSemanasCumplido: true,
+    } as Parameters<ReporteConsolidadoService['exportar']>[0] & { hitoTresSemanasCumplido: boolean })
+      .subscribe();
+
+    const request = http.expectOne(req => req.url === `${environment.apiUrl}/reportes/consolidados/xlsx`);
+    expect(request.request.params.has('hitoTresSemanasCumplido')).toBeFalse();
+    request.flush(new Blob(['excel']));
+  });
 });

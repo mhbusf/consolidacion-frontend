@@ -44,9 +44,6 @@ export function construirParametrosReporteConsolidado(
   if (filtros.origenCafeConJesus !== undefined) {
     params = params.set('origenCafeConJesus', filtros.origenCafeConJesus);
   }
-  if (filtros.hitoTresSemanasCumplido !== undefined) {
-    params = params.set('hitoTresSemanasCumplido', filtros.hitoTresSemanasCumplido);
-  }
   if (filtros.conGdc !== undefined) {
     params = params.set('conGdc', filtros.conGdc);
   }

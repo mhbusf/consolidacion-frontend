@@ -4,7 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, defaultIfEmpty, finalize, map, of, switchMap, takeUntil, tap } from 'rxjs';
 import { User } from '../core/models/auth.model';
-import { ConsolidadoEstado, Dashboard, UsuarioEstadistica } from '../core/models/consolidado.model';
+import {
+  ConsolidadoEstado,
+  Dashboard,
+  UsuarioEstadistica,
+  esTipoSeguimientoDiario,
+  etiquetaSeguimientoDiario,
+} from '../core/models/consolidado.model';
 import { AuthService } from '../core/services/auth.service';
 import { ConsolidadorResumen, DashboardService } from '../core/services/dashboard.service';
 
@@ -18,7 +24,7 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
         <div>
           <p class="eyebrow">Panel de operaciones</p>
           <h1>Seguimiento de Consolidación</h1>
-          <p class="subtitle">Prioriza atrasos, distribuye la carga del equipo y revisa el avance de cada seguimiento.</p>
+          <p class="subtitle">Prioriza el seguimiento de los primeros tres días, distribuye la carga del equipo y revisa el avance de cada persona.</p>
           <p class="update-status" role="status" aria-live="polite">
             @if (isInitialLoading) {
               Cargando información actualizada
@@ -82,8 +88,8 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
             <div class="attention-grid">
               <a routerLink="/consolidados-atrasos" class="attention-card attention-critical" data-testid="attention-overdue">
                 <span class="attention-code" aria-hidden="true">01</span>
-                <span class="attention-value">{{ dashboard.consolidadosAtrasados }}</span>
-                <span class="attention-label">Con atrasos</span>
+                <span class="attention-value">{{ dailyOverdueCount }}</span>
+                <span class="attention-label">Con seguimiento inicial atrasado</span>
                 <span class="attention-action">Revisar prioridades <span aria-hidden="true">→</span></span>
               </a>
               <a routerLink="/consolidados" class="attention-card attention-unassigned" data-testid="attention-unassigned">
@@ -106,7 +112,7 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
               <div class="section-heading">
                 <div>
                   <p class="section-kicker">Cola prioritaria</p>
-                  <h2 id="prioridad-title">Atrasos que requieren seguimiento</h2>
+                  <h2 id="prioridad-title">Seguimientos de día 1, 2 o 3 atrasados</h2>
                   <p>Ordenados por mayor cantidad de días de atraso.</p>
                 </div>
                 <a routerLink="/consolidados-atrasos" class="text-link">Ver todos los atrasos</a>
@@ -123,7 +129,7 @@ import { ConsolidadorResumen, DashboardService } from '../core/services/dashboar
                       </div>
                       <div class="priority-delay">
                         <strong>{{ item.diasDeAtraso }} día{{ item.diasDeAtraso === 1 ? '' : 's' }}</strong>
-                        <span>{{ pendingCount(item) }} obligación{{ pendingCount(item) === 1 ? '' : 'es' }} pendiente{{ pendingCount(item) === 1 ? '' : 's' }}</span>
+                        <span>{{ pendingLabels(item).join(' · ') }}</span>
                       </div>
                       <a [routerLink]="['/consolidados', item.id]" class="row-action" [attr.aria-label]="'Abrir detalle de ' + item.titulo">Ver detalle</a>
                     </li>
@@ -686,8 +692,25 @@ export class DashboardComponent implements OnInit {
 
   get priorityQueue(): ConsolidadoEstado[] {
     return [...(this.dashboard?.consolidadosConAtrasos ?? [])]
+      .map(item => {
+        const comentariosPendientes = item.comentariosPendientes.filter(
+          pendiente => esTipoSeguimientoDiario(pendiente.tipo),
+        );
+        return {
+          ...item,
+          comentariosPendientes,
+          diasDeAtraso: Math.max(0, ...comentariosPendientes.map(pendiente => pendiente.diasDeAtraso)),
+        };
+      })
+      .filter(item => item.comentariosPendientes.length > 0)
       .sort((a, b) => b.diasDeAtraso - a.diasDeAtraso)
       .slice(0, 5);
+  }
+
+  get dailyOverdueCount(): number {
+    return (this.dashboard?.consolidadosConAtrasos ?? []).filter(item =>
+      item.comentariosPendientes.some(pendiente => esTipoSeguimientoDiario(pendiente.tipo)),
+    ).length;
   }
 
   get teamStatistics(): UsuarioEstadistica[] {
@@ -757,7 +780,13 @@ export class DashboardComponent implements OnInit {
   }
 
   pendingCount(item: ConsolidadoEstado): number {
-    return item.comentariosPendientes?.length ?? 0;
+    return item.comentariosPendientes.filter(pendiente => esTipoSeguimientoDiario(pendiente.tipo)).length;
+  }
+
+  pendingLabels(item: ConsolidadoEstado): string[] {
+    return item.comentariosPendientes
+      .filter(pendiente => esTipoSeguimientoDiario(pendiente.tipo))
+      .map(pendiente => etiquetaSeguimientoDiario(pendiente.tipo));
   }
 
   estadoLabel(estado: string): string {

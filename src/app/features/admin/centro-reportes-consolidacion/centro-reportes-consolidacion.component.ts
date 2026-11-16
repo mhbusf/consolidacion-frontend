@@ -24,7 +24,7 @@ interface DefinicionReporte {
 }
 
 const REPORTES: readonly DefinicionReporte[] = [
-  { tipo: 'seguimiento', titulo: 'Atrasos y seguimiento', descripcion: 'Prioriza obligaciones vencidas y responsables.', contenido: 'Persona, responsable, obligación, fecha esperada, días de atraso y último comentario.' },
+  { tipo: 'seguimiento', titulo: 'Atrasos y seguimiento', descripcion: 'Prioriza seguimientos de los primeros tres días y responsables.', contenido: 'Persona, responsable, seguimiento día 1, 2 o 3, fecha esperada, días de atraso y último comentario.' },
   { tipo: 'cartera', titulo: 'Cartera por consolidador', descripcion: 'Compara carga y cumplimiento del equipo.', contenido: 'Hojas de resumen por consolidador y detalle completo de la cartera activa.' },
   { tipo: 'historico', titulo: 'Histórico de cierres', descripcion: 'Analiza cierres por su fecha real de cierre.', contenido: 'Tipo, motivo, GDC, responsable, reunión, comuna, duración y comentario de cierre.' },
   { tipo: 'ejecutivo', titulo: 'Resumen ejecutivo', descripcion: 'Obtén indicadores consolidados del período.', contenido: 'Indicadores, resultados por reunión, por consolidador y base detallada.' },

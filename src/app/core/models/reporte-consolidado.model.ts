@@ -1,3 +1,5 @@
+import type { TipoComentario } from './comentario.model';
+
 export type ReporteConsolidadoAlcance = 'TODOS' | 'ACTIVOS' | 'CERRADOS';
 
 export type ReporteConsolidadoEstado =
@@ -13,8 +15,7 @@ export interface ReporteConsolidadoUltimoComentario {
   readonly fechaCreacion: string | null;
   readonly fechaEsperada: string | null;
   readonly usuario: string | null;
-  readonly tipo: string | null;
-  readonly numeroSemana: number | null;
+  readonly tipo: TipoComentario | null;
   readonly obligatorio: boolean | null;
 }
 
@@ -44,7 +45,6 @@ export interface ReporteConsolidado {
   readonly usuarioAsigno: string | null;
   readonly origenCafeConJesus: boolean | null;
   readonly cafeConJesusId: number | null;
-  readonly hitoTresSemanasCumplido: boolean | null;
   readonly gdc: string | null;
   readonly fechaCierre: string | null;
   readonly comentarioCierre: string | null;
@@ -94,7 +94,6 @@ export interface ReporteConsolidadoFiltros {
   readonly sinAsignar?: boolean;
   readonly comunaId?: number;
   readonly origenCafeConJesus?: boolean;
-  readonly hitoTresSemanasCumplido?: boolean;
   readonly conGdc?: boolean;
   readonly texto?: string;
 }

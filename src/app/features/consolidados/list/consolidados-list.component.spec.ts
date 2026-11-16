@@ -29,7 +29,6 @@ describe('ConsolidadosListComponent WhatsApp', () => {
     usuarioAsigno: 'admin',
     fechaIngreso: '2026-10-29T10:00:00',
     estado: 'ASIGNADO',
-    hitoTresSemanasCumplido: false,
     gdc: null,
     fechaCierre: null,
     comentarioCierre: null,
@@ -105,5 +104,10 @@ describe('ConsolidadosListComponent WhatsApp', () => {
 
     expect(button).toBeDefined();
     expect(reporteService.exportarActivos).toHaveBeenCalledTimes(1);
+  });
+
+  it('no muestra columnas ni controles del hito de tres semanas', () => {
+    expect(fixture.nativeElement.textContent).not.toContain('3 semanas');
+    expect(fixture.nativeElement.querySelector('.btn-hito')).toBeNull();
   });
 });
